@@ -2,49 +2,99 @@ package typeset
 
 import (
     "fmt"
+    "strings"
 )
 
-type AnsiCMD int
+type ansiCMD int
 
 const (
-    Normal           AnsiCMD = 0
-    Bold             AnsiCMD = 1
-    Faint            AnsiCMD = 2
-    Italics          AnsiCMD = 3
-    Underline        AnsiCMD = 4
-    Blink            AnsiCMD = 5
-    Inverse          AnsiCMD = 7
-    Hidden           AnsiCMD = 8
-    CrossOut         AnsiCMD = 9
-    DoubleUnderline  AnsiCMD = 21
-    NotItalics       AnsiCMD = 23
-    NotUnderline     AnsiCMD = 24
-    NotBlink         AnsiCMD = 25
-    NotInverse       AnsiCMD = 27
-    NotHidden        AnsiCMD = 28
-    NotCrossOut      AnsiCMD = 29
-    ForeBlack        AnsiCMD = 30
-    ForeRed          AnsiCMD = 31
-    ForeGreen        AnsiCMD = 32
-    ForeYellow       AnsiCMD = 33
-    ForeBlue         AnsiCMD = 34
-    ForeMagenta      AnsiCMD = 35
-    ForeCyan         AnsiCMD = 36
-    ForeWhite        AnsiCMD = 37
-    ForeDefault      AnsiCMD = 39
-    BackBlack        AnsiCMD = 40
-    BackRed          AnsiCMD = 41
-    BackGreen        AnsiCMD = 42
-    BackYellow       AnsiCMD = 43
-    BackBlue         AnsiCMD = 44
-    BackMagenta      AnsiCMD = 45
-    BackCyan         AnsiCMD = 46
-    BackWhite        AnsiCMD = 47
-    BackDefault      AnsiCMD = 49
+    Normal           ansiCMD = 0
+    Bold             ansiCMD = 1
+    Faint            ansiCMD = 2
+    Italics          ansiCMD = 3
+    Underline        ansiCMD = 4
+    Blink            ansiCMD = 5
+    Inverse          ansiCMD = 7
+    Hidden           ansiCMD = 8
+    CrossOut         ansiCMD = 9
+    DoubleUnderline  ansiCMD = 21
+    NotItalics       ansiCMD = 23
+    NotUnderline     ansiCMD = 24
+    NotBlink         ansiCMD = 25
+    NotInverse       ansiCMD = 27
+    NotHidden        ansiCMD = 28
+    NotCrossOut      ansiCMD = 29
+    ForeBlack        ansiCMD = 30
+    ForeRed          ansiCMD = 31
+    ForeGreen        ansiCMD = 32
+    ForeYellow       ansiCMD = 33
+    ForeBlue         ansiCMD = 34
+    ForeMagenta      ansiCMD = 35
+    ForeCyan         ansiCMD = 36
+    ForeWhite        ansiCMD = 37
+    ForeDefault      ansiCMD = 39
+    BackBlack        ansiCMD = 40
+    BackRed          ansiCMD = 41
+    BackGreen        ansiCMD = 42
+    BackYellow       ansiCMD = 43
+    BackBlue         ansiCMD = 44
+    BackMagenta      ansiCMD = 45
+    BackCyan         ansiCMD = 46
+    BackWhite        ansiCMD = 47
+    BackDefault      ansiCMD = 49
 )
 
-func FormatANSI(codes []AnsiCMD) (string, error) {
+/*
+type feature int
+
+const (
+    Default         feature = iota
+    Bold 
+    Faint 
+    Italics 
+    Underline
+    Blink
+    _
+    Inverse 
+    Hidden
+    Crossout 
+    DoubleUnderline feature = 21
+    NotItalics      feature = 23
+    NotUnderline    feature = 24
+    NotBlink        feature = 25
+    NotInverse      feature = 27
+    NotHidden       feature = 28
+    NotCrossout     feature = 29
+)
+
+type color int 
+
+const (
+    Black   color = iota
+    Red
+    Green
+    Yellow
+    Blue 
+    Magenta 
+    Cyan 
+    White 
+    _
+    Default
+)
+
+type cground int 
+
+const (
+    Fore cground = iota + 3
+    Back
+)
+*/
+
+func formatANSI(codes []ansiCMD) (string, error) {
+    // Start ANSI sequence
     ansi := "\033["
+
+    // Append codes if they exist
     if len(codes) > 0 {
         ansi += fmt.Sprintf("%d", codes[0])
         for i := 1; i < len(codes); i++ {
@@ -53,9 +103,149 @@ func FormatANSI(codes []AnsiCMD) (string, error) {
     } else {
         return "", fmt.Errorf("No ANSI code to apply...")
     }
+
+    // Finish ANSI code and return
     ansi += "m"
     // ansi := fmt.Sprintf("\033[%vm", codes)
+    
     return ansi, nil
+}
+
+func getCode(format string) (ansiCMD, error) {
+    var code ansiCMD
+    // Switch depending on input format
+    switch strings.ToLower(strings.Replace(format, " ", "", -1)) {
+    // Behaviour codes
+    case "reset":
+        fallthrough
+    case "default":
+        code = Normal
+    case "bold":
+        code = Bold
+    case "faint":
+        code = Faint
+    case "italics":
+        code = Italics
+    case "underline":
+        code = Underline
+    case "blink":
+        code = Blink
+    case "inverse":
+        code = Inverse
+    case "hidden":
+        code = Hidden
+    case "crossout":
+        code = CrossOut
+    case "doubleunderline":
+        code = DoubleUnderline
+    case "notitalics":
+        code = NotItalics
+    case "notunderline":
+        code = NotUnderline
+    case "notblink":
+        code = NotBlink
+    case "notinverse":
+        code = NotInverse
+    case "nothidden":
+        code = NotHidden
+    case "notcrossout":
+        code = NotCrossOut
+    // Foreground color codes
+    case "black":
+        fallthrough
+    case "foreblack":
+        code = ForeBlack
+    case "red":
+        fallthrough
+    case "forered":
+        code = ForeRed
+    case "green":
+        fallthrough
+    case "foregreen":
+        code = ForeGreen
+    case "yellow":
+        fallthrough
+    case "foreyellow":
+        code = ForeYellow
+    case "blue":
+        fallthrough
+    case "foreblue":
+        code = ForeBlue
+    case "magenta":
+        fallthrough
+    case "foremagenta":
+        code = ForeMagenta
+    case "cyan":
+        fallthrough
+    case "forecyan":
+        code = ForeCyan
+    case "white":
+        fallthrough
+    case "forewhite":
+        code = ForeWhite
+    case "foredefault":
+        code = ForeDefault
+    // Background color codes
+    case "backblack":
+        code = BackBlack
+    case "backred":
+        code = BackRed
+    case "backgreen":
+        code = BackGreen
+    case "backyellow":
+        code = BackYellow
+    case "backblue":
+        code = BackBlue
+    case "backmagenta":
+        code = BackMagenta
+    case "backcyan":
+        code = BackCyan
+    case "backwhite":
+        code = BackWhite
+    case "backdefault":
+        code = BackDefault
+    // Default error
+    default:
+        return Normal, fmt.Errorf("Error parsing format %v.\n" +
+            "You can specify 'normal', 'bold', 'faint', 'italics', " +
+            "'underline', 'blink', 'crossout', as well as those keys preceded by 'not'.\n" +
+            "You can also specify the colors 'black', 'red', 'green', 'yellow', 'blue', " +
+            "'magenta', 'cyan', and 'white', but you should also specify 'fore' or 'back' " +
+            "before the color to set the foreground or background. " +
+            "The default is the foreground.", format)
+    }
+    return code, nil
+}
+
+func FormatString(line string, format []string) (string, error) {
+    // Return unformatted string if no format is specified
+    if len(format) == 0 {
+        return line, nil
+    }
+
+    // Go through formats to get ANSI codes
+    var codes []ansiCMD
+    for i := 0; i < len(format); i++ {
+        code, err := getCode(format[i])
+        if err != nil {
+            return "", fmt.Errorf("Error getting ANSI CODE: %v", err)
+        }
+        codes = append(codes, code)
+    }
+
+    // Format string prefix
+    prefix, err := formatANSI(codes)
+    if err != nil {
+        return "", fmt.Errorf("Error combining ANSI codes: %v", err)
+    }
+
+    // Format reset string
+    suffix, err := formatANSI([]ansiCMD{Normal})
+    if err != nil {
+        return "", fmt.Errorf("Error creating suffix: %v", err)
+    }
+
+    return prefix + line + suffix, nil
 }
 
 
