@@ -1,6 +1,6 @@
-package "typeset"
+package typeset
 
-include (
+import (
     "fmt"
 )
 
