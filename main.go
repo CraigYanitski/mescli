@@ -6,6 +6,7 @@ import (
 )
 
 func main() {
+    /*
     // Initialise ANSI codes for test
     var codes = []typeset.AnsiCMD{3, 31}
     var reset = []typeset.AnsiCMD{0}
@@ -19,7 +20,20 @@ func main() {
     if err != nil {
         panic(err)
     }
+    */
+
+    // Test string
+    line := "A test string!!"
+
+    // desired format
+    format := []string{"default", "blue"}
+
+    // Formatted string
+    formattedLine, err := typeset.FormatString(line, format)
+    if err != nil {
+        panic(err)
+    }
 
     // Test printing to terminal
-    fmt.Printf("%v%v%v\n", prefix, "A test string!", suffix)
+    fmt.Println(formattedLine)
 }
