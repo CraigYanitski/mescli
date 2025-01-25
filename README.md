@@ -1,7 +1,7 @@
 # MESCLI
 ---
 
-MESCLI will be a CLI messaging app.
+MESCLI will be a CLI messaging app, and is currently in development.
 I want secure end-to-end encryption of the messages, as well as a double ratchet for improved security.
 There will preferably be markup support, including a maths mode.
 It is not yet known whether a server will be made public.
