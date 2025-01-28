@@ -57,7 +57,6 @@ func main() {
         panic(err)
     }
 
-
     alicePrivKey := alice.KeyDH.Bytes()
     fmt.Printf("\nAlice's private key: %x\n", alicePrivKey)
     alicePubKey := alice.KeyDH.PublicKey()
@@ -92,7 +91,7 @@ func main() {
         panic(err)
     }
 
-    fmt.Printf("\nAlice's secret: %x\n", aliceSecret)
+    fmt.Printf("\nAlice's secret (%d): %x\n", len(aliceSecret), aliceSecret)
 
     // Bob
     bobSecret, err := bob.KeyDH.ECDH(alicePubKey)
@@ -101,12 +100,66 @@ func main() {
         err = fmt.Errorf("Error getting Bob's secret : %v", err)
         panic(err)
     }
-    fmt.Printf("Bob's secret: %x\n", bobSecret)
+    fmt.Printf("Bob's secret (%d): %x\n", len(bobSecret), bobSecret)
 
     // Confirm whether or not they are equal, and thus the exchange is complete
     if !bytes.Equal(aliceSecret, bobSecret) {
         err = fmt.Errorf("Error in establishing DH exchange!! : %v", err)
         panic(err)
     }
-    fmt.Println("\nDiffie-Hellman exchange complete.")
+    result, _ := typeset.FormatString("\nDiffie-Hellman exchange complete", []string{"italics", "green"})
+    fmt.Println(result)
+
+    // Renew keys in separate test
+    fmt.Printf("\n---------------\n\n")
+
+    err = alice.GenerateKey()
+    if err != nil {
+        err = fmt.Errorf("Cannot generate Alice's key : %v", err)
+        panic(err)
+    }
+
+    alicePrivKey = alice.KeyDH.Bytes()
+    fmt.Printf("\nAlice's private key: %x\n", alicePrivKey)
+    alicePubKey = alice.KeyDH.PublicKey()
+    fmt.Printf("Alice's public key: %x\n", alicePubKey.Bytes())
+
+    err = bob.GenerateKey()
+    if err != nil {
+        err = fmt.Errorf("Cannot generate Bob's key : %v", err)
+        panic(err)
+    }
+
+    bobPrivKey = bob.KeyDH.Bytes()
+    fmt.Printf("\nBob's private key: %x\n", bobPrivKey)
+    bobPubKey = bob.KeyDH.PublicKey()
+    fmt.Printf("Bob's public key: %x\n", bobPubKey.Bytes())
+
+    // Calculate both clients' secrets
+    //Alice
+    aliceSecret, err = alice.KeyDH.ECDH(bobPubKey)
+
+    if err != nil {
+        err = fmt.Errorf("Error getting Alice's secret : %v", err)
+        panic(err)
+    }
+
+    fmt.Printf("\nAlice's secret (%d): %x\n", len(aliceSecret), aliceSecret)
+
+    // Bob
+    bobSecret, err = bob.KeyDH.ECDH(alicePubKey)
+
+    if err != nil {
+        err = fmt.Errorf("Error getting Bob's secret : %v", err)
+        panic(err)
+    }
+    fmt.Printf("Bob's secret (%d): %x\n", len(bobSecret), bobSecret)
+
+    // Confirm whether or not they are equal, and thus the exchange is complete
+    if !bytes.Equal(aliceSecret, bobSecret) {
+        err = fmt.Errorf("Error in establishing DH exchange!! : %v", err)
+        panic(err)
+    }
+    result, _ = typeset.FormatString("\nDiffie-Hellman exchange complete", []string{"italics", "green"})
+    fmt.Println(result)
 }
