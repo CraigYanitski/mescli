@@ -57,7 +57,7 @@ func GenerateECDH() (*ecdh.PrivateKey, error) {
     return key, nil
 }
 
-func generateNonce(length int) []byte {
+func GenerateNonce(length int) []byte {
 	randomBytes := make([]byte, length)
 	rand.Read(randomBytes)
 	return randomBytes
