@@ -1,6 +1,8 @@
 package cryptography
 
 import (
+    "crypto/aes"
+    "crypto/cipher"
     "crypto/ecdh"
     "crypto/rand"
     "fmt"
@@ -53,5 +55,51 @@ func GenerateECDH() (*ecdh.PrivateKey, error) {
         return nil, fmt.Errorf("error generating private key: %v", err)
     }
     return key, nil
+}
+
+func generateNonce(length int) []byte {
+	randomBytes := make([]byte, length)
+	rand.Read(randomBytes)
+	return randomBytes
+}
+
+func EncryptMessage(key, plaintext, nonce []byte) (ciphertext []byte, err error) {
+    // Create new cipher block
+    block, err := aes.NewCipher(key)
+	if err != nil {
+		return nil, err
+	}
+
+    // create new GCM cipher
+	aesgcm, err := cipher.NewGCM(block)
+	if err != nil {
+		return nil, err
+	}
+
+    // encrypt the plaintext
+	ciphertext = aesgcm.Seal(nil, nonce, plaintext, nil)
+	return ciphertext, nil
+}
+
+func DecryptMessage(key, ciphertext, nonce []byte) (plaintext []byte, err error) {
+	// Create a new cipher block
+    block, err := aes.NewCipher(key)
+	if err != nil {
+		return nil, err
+	}
+
+    // create new GCM cipher
+	aesaead, err := cipher.NewGCM(block)
+	if err != nil {
+		return nil, err
+	}
+
+    // decrypt the ciphertext
+	plaintext, err = aesaead.Open(nil, nonce, ciphertext, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return plaintext, nil
 }
 
