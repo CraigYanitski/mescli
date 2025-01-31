@@ -13,18 +13,6 @@ type Client struct {
     KeyDH     *ecdh.PrivateKey
 }
 
-func (c *Client) GenerateKey() error {
-    // generate private key
-    key, err := cryptography.GenerateECDH()
-
-    // Return error if failed, else save key
-    if err != nil {
-        return err
-    }
-    c.KeyDH = key
-    return nil
-}
-
 func (c *Client) HashPassword(password string) error {
     // Hash password
     hash, err := cryptography.HashPassword(password)
@@ -83,5 +71,16 @@ func (c *Client) ReceiveMessage(ciphertext []byte, pubkey ecdh.PublicKey) (strin
     }
 
     return string(plaintext), nil
+}
+
+func generateKey() (*ecdh.PrivateKey, error) {
+    // generate private key
+    key, err := cryptography.GenerateECDH()
+
+    // Return error if failed, else save key
+    if err != nil {
+        return nil, err
+    }
+    return key, nil
 }
 
