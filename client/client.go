@@ -4,7 +4,7 @@ import (
 	"crypto/ecdh"
 	"fmt"
 	"github.com/CraigYanitski/mescli/cryptography"
-	"github.com/CraigYanitski/mescli/typesetting"
+	"github.com/CraigYanitski/mescli/typeset"
 )
 
 type Client struct {
@@ -31,9 +31,15 @@ func (c *Client) CheckPassword(password string) bool {
     return ok
 }
 
-func (c *Client) SendMessage(plaintext string, pubkey ecdh.PublicKey) ([]byte, error) {
+func (c *Client) SendMessage(plaintext string, format []string, pubkey *ecdh.PublicKey) ([]byte, error) {
+    // Format message
+    formattedMessage, err := typeset.FormatString(plaintext, format)
+    if err != nil {
+        return nil, err
+    }
+
     // Renew Diffie-Hellman key for encryption
-    err := c.GenerateKey()
+    key, err := generateKey()
     if err != nil {
         err = fmt.Errorf("error generating DH key to send message: %v", err)
         return nil, err
@@ -42,8 +48,14 @@ func (c *Client) SendMessage(plaintext string, pubkey ecdh.PublicKey) ([]byte, e
     // Generate nonce
     nonce := cryptography.GenerateNonce(15)
 
+    // Calculate shared secret
+    secret, err := key.ECDH(pubkey)
+    if err != nil {
+        return nil, err
+    }
+
     // Encrypt message
-    ciphertext, err := cryptography.EncryptMessage(c.KeyDH.ECDH(pubkey), []byte(plaintext), nonce)
+    ciphertext, err := cryptography.EncryptMessage(secret, []byte(formattedMessage), nonce)
     if err != nil {
         err = fmt.Errorf("error encrypting message: %v", err)
         return nil, err
@@ -52,9 +64,9 @@ func (c *Client) SendMessage(plaintext string, pubkey ecdh.PublicKey) ([]byte, e
     return ciphertext, nil
 }
 
-func (c *Client) ReceiveMessage(ciphertext []byte, pubkey ecdh.PublicKey) (string, error) {
+func (c *Client) ReceiveMessage(ciphertext []byte, pubkey *ecdh.PublicKey) (string, error) {
     // Renew Diffie-Hellman key
-    err := c.GenerateKey()
+    key, err := generateKey()
     if err != nil {
         err = fmt.Errorf("error generating DH key for decryption: %v", err)
         return "", err
@@ -63,8 +75,14 @@ func (c *Client) ReceiveMessage(ciphertext []byte, pubkey ecdh.PublicKey) (strin
     // Generate nonce
     nonce := cryptography.GenerateNonce(15)
 
+    // Calculate shared secret
+    secret, err := key.ECDH(pubkey)
+    if err != nil {
+        return "", err
+    }
+
     // Decrypt message
-    plaintext, err := cryptography.DecryptMessage(c.KeyDH.ECDH(pubkey), ciphertext, nonce)
+    plaintext, err := cryptography.DecryptMessage(secret, ciphertext, nonce)
     if err != nil {
         err = fmt.Errorf("error decrypting message: %v", err)
         return "", err
