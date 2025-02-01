@@ -2,15 +2,174 @@ package client
 
 import (
 	"crypto/ecdh"
+	"crypto/sha256"
 	"fmt"
+	"slices"
 	"github.com/CraigYanitski/mescli/cryptography"
 	"github.com/CraigYanitski/mescli/typeset"
+	"golang.org/x/crypto/hkdf"
 )
 
 type Client struct {
-    Name      string
-    password  string
-    KeyDH     *ecdh.PrivateKey
+    Name           string
+    password       string
+    identityKey    *ecdh.PrivateKey
+    signedPrekey   *ecdh.PrivateKey
+    onetimePrekey  *ecdh.PrivateKey
+    ephemeralKey   *ecdh.PrivateKey
+    Secret         []byte
+}
+
+func (c *Client) Initialise() error {
+    // generate identity key
+    key, err := cryptography.GenerateECDH()
+    if err != nil {
+        return err
+    }
+    c.identityKey = key
+
+    // generate signedPrekey
+    key, err = cryptography.GenerateECDH()
+    if err != nil {
+        return err
+    }
+    c.signedPrekey = key
+
+    // generate onetime prekey
+    key, err = cryptography.GenerateECDH()
+    if err != nil {
+        return err
+    }
+    c.onetimePrekey = key
+
+    // generate ephemeral key
+    key, err = cryptography.GenerateECDH()
+    if err != nil {
+        return err
+    }
+    c.ephemeralKey = key
+
+    return nil
+}
+
+func (c *Client) Identity() (*ecdh.PublicKey, error) {
+    if c.identityKey == nil {
+        return nil, fmt.Errorf("error returning identity key -- client not yet initialised")
+    }
+    return c.identityKey.PublicKey(), nil
+}
+
+func (c *Client) SignedPrekey() (*ecdh.PublicKey, error) {
+    if c.signedPrekey == nil {
+        return nil, fmt.Errorf("error returning signed prekey -- client not yet initialised")
+    }
+    return c.signedPrekey.PublicKey(), nil
+}
+
+func (c *Client) OnetimePrekey() (*ecdh.PublicKey, error) {
+    if c.onetimePrekey == nil {
+        return nil, fmt.Errorf("error returning one-time prekey -- client not yet initialised")
+    }
+    return c.onetimePrekey.PublicKey(), nil
+}
+
+func (c *Client) EphemeralKey() (*ecdh.PublicKey, error) {
+    if c.ephemeralKey == nil {
+        return nil, fmt.Errorf("error returning ephemeral key -- client not yet initialised")
+    }
+    return c.ephemeralKey.PublicKey(), nil
+}
+
+func (c *Client) EstablishX3DH(recipient Client) error {
+    // get recipient public keys
+    rIK, err := recipient.Identity()
+    if err != nil {
+        return err
+    }
+    rSK, err := recipient.SignedPrekey()
+    if err != nil {
+        return err
+    }
+    rOK, err := recipient.OnetimePrekey()
+    if err != nil {
+        return err
+    }
+
+    // verify signed prekey
+
+    // calculate four DH secrets
+    dh1, err := c.identityKey.ECDH(rSK)
+    if err != nil {
+        return err
+    }
+    dh2, err := c.ephemeralKey.ECDH(rIK)
+    if err != nil {
+        return err
+    }
+    dh3, err := c.ephemeralKey.ECDH(rSK)
+    if err != nil {
+        return err
+    }
+    dh4, err := c.ephemeralKey.ECDH(rOK)
+    if err != nil {
+        return err
+    }
+
+    // calculate secret key
+    concat := slices.Concat(dh1, dh2, dh3, dh4)
+    secret := make([]byte, 32)
+    _, err = hkdf.New(sha256.New, concat, nil, nil).Read(secret)
+    if err != nil {
+        return err
+    }
+
+    // save secret and return
+    c.Secret = secret
+    return nil
+}
+
+func (c *Client) CompleteX3DH(sender Client) error {
+    // get sender public keys
+    sIK, err := sender.Identity()
+    if err != nil {
+        return err
+    }
+    sEK, err := sender.EphemeralKey()
+    if err != nil {
+        return err
+    }
+
+    // verify signed prekey
+
+    // calculate four DH secrets
+    dh1, err := c.signedPrekey.ECDH(sIK)
+    if err != nil {
+        return err
+    }
+    dh2, err := c.identityKey.ECDH(sEK)
+    if err != nil {
+        return err
+    }
+    dh3, err := c.signedPrekey.ECDH(sEK)
+    if err != nil {
+        return err
+    }
+    dh4, err := c.onetimePrekey.ECDH(sEK)
+    if err != nil {
+        return err
+    }
+
+    // calculate secret key
+    concat := slices.Concat(dh1, dh2, dh3, dh4)
+    secret := make([]byte, 32)
+    _, err = hkdf.New(sha256.New, concat, nil, nil).Read(secret)
+    if err != nil {
+        return err
+    }
+
+    // save secret and return
+    c.Secret = secret
+    return nil
 }
 
 func (c *Client) HashPassword(password string) error {
