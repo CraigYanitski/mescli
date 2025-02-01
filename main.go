@@ -39,6 +39,7 @@ func main() {
     // Test printing to terminal
     fmt.Println(formattedLine)
 
+    /*
     // Separate tests
     fmt.Printf("\n---------------\n\n")
 
@@ -161,5 +162,33 @@ func main() {
         panic(err)
     }
     result, _ = typeset.FormatString("\nDiffie-Hellman exchange complete", []string{"italics", "green"})
+    fmt.Println(result)
+    */
+    
+    // Separate tests
+    fmt.Printf("\n---------------\n\n")
+
+    // Initialise clients in conversation
+    alice := client.Client{Name: "Alice"}
+    _ = alice.Initialise()
+    bob := client.Client{Name: "Bob"}
+    _ = bob.Initialise()
+
+    // Perform extended triple Diffie-Hellman exchange
+    alice.EstablishX3DH(bob)
+    fmt.Printf("\n%v secret key: %x\n", alice.Name, alice.Secret)
+    bob.CompleteX3DH(alice)
+    fmt.Printf("%v secret key: %x\n", bob.Name, bob.Secret)
+
+    // Check if exchange was successful
+    // Confirm whether or not they are equal, and thus the exchange is complete
+    if !bytes.Equal(alice.Secret, bob.Secret) {
+        err, _ := typeset.FormatString("\nError in establishing X3DH exchange! Secrets are not equal!!", 
+            []string{"italics", "red"})
+        // fmt.Println(err)
+        panic(err)
+    }
+    result, _ := typeset.FormatString("\nExtended triple Diffie-Hellman exchange complete", 
+        []string{"italics", "green"})
     fmt.Println(result)
 }
