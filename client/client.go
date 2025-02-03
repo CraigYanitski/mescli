@@ -1,10 +1,12 @@
 package client
 
 import (
+	"bytes"
 	"crypto/ecdh"
 	"crypto/sha256"
 	"fmt"
 	"slices"
+
 	"github.com/CraigYanitski/mescli/cryptography"
 	"github.com/CraigYanitski/mescli/typeset"
 	"golang.org/x/crypto/hkdf"
@@ -18,6 +20,9 @@ type Client struct {
     onetimePrekey  *ecdh.PrivateKey
     ephemeralKey   *ecdh.PrivateKey
     Secret         []byte
+    root_ratchet    *cryptography.Ratchet
+    send_ratchet    *cryptography.Ratchet
+    recv_ratchet    *cryptography.Ratchet
 }
 
 func (c *Client) Initialise() error {
@@ -123,8 +128,20 @@ func (c *Client) EstablishX3DH(recipient Client) error {
         return err
     }
 
-    // save secret and return
+    // save secret
     c.Secret = secret
+
+    // initialise root ratchet
+    c.root_ratchet = &cryptography.Ratchet{}
+    c.root_ratchet.NewKDF(secret, nil, nil)
+
+    // initialise sending ratchet
+    sendSecret, err := c.root_ratchet.Extract(nil, nil)
+    if err != nil {
+        return err
+    }
+    c.send_ratchet = &cryptography.Ratchet{}
+    c.send_ratchet.NewKDF(sendSecret, nil, nil)
     return nil
 }
 
@@ -169,6 +186,18 @@ func (c *Client) CompleteX3DH(sender Client) error {
 
     // save secret and return
     c.Secret = secret
+
+    // initialise root ratchet
+    c.root_ratchet = &cryptography.Ratchet{}
+    c.root_ratchet.NewKDF(secret, nil, nil)
+
+    // initialise receiving ratchet
+    recvSecret, err := c.root_ratchet.Extract(nil, nil)
+    if err != nil {
+        return err
+    }
+    c.recv_ratchet = &cryptography.Ratchet{}
+    c.recv_ratchet.NewKDF(recvSecret, nil, nil)
     return nil
 }
 
@@ -203,9 +232,7 @@ func (c *Client) SendMessage(plaintext string, format []string, pubkey *ecdh.Pub
         err = fmt.Errorf("error generating DH key to send message: %v", err)
         return nil, err
     }
-
-    // Generate nonce
-    nonce := cryptography.GenerateNonce(15)
+    key = c.identityKey
 
     // Calculate shared secret
     secret, err := key.ECDH(pubkey)
@@ -213,8 +240,20 @@ func (c *Client) SendMessage(plaintext string, format []string, pubkey *ecdh.Pub
         return nil, err
     }
 
+    // Make salt
+    salt := make([]byte, len(secret))
+    for i := 0; i < len(secret); i++ {
+        salt[i] = secret[i] ^ 0xff
+    }
+
+    // Generate key and iv
+    sendKey, iv, err := c.send_ratchet.Extract(secret, salt, nil)
+    if err != nil {
+        return nil, err
+    }
+
     // Encrypt message
-    ciphertext, err := cryptography.EncryptMessage(secret, []byte(formattedMessage), nonce)
+    ciphertext, err := cryptography.EncryptMessage(sendKey, []byte(formattedMessage), iv)
     if err != nil {
         err = fmt.Errorf("error encrypting message: %v", err)
         return nil, err
@@ -230,9 +269,7 @@ func (c *Client) ReceiveMessage(ciphertext []byte, pubkey *ecdh.PublicKey) (stri
         err = fmt.Errorf("error generating DH key for decryption: %v", err)
         return "", err
     }
-
-    // Generate nonce
-    nonce := cryptography.GenerateNonce(15)
+    key = c.identityKey
 
     // Calculate shared secret
     secret, err := key.ECDH(pubkey)
@@ -240,8 +277,20 @@ func (c *Client) ReceiveMessage(ciphertext []byte, pubkey *ecdh.PublicKey) (stri
         return "", err
     }
 
+    // Make salt
+    salt := make([]byte, len(secret))
+    for i := 0; i < len(secret); i++ {
+        salt[i] = secret[i] ^ 0xff
+    }
+
+    // Generate key and iv
+    recvKey, iv, err := c.send_ratchet.Extract(secret, salt, nil)
+    if err != nil {
+        return "", err
+    }
+
     // Decrypt message
-    plaintext, err := cryptography.DecryptMessage(secret, ciphertext, nonce)
+    plaintext, err := cryptography.DecryptMessage(recvKey, ciphertext, iv)
     if err != nil {
         err = fmt.Errorf("error decrypting message: %v", err)
         return "", err
