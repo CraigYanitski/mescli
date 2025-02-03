@@ -1,12 +1,16 @@
 package cryptography
 
 import (
-    "crypto/aes"
-    "crypto/cipher"
-    "crypto/ecdh"
-    "crypto/rand"
-    "fmt"
-    "golang.org/x/crypto/bcrypt"
+	"crypto/aes"
+	"crypto/cipher"
+	"crypto/ecdh"
+	"crypto/rand"
+	"crypto/sha256"
+	"fmt"
+	"io"
+
+	"golang.org/x/crypto/bcrypt"
+	"golang.org/x/crypto/hkdf"
 )
 
 func HashPassword(password string) (string, error) {
@@ -101,5 +105,38 @@ func DecryptMessage(key, ciphertext, nonce []byte) (plaintext []byte, err error)
 	}
 
 	return plaintext, nil
+}
+
+type Ratchet struct {
+    // This is a KDF reader that will be used to generate new keys
+    kdf  io.Reader
+    // This is the root key to be concatenated with the input data
+    key  []byte
+}
+
+// This is a function to create a new KDF Reader from which keys can be read
+func (r *Ratchet) NewKDF(secret, salt, info []byte) {
+    r.key = secret
+    r.kdf = hkdf.New(sha256.New, secret, salt, info)
+}
+
+// This function performs an extract and expand on the KDF to derive a new key and initialisation vector
+func (r *Ratchet) Extract(input, salt, info []byte) ([]byte, []byte, error) {
+    secret := append(r.key, input...)
+    // kdf := hkdf.Extract(sha256.New, secret, salt)
+    kdfKey := hkdf.Extract(sha256.New, secret, salt)
+    r.key = kdfKey
+    r.kdf = hkdf.Expand(sha256.New, kdfKey, info)
+    key := make([]byte, 32)
+    iv := make([]byte, 15)
+    _, err := r.kdf.Read(key)
+    if err != nil {
+        return nil, nil, err
+    }
+    _, err = r.kdf.Read(iv)
+    if err != nil {
+        return nil, nil, err
+    }
+    return key, iv, nil
 }
 
