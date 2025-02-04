@@ -1,11 +1,19 @@
 # MESCLI
 ---
 
+## Introduction
+
 MESCLI will be a CLI messaging app, and is currently in development.
 I want secure end-to-end encryption of the messages, as well as a double ratchet for improved security.
 There will preferably be markup support, eventually including a maths mode.
 It is not yet known whether a server will be made public.
 More likely than not, this will have iterations over several stages.
+
+## Motivation
+
+I am fascinated by cryptology, so I wanted to attempt my own implementation of an end-to-end messaging 
+service.
+
 
 ## Development
 
@@ -13,12 +21,13 @@ Since the full project is rather complex, I will focus on a few features for the
 Many of the more complex features making it useful will be deferred to a later release.
 
 - [x] Format text with ANSI codes
-- [ ] Generate client- and server-side keys
-- [ ] Synchronise client KDFs
-- [ ] Encrypt messages before sending through server
-- [ ] Decrypt server response
-- [ ] Format display -- create TUI
+- [x] Generate client- and server-side keys
+- [x] Synchronise client KDFs
+- [x] Encrypt messages before sending through server
+- [x] Decrypt server response
+- [x] Format display -- create TUI
 - [ ] ~Format maths env~ DEFERRED
+- [ ] ~Create a TUI (possibly using bubbletea)~ DEFERRED
 - [ ] ~Allow non-local users~ DEFERRED
 - [ ] ~Use DH generation for each message with KDF~ DEFERRED
 
@@ -32,3 +41,15 @@ until a much later date.
 
 There are obvious legal reasons for and against full end-to-end encryption on a public service.
 I do not want to go through this just for a small project; I just want to test a double-ratchet encryption.
+
+## Contributing
+
+### clone the repo
+
+```bash
+git clone https://github.com/CraigYanitski/mescli@latest
+cd mescli
+```
+
+Then create some tests for your contribution and submit a pull request.
+
