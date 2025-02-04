@@ -1,10 +1,11 @@
 package main
 
 import (
-    "bytes"
-    "fmt"
-    "github.com/CraigYanitski/mescli/client"
-    "github.com/CraigYanitski/mescli/typeset"
+	"fmt"
+	"strings"
+
+	"github.com/CraigYanitski/mescli/client"
+	"github.com/CraigYanitski/mescli/typeset"
 )
 
 func main() {
@@ -31,29 +32,102 @@ func main() {
     // Test prelude
     fmt.Printf("\n---------------\n")
     fmt.Println("X3DH test")
-    fmt.Printf("---------------\n\n")
+    fmt.Printf("---------------\n")
 
     // Initialise clients in conversation
-    alice := client.Client{Name: "Alice"}
+    alice := &client.Client{Name: "Alice"}
     _ = alice.Initialise()
-    bob := client.Client{Name: "Bob"}
+    bob := &client.Client{Name: "Bob"}
     _ = bob.Initialise()
 
     // Perform extended triple Diffie-Hellman exchange
-    alice.EstablishX3DH(bob)
-    fmt.Printf("%v's secret key: %x\n", alice.Name, alice.Secret)
-    bob.CompleteX3DH(alice)
-    fmt.Printf("%v's secret key: %x\n", bob.Name, bob.Secret)
+    _ = alice.EstablishX3DH(bob)
+    fmt.Printf("\nX3DH initialised\n")
+    _ = bob.CompleteX3DH(alice)
+    fmt.Printf("\nX3DH established\n")
 
     // Check if exchange was successful
     // Confirm whether or not they are equal, and thus the exchange is complete
     var result string
-    if !bytes.Equal(alice.Secret, bob.Secret) {
-        result, _ = typeset.FormatString("\nError in establishing X3DH exchange! Secrets are not equal!!", 
-            []string{"italics", "red"})
-    } else {
-        result, _ = typeset.FormatString("\nExtended triple Diffie-Hellman exchange complete", 
+    if alice.CheckSecretEqual(bob) {
+        result, _ = typeset.FormatString("\nDiffie-Hellman secrets match - extended triple Diffie-Hellman exchange complete", 
             []string{"italics", "green"})
+    } else {
+        result, _ = typeset.FormatString("\nDiffie-Hellman secrets don't match - error in establishing X3DH exchange! Secrets are not equal!!", 
+            []string{"italics", "red"})
+    }
+    fmt.Println(result)
+
+    // Test prelude
+    fmt.Printf("\n---------------\n")
+    fmt.Println("Encryption test")
+    fmt.Printf("---------------\n")
+
+    // Try to send a message from Alice to Bob
+    alicePub, _ := alice.Identity()
+    bobPub, _ := bob.Identity()
+    message := "Hi Bob!!"
+    ciphertext, err := alice.SendMessage(message, []string{"blue"}, bobPub)
+    if err != nil {
+        panic(err)
+    }
+    plaintext, err := bob.ReceiveMessage(ciphertext, alicePub)
+    if err != nil {
+        panic(err)
+    }
+
+    // Define progress strings
+    initMessage, _ := typeset.FormatString("\ninitial message: ", []string{"yellow", "bold"})
+    initMessage += "%s\n"
+    encrMessage, _ := typeset.FormatString("\nencrypted message: ", []string{"yellow", "bold"})
+    encrMessage += "0x%x\n"
+    decrMessage, _ := typeset.FormatString("\ndecrypted message: ", []string{"yellow", "bold"})
+    decrMessage += "%s\n"
+
+    // Print progress
+    fmt.Printf(initMessage, message)
+    fmt.Printf(encrMessage, ciphertext)
+    fmt.Printf(decrMessage, plaintext)
+
+    // Compare result
+    if strings.Contains(plaintext, message) {
+        result, _ = typeset.FormatString("\nMessage Encryption successful!!", []string{"green"})
+    } else {
+        result, _ = typeset.FormatString("\nError in message encryption!", []string{"red"})
+    }
+    fmt.Println(result)
+
+    // Test prelude
+    fmt.Printf("\n---------------\n")
+    fmt.Println("Message length test")
+    fmt.Printf("---------------\n")
+
+    // Try to send a message from Alice to Bob
+    message = "I am wondering about how much text I can put in a message before it encryption truncates. " +
+              "There is obviously some entropy limit that cannot be surpassed given the SHA256 hashing function. " +
+              "Perhaps this sentence will not make it through the transmission? " +
+              "I should start splitting the message into chunks before finishing the encryption. " +
+              "This message is clearly a good way to test this functionality."
+    ciphertext, err = alice.SendMessage(message, []string{}, bobPub)
+    if err != nil {
+        panic(err)
+    }
+    plaintext, err = bob.ReceiveMessage(ciphertext, alicePub)
+    if err != nil {
+        panic(err)
+    }
+
+    // Print progress
+    fmt.Printf(initMessage, message)
+    fmt.Printf(encrMessage, ciphertext)
+    fmt.Printf(decrMessage, plaintext)
+
+    // Compare result
+    if strings.Contains(plaintext, message) {
+        result, _ = typeset.FormatString("\nMessage Encryption successful!!", []string{"italics", "green"})
+    } else {
+        result, _ = typeset.FormatString("\nError in message encryption!", []string{"italics", "red"})
     }
     fmt.Println(result)
 }
+
