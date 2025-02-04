@@ -19,7 +19,7 @@ type Client struct {
     signedPrekey   *ecdh.PrivateKey
     onetimePrekey  *ecdh.PrivateKey
     ephemeralKey   *ecdh.PrivateKey
-    Secret         []byte
+    secret         []byte
     root_ratchet    *cryptography.Ratchet
     send_ratchet    *cryptography.Ratchet
     recv_ratchet    *cryptography.Ratchet
@@ -85,7 +85,7 @@ func (c *Client) EphemeralKey() (*ecdh.PublicKey, error) {
     return c.ephemeralKey.PublicKey(), nil
 }
 
-func (c *Client) EstablishX3DH(recipient Client) error {
+func (c *Client) EstablishX3DH(recipient *Client) error {
     // get recipient public keys
     rIK, err := recipient.Identity()
     if err != nil {
@@ -129,14 +129,14 @@ func (c *Client) EstablishX3DH(recipient Client) error {
     }
 
     // save secret
-    c.Secret = secret
+    c.secret = secret
 
     // initialise root ratchet
     c.root_ratchet = &cryptography.Ratchet{}
     c.root_ratchet.NewKDF(secret, nil, nil)
 
     // initialise sending ratchet
-    sendSecret, err := c.root_ratchet.Extract(nil, nil)
+    sendSecret, _, err := c.root_ratchet.Extract(nil, nil, nil)
     if err != nil {
         return err
     }
@@ -145,7 +145,7 @@ func (c *Client) EstablishX3DH(recipient Client) error {
     return nil
 }
 
-func (c *Client) CompleteX3DH(sender Client) error {
+func (c *Client) CompleteX3DH(sender *Client) error {
     // get sender public keys
     sIK, err := sender.Identity()
     if err != nil {
@@ -185,20 +185,24 @@ func (c *Client) CompleteX3DH(sender Client) error {
     }
 
     // save secret and return
-    c.Secret = secret
+    c.secret = secret
 
     // initialise root ratchet
     c.root_ratchet = &cryptography.Ratchet{}
     c.root_ratchet.NewKDF(secret, nil, nil)
 
     // initialise receiving ratchet
-    recvSecret, err := c.root_ratchet.Extract(nil, nil)
+    recvSecret, _, err := c.root_ratchet.Extract(nil, nil, nil)
     if err != nil {
         return err
     }
     c.recv_ratchet = &cryptography.Ratchet{}
     c.recv_ratchet.NewKDF(recvSecret, nil, nil)
     return nil
+}
+
+func (c *Client) CheckSecretEqual(contact *Client) bool {
+    return bytes.Equal(c.secret, contact.secret)
 }
 
 func (c *Client) HashPassword(password string) error {
@@ -284,7 +288,7 @@ func (c *Client) ReceiveMessage(ciphertext []byte, pubkey *ecdh.PublicKey) (stri
     }
 
     // Generate key and iv
-    recvKey, iv, err := c.send_ratchet.Extract(secret, salt, nil)
+    recvKey, iv, err := c.recv_ratchet.Extract(secret, salt, nil)
     if err != nil {
         return "", err
     }
