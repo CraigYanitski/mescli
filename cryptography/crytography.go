@@ -13,6 +13,10 @@ import (
 	"golang.org/x/crypto/hkdf"
 )
 
+const (
+    nonceSize = 15
+)
+
 func HashPassword(password string) (string, error) {
 	// Hash password a specified number of times
     hash, err := bcrypt.GenerateFromPassword([]byte(password), 13)
@@ -75,7 +79,7 @@ func EncryptMessage(key, plaintext, nonce []byte) (ciphertext []byte, err error)
 	}
 
     // create new GCM cipher
-	aesgcm, err := cipher.NewGCM(block)
+	aesgcm, err := cipher.NewGCMWithNonceSize(block, nonceSize)
 	if err != nil {
 		return nil, err
 	}
@@ -93,7 +97,7 @@ func DecryptMessage(key, ciphertext, nonce []byte) (plaintext []byte, err error)
 	}
 
     // create new GCM cipher
-	aesaead, err := cipher.NewGCM(block)
+	aesaead, err := cipher.NewGCMWithNonceSize(block, nonceSize)
 	if err != nil {
 		return nil, err
 	}
@@ -121,15 +125,15 @@ func (r *Ratchet) NewKDF(secret, salt, info []byte) {
 }
 
 // This function performs an extract and expand on the KDF to derive a new key and initialisation vector
-func (r *Ratchet) Extract(input, salt, info []byte) ([]byte, []byte, error) {
+func (r *Ratchet) Extract(input, salt, info []byte) (key []byte, iv []byte, err error) {
     secret := append(r.key, input...)
     // kdf := hkdf.Extract(sha256.New, secret, salt)
     kdfKey := hkdf.Extract(sha256.New, secret, salt)
     r.key = kdfKey
     r.kdf = hkdf.Expand(sha256.New, kdfKey, info)
-    key := make([]byte, 32)
-    iv := make([]byte, 15)
-    _, err := r.kdf.Read(key)
+    key = make([]byte, 32)
+    iv = make([]byte, nonceSize)
+    _, err = r.kdf.Read(key)
     if err != nil {
         return nil, nil, err
     }
