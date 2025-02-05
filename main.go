@@ -77,17 +77,17 @@ func main() {
     }
 
     // Define progress strings
-    initMessage, _ := typeset.FormatString("\ninitial message: ", []string{"yellow", "bold"})
+    initMessage, _ := typeset.FormatString("\ninitial message (%d): ", []string{"yellow", "bold"})
     initMessage += "%s\n"
-    encrMessage, _ := typeset.FormatString("\nencrypted message: ", []string{"yellow", "bold"})
+    encrMessage, _ := typeset.FormatString("\nencrypted message (%d): ", []string{"yellow", "bold"})
     encrMessage += "0x%x\n"
-    decrMessage, _ := typeset.FormatString("\ndecrypted message: ", []string{"yellow", "bold"})
+    decrMessage, _ := typeset.FormatString("\ndecrypted message (%d): ", []string{"yellow", "bold"})
     decrMessage += "%s\n"
 
     // Print progress
-    fmt.Printf(initMessage, message)
-    fmt.Printf(encrMessage, ciphertext)
-    fmt.Printf(decrMessage, plaintext)
+    fmt.Printf(initMessage, len(message), message)
+    fmt.Printf(encrMessage, len(ciphertext), ciphertext)
+    fmt.Printf(decrMessage, len(plaintext), plaintext)
 
     // Compare result
     if strings.Contains(plaintext, message) {
@@ -118,9 +118,9 @@ func main() {
     }
 
     // Print progress
-    fmt.Printf(initMessage, message)
-    fmt.Printf(encrMessage, ciphertext)
-    fmt.Printf(decrMessage, plaintext)
+    fmt.Printf(initMessage, len(message), message)
+    fmt.Printf(encrMessage, len(ciphertext), ciphertext)
+    fmt.Printf(decrMessage, len(plaintext), plaintext)
 
     // Compare result
     if strings.Contains(plaintext, message) {
