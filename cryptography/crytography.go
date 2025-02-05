@@ -14,7 +14,7 @@ import (
 )
 
 const (
-    nonceSize = 15
+    NonceSize = 15
 )
 
 func HashPassword(password string) (string, error) {
