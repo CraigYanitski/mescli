@@ -20,7 +20,7 @@ func TestClientCreation(t *testing.T) {
         return ok
     }
     checkPrivate := func (i interface{}) bool {
-        _, ok := i.(ecdh.PrivateKey)
+        i, ok := i.(ecdh.PrivateKey)
         return ok
     }
 
@@ -91,14 +91,16 @@ func TestClientCreation(t *testing.T) {
 Passwords not equal...
 Inputs:    name: %v, password: %q, tryPassword: %q
 Expected:  %v
-Actual:    %v`, test.name, test.password, test.password, test.expected, false)
+Actual:    %v
+`, test.name, test.password, test.password, test.expected, false)
         } else {
             passCount++
             fmt.Printf(`
 Passwords equal
 Inputs:    name: %v, password: %q, tryPassword: %q
 Expected:  %v
-Actual:    %v`, test.name, test.password, test.password, test.expected, true)
+Actual:    %v
+`, test.name, test.password, test.password, test.expected, true)
         }
 
         tryPassword := test.password + " "
@@ -109,14 +111,16 @@ Actual:    %v`, test.name, test.password, test.password, test.expected, true)
 Passwords shouldn't be equal...
 Inputs:    name: %v, password: %q, tryPassword: %q
 Expected:  %v
-Actual:    %v`, test.name, test.password, tryPassword, test.expected, false)
+Actual:    %v
+`, test.name, test.password, tryPassword, test.expected, false)
         } else {
             passCount++
             fmt.Printf(`
 Passwords are not equal
 Inputs:    name: %v, password: %q, tryPassword: %q
 Expected:  %v
-Actual:    %v`, test.name, test.password, tryPassword, test.expected, true)
+Actual:    %v
+`, test.name, test.password, tryPassword, test.expected, true)
         }
     }
 
@@ -179,13 +183,15 @@ func TestX3DH(t *testing.T) {
             t.Errorf(`
 Inputs:    clientOneName: %v, clientTwoName: %v
 Expected:  X3DH established: %v
-Actual:    X3DH established: %v`, test.clientOneName, test.clientTwoName, true, result)
+Actual:    X3DH established: %v
+`, test.clientOneName, test.clientTwoName, true, result)
         } else {
             passCount++
             fmt.Printf(`
 Inputs:    clientOneName: %v, clientTwoName: %v
 Expected:  X3DH established: %v
-Actual:    X3DH established: %v`, test.clientOneName, test.clientTwoName, true, result)
+Actual:    X3DH established: %v
+`, test.clientOneName, test.clientTwoName, true, result)
         }
     }
 

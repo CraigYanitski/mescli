@@ -39,7 +39,7 @@ func TestBlueText(t *testing.T) {
     fmt.Println("\nTesting typesetting")
 
     for _, test := range tests {
-        fmt.Println("---------------------------------")
+        fmt.Println("----------------------------------------")
         fmt.Printf("Typesetting %q with format %q...\n", test.message, test.format)
         
         formattedMessage, err := typeset.FormatString(test.message, test.format)
@@ -66,6 +66,6 @@ Actual:    formattedMessage: %s
         }
     }
     
-	fmt.Println("=================================")
+	fmt.Println("========================================")
 	fmt.Printf("%d passed, %d failed\n", passCount, failCount)
 }

@@ -20,11 +20,11 @@ func TestPasswordHash(t *testing.T) {
     failCount := 0
     passCount := 0
 
-    fmt.Println("Testing X")
+    fmt.Println("Testing password hashing")
 
     for _, test := range tests {
         fmt.Println("----------------------------------------")
-        fmt.Printf("Hashing password %q and comparing to %q", test.password, test.tryPassword)
+        fmt.Printf("Hashing password %q and comparing to %q\n", test.password, test.tryPassword)
 
         hash, err := cryptography.HashPassword(test.password)
         if err != nil {
@@ -32,7 +32,7 @@ func TestPasswordHash(t *testing.T) {
             continue
         }
 
-        fmt.Printf("Hashed password: %s", hash)
+        fmt.Printf("Hashed password: %s\n", hash)
 
         result := cryptography.CheckPasswordHash(test.password, hash)
 
@@ -41,13 +41,15 @@ func TestPasswordHash(t *testing.T) {
             t.Errorf(`
 Inputs:    password: %q, tryPassword: %q
 Expected:  %t
-Actual:    %t`, test.password, test.tryPassword, test.expected, result)
+Actual:    %t
+`, test.password, test.tryPassword, test.expected, result)
         } else {
             passCount++
             fmt.Printf(`
 Inputs:    password: %q, tryPassword: %q
 Expected:  %t
-Actual:    %t`, test.password, test.tryPassword, test.expected, result)
+Actual:    %t
+`, test.password, test.tryPassword, test.expected, result)
         }
     }
 
@@ -71,30 +73,37 @@ func TestDHKeyGeneration(t *testing.T) {
 
     for _, test := range tests {
         fmt.Println("----------------------------------------")
-        fmt.Printf("Generating Diffie-Hellman key")
+        fmt.Println("Generating Diffie-Hellman key")
 
-        result, err := cryptography.GenerateECDH()
+        key, err := cryptography.GenerateECDH()
         if err != nil {
             t.Errorf("error generating DH key: %v", err)
         }
 
-        var keyPrivate interface{} = result
+        fmt.Printf("Private key: %x\n", key.Bytes())
+        fmt.Printf("Public key: %x\n", key.PublicKey().Bytes())
+
+        var keyPrivate interface{} = key
         _, okPrivate := keyPrivate.(*ecdh.PrivateKey)
-        var keyPublic interface{} = result.Public()
+        var keyPublic interface{} = key.Public()
         _, okPublic := keyPublic.(*ecdh.PublicKey)
+
+        result := okPrivate && okPublic
 
         if (okPrivate && okPublic) != test.expected {
             failCount++
             t.Errorf(`
 Inputs:    %v
 Expected:  %v
-Actual:    %v`, nil, test.expected, result)
+Actual:    %v
+`, nil, test.expected, result)
         } else {
             passCount++
             fmt.Printf(`
 Inputs:    %v
 Expected:  %v
-Actual:    %v`, nil, test.expected, result)
+Actual:    %v
+`, nil, test.expected, result)
         }
     }
 
@@ -144,13 +153,15 @@ func TestEncryptMessage(t *testing.T) {
             t.Errorf(`
 Inputs:    %v
 Expected:  %v
-Actual:    %x`, test.message, test.expected, ciphertext)
+Actual:    %x
+`, test.message, test.expected, ciphertext)
         } else {
             passCount++
             fmt.Printf(`
 Inputs:    %v
 Expected:  %v
-Actual:    %x`, test.message, test.expected, ciphertext)
+Actual:    %x
+`, test.message, test.expected, ciphertext)
         }
     }
 
@@ -189,17 +200,20 @@ func TestRatchetExtraction(t *testing.T) {
         t.Errorf(`
 Inputs:    secret: %v
 Expected:  %v
-Actual:    %v`, test.secret, test.expected, []int{len(key), len(iv)})
+Actual:    %v
+`, test.secret, test.expected, []int{len(key), len(iv)})
     } else {
         //passCount++
         fmt.Printf(`
-Inputs:    %v
+Inputs:    secret: %v
 Expected:  %v
-Actual:    %v`, test.secret, test.expected, []int{len(key), len(iv)})
+Actual:    %v
+`, test.secret, test.expected, []int{len(key), len(iv)})
         //}
     }
 
     fmt.Println("========================================")
+    fmt.Print("\n")
     //fmt.Printf("%d passed, %d failed\n", passCount, failCount)
 }
 
