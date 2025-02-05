@@ -20,9 +20,9 @@ type Client struct {
     onetimePrekey  *ecdh.PrivateKey
     ephemeralKey   *ecdh.PrivateKey
     secret         []byte
-    root_ratchet    *cryptography.Ratchet
-    send_ratchet    *cryptography.Ratchet
-    recv_ratchet    *cryptography.Ratchet
+    root_ratchet   *cryptography.Ratchet
+    send_ratchet   *cryptography.Ratchet
+    recv_ratchet   *cryptography.Ratchet
 }
 
 func (c *Client) Initialise() error {
