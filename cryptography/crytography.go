@@ -79,7 +79,7 @@ func EncryptMessage(key, plaintext, nonce []byte) (ciphertext []byte, err error)
 	}
 
     // create new GCM cipher
-	aesgcm, err := cipher.NewGCMWithNonceSize(block, nonceSize)
+	aesgcm, err := cipher.NewGCMWithNonceSize(block, NonceSize)
 	if err != nil {
 		return nil, err
 	}
@@ -97,7 +97,7 @@ func DecryptMessage(key, ciphertext, nonce []byte) (plaintext []byte, err error)
 	}
 
     // create new GCM cipher
-	aesaead, err := cipher.NewGCMWithNonceSize(block, nonceSize)
+	aesaead, err := cipher.NewGCMWithNonceSize(block, NonceSize)
 	if err != nil {
 		return nil, err
 	}
@@ -132,7 +132,7 @@ func (r *Ratchet) Extract(input, salt, info []byte) (key []byte, iv []byte, err 
     r.key = kdfKey
     r.kdf = hkdf.Expand(sha256.New, kdfKey, info)
     key = make([]byte, 32)
-    iv = make([]byte, nonceSize)
+    iv = make([]byte, NonceSize)
     _, err = r.kdf.Read(key)
     if err != nil {
         return nil, nil, err
