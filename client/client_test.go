@@ -1,6 +1,7 @@
 package client_test
 
 import (
+	"crypto"
 	"crypto/ecdh"
 	"fmt"
 	"testing"
@@ -16,7 +17,7 @@ func TestClientCreation(t *testing.T) {
     }
 
     checkPublic := func (i interface{}) bool {
-        _, ok := i.(ecdh.PublicKey)
+        _, ok := i.(crypto.PublicKey)
         return ok
     }
     checkPrivate := func (i interface{}) bool {
@@ -32,7 +33,7 @@ func TestClientCreation(t *testing.T) {
     failCount := 0
     passCount := 0
 
-    fmt.Println("Testing Client creation")
+    fmt.Println("\n\nTesting Client creation")
 
     for _, test := range tests {
         fmt.Println("----------------------------------------")
@@ -45,44 +46,56 @@ func TestClientCreation(t *testing.T) {
         ik, err := c.Identity()
         if err != nil {
             t.Errorf("error getting client %v's public identity key: %v", c.Name, err)
+            continue
         }
         spk, err := c.SignedPrekey()
         if err != nil {
             t.Errorf("error getting client %v's public signed prekey: %v", c.Name, err)
+            continue
         }
         opk, err := c.OnetimePrekey()
         if err != nil {
             t.Errorf("error getting client %v's public one-time prekey: %v", c.Name, err)
+            continue
         }
         ek, err := c.EphemeralKey()
         if err != nil {
             t.Errorf("error getting client %v's public ephemeral key: %v", c.Name, err)
+            continue
         }
         
         if checkPrivate(ik) {
             t.Error("error: client private identity key exposed!")
+            continue
         }
         if checkPrivate(spk) {
             t.Error("error: client private signed prekey exposed!")
+            continue
         }
         if checkPrivate(opk) {
             t.Error("error: client private one-time prekey exposed!")
+            continue
         }
         if checkPrivate(ek) {
             t.Error("error: client private ephemeral key exposed!")
+            continue
         }
         
         if !checkPublic(ik) {
             t.Error("error: client public identity key wrong type")
+            continue
         }
         if !checkPublic(spk) {
             t.Error("error: client public signed prekey wrong type")
+            continue
         }
         if !checkPublic(opk) {
             t.Error("error: client public one-time prekey wrong type")
+            continue
         }
         if !checkPublic(ek) {
             t.Error("error: client public ephemeral key wrong type")
+            continue
         }
 
         if !c.CheckPassword(test.password) {
@@ -112,7 +125,7 @@ Passwords shouldn't be equal...
 Inputs:    name: %v, password: %q, tryPassword: %q
 Expected:  %v
 Actual:    %v
-`, test.name, test.password, tryPassword, test.expected, false)
+`, test.name, test.password, tryPassword, false, true)
         } else {
             passCount++
             fmt.Printf(`
@@ -120,12 +133,12 @@ Passwords are not equal
 Inputs:    name: %v, password: %q, tryPassword: %q
 Expected:  %v
 Actual:    %v
-`, test.name, test.password, tryPassword, test.expected, true)
+`, test.name, test.password, tryPassword, false, false)
         }
     }
 
     fmt.Println("========================================")
-    fmt.Printf("%d passed, %d failed\n", passCount, failCount)
+    fmt.Printf("%d passed, %d failed\n\n\n", passCount, failCount)
 }
 
 func TestX3DH(t *testing.T) {
@@ -142,11 +155,11 @@ func TestX3DH(t *testing.T) {
     failCount := 0
     passCount := 0
 
-    fmt.Println("Testing Extended triple-Diffie Hellman exchange")
+    fmt.Println("\n\nTesting Extended triple-Diffie Hellman exchange")
 
     for _, test := range tests {
         fmt.Println("----------------------------------------")
-        fmt.Printf("Creating client %v", test.clientOneName)
+        fmt.Printf("Creating client %v\n", test.clientOneName)
 
         clientOne := &client.Client{Name: test.clientOneName}
         err := clientOne.Initialise()
@@ -154,7 +167,7 @@ func TestX3DH(t *testing.T) {
             t.Errorf("error initialising client %s's keys: %v", clientOne.Name, err)
         }
 
-        fmt.Printf("Creating client %v", test.clientTwoName)
+        fmt.Printf("Creating client %v\n", test.clientTwoName)
 
         clientTwo := &client.Client{Name: test.clientTwoName}
         err = clientTwo.Initialise()
@@ -196,5 +209,5 @@ Actual:    X3DH established: %v
     }
 
     fmt.Println("========================================")
-    fmt.Printf("%d passed, %d failed\n", passCount, failCount)
+    fmt.Printf("%d passed, %d failed\n\n\n", passCount, failCount)
 }

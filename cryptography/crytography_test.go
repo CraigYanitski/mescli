@@ -20,7 +20,7 @@ func TestPasswordHash(t *testing.T) {
     failCount := 0
     passCount := 0
 
-    fmt.Println("Testing password hashing")
+    fmt.Println("\n\nTesting password hashing")
 
     for _, test := range tests {
         fmt.Println("----------------------------------------")
@@ -54,7 +54,7 @@ Actual:    %t
     }
 
     fmt.Println("========================================")
-    fmt.Printf("%d passed, %d failed\n", passCount, failCount)
+    fmt.Printf("%d passed, %d failed\n\n\n", passCount, failCount)
 }
 
 func TestDHKeyGeneration(t *testing.T) {
@@ -69,7 +69,7 @@ func TestDHKeyGeneration(t *testing.T) {
     failCount := 0
     passCount := 0
 
-    fmt.Println("Testing Diffie-Hellman key generation")
+    fmt.Println("\n\nTesting Diffie-Hellman key generation")
 
     for _, test := range tests {
         fmt.Println("----------------------------------------")
@@ -108,7 +108,7 @@ Actual:    %v
     }
 
     fmt.Println("========================================")
-    fmt.Printf("%d passed, %d failed\n", passCount, failCount)
+    fmt.Printf("%d passed, %d failed\n\n\n", passCount, failCount)
 }
 
 func TestEncryptMessage(t *testing.T) {
@@ -127,7 +127,7 @@ func TestEncryptMessage(t *testing.T) {
     failCount := 0
     passCount := 0
 
-    fmt.Println("Testing message encryption")
+    fmt.Println("\n\nTesting message encryption")
 
     for _, test := range tests {
         fmt.Println("----------------------------------------")
@@ -148,25 +148,25 @@ func TestEncryptMessage(t *testing.T) {
             t.Errorf("error encrypting message: %v", err)
         }
 
-        if string(ciphertext) != test.message {
+        if string(ciphertext) == test.message {
             failCount++
             t.Errorf(`
 Inputs:    %v
 Expected:  %v
-Actual:    %x
+Actual:    %#x
 `, test.message, test.expected, ciphertext)
         } else {
             passCount++
             fmt.Printf(`
 Inputs:    %v
 Expected:  %v
-Actual:    %x
+Actual:    %#x
 `, test.message, test.expected, ciphertext)
         }
     }
 
     fmt.Println("========================================")
-    fmt.Printf("%d passed, %d failed\n", passCount, failCount)
+    fmt.Printf("%d passed, %d failed\n\n\n", passCount, failCount)
 }
 
 func TestRatchetExtraction(t *testing.T) {
@@ -180,7 +180,7 @@ func TestRatchetExtraction(t *testing.T) {
     //failCount := 0
     //passCount := 0
 
-    fmt.Println("Testing cryptographic ratchet creation and key extraction")
+    fmt.Println("\n\nTesting cryptographic ratchet creation and key extraction")
 
     //for _, test := range tests {
     fmt.Println("----------------------------------------")
@@ -213,7 +213,7 @@ Actual:    %v
     }
 
     fmt.Println("========================================")
-    fmt.Print("\n")
+    fmt.Print("\n\n\n")
     //fmt.Printf("%d passed, %d failed\n", passCount, failCount)
 }
 
