@@ -142,8 +142,10 @@ func initialModel() model {
     ta.Placeholder = "Message"
     ta.Focus()
 
-    ta.Prompt = "|"
+    ta.Prompt = "| "
     ta.CharLimit = 256
+
+    ta.FocusedStyle.Prompt = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("220"))
 
     ta.SetWidth(30)
     ta.SetHeight(3)
@@ -153,8 +155,8 @@ func initialModel() model {
     ta.ShowLineNumbers = false
 
     vp := viewport.New(30, 5)
-    vp.SetContent(`Welcome to the chat room!
-Type a message and press Enter to send.`)
+    vp.SetContent("Welcome to the chat room!\nType a message and press Enter to send.")
+    vp.Style.Bold(true)
     
     ta.KeyMap.InsertNewline.SetEnabled(false)
 
@@ -197,10 +199,16 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
             fmt.Println(m.textarea.Value())
             return m, tea.Quit
         case tea.KeyEnter:
-            m.messages = append(m.messages, m.senderStyle.Render("You: ") + m.textarea.Value())
-            m.viewport.SetContent(lipgloss.NewStyle().Width(m.viewport.Width).Render(strings.Join(m.messages, "\n")))
-            m.textarea.Reset()
-            m.viewport.GotoBottom()
+            if strings.TrimSpace(m.textarea.Value()) != "" {
+                m.viewport.Style.Bold(false)
+                m.messages = append(m.messages, m.senderStyle.Render("You: ") + m.textarea.Value())
+                m.viewport.SetContent(lipgloss.NewStyle().Width(m.viewport.Width).
+                    Render(strings.Join(m.messages, "\n")))
+                m.textarea.Reset()
+                m.viewport.GotoBottom()
+            } else {
+                m.textarea.Reset()
+            }
         }
     case errMsg:
         m.err = msg
