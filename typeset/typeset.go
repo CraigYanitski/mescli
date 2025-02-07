@@ -44,52 +44,6 @@ const (
     BackDefault      ansiCMD = 49
 )
 
-/*
-type feature int
-
-const (
-    Default         feature = iota
-    Bold 
-    Faint 
-    Italics 
-    Underline
-    Blink
-    _
-    Inverse 
-    Hidden
-    Crossout 
-    DoubleUnderline feature = 21
-    NotItalics      feature = 23
-    NotUnderline    feature = 24
-    NotBlink        feature = 25
-    NotInverse      feature = 27
-    NotHidden       feature = 28
-    NotCrossout     feature = 29
-)
-
-type color int 
-
-const (
-    Black   color = iota
-    Red
-    Green
-    Yellow
-    Blue 
-    Magenta 
-    Cyan 
-    White 
-    _
-    Default
-)
-
-type cground int 
-
-const (
-    Fore cground = iota + 3
-    Back
-)
-*/
-
 func formatANSI(codes []ansiCMD) (string, error) {
     // Start ANSI sequence
     ansi := "\033["
@@ -116,9 +70,7 @@ func getCode(format string) (ansiCMD, error) {
     // Switch depending on input format
     switch strings.ToLower(strings.Replace(format, " ", "", -1)) {
     // Behaviour codes
-    case "reset":
-        fallthrough
-    case "default":
+    case "reset", "default":
         code = Normal
     case "bold":
         code = Bold
@@ -151,37 +103,21 @@ func getCode(format string) (ansiCMD, error) {
     case "notcrossout":
         code = NotCrossOut
     // Foreground color codes
-    case "black":
-        fallthrough
-    case "foreblack":
+    case "black", "foreblack":
         code = ForeBlack
-    case "red":
-        fallthrough
-    case "forered":
+    case "red", "forered":
         code = ForeRed
-    case "green":
-        fallthrough
-    case "foregreen":
+    case "green", "foregreen":
         code = ForeGreen
-    case "yellow":
-        fallthrough
-    case "foreyellow":
+    case "yellow", "foreyellow":
         code = ForeYellow
-    case "blue":
-        fallthrough
-    case "foreblue":
+    case "blue", "foreblue":
         code = ForeBlue
-    case "magenta":
-        fallthrough
-    case "foremagenta":
+    case "magenta", "foremagenta":
         code = ForeMagenta
-    case "cyan":
-        fallthrough
-    case "forecyan":
+    case "cyan", "forecyan":
         code = ForeCyan
-    case "white":
-        fallthrough
-    case "forewhite":
+    case "white", "forewhite":
         code = ForeWhite
     case "foredefault":
         code = ForeDefault
