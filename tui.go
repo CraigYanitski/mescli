@@ -44,25 +44,26 @@ var (
     selectedContactStyleDesc  = lipgloss.NewStyle().Italic(true).Foreground(lipgloss.Color("164"))
 
     // chat styles
-    senderStyle  = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("164"))
-    promptStyle  = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("220"))
+    converstionStyle  = lipgloss.NewStyle().Bold(true)
+    senderStyle       = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("164"))
+    promptStyle       = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("220"))
 )
 
 // additional output
 var (
-    conversationGap = "\n\n"
+    conversationWrapping = "\n%s\n\n%s\n\n%s"
     optionWrapping = optionStyle.Margin(optionMargin.height, optionMargin.width).
         Render("\nPlease choose an option\n%s\n")
-        //+
-        // subtleStyle.Render("j/k, up/down: select") + dotStyle +
-        // subtleStyle.Render("enter: choose") + dotStyle +
-        // subtleStyle.Render("q, esc: quit")
+            //+
+            // subtleStyle.Render("j/k, up/down: select") + dotStyle +
+            // subtleStyle.Render("enter: choose") + dotStyle +
+            // subtleStyle.Render("q, esc: quit")
     contactWrapping = contactStyleName.Margin(contactMargin.height, contactMargin.width).
         Render("\nConversations\n%s\n")
-        //+
-        // subtleStyle.Render("j/k, up/down: select") + dotStyle +
-        // subtleStyle.Render("enter: choose") + dotStyle +
-        // subtleStyle.Render("q, esc: quit")
+            //+
+            // subtleStyle.Render("j/k, up/down: select") + dotStyle +
+            // subtleStyle.Render("enter: choose") + dotStyle +
+            // subtleStyle.Render("q, esc: quit")
 )
 type (
     errMsg error
@@ -268,10 +269,13 @@ func updateContacts(msg tea.Msg, m Model) (tea.Model, tea.Cmd) {
             c, _ := m.contacts.SelectedItem().(contact)
             m.conversation = c.name
 
-            if len(m.messages[m.conversation]) > -1 {
-                // Wrap content before setting it
+            // Wrap content before setting it
+            if len(m.messages[m.conversation]) > 0 {
                 m.viewport.SetContent(lipgloss.NewStyle().Width(m.viewport.Width).
                     Render(strings.Join(m.messages[m.conversation], "\n")))
+            } else {
+                m.viewport.SetContent(lipgloss.NewStyle().Bold(true).Render(
+                    "Welcome to the chat room!\nType a message and press Enter to send."))
             }
             m.viewport.GotoBottom()
         }
@@ -294,11 +298,11 @@ func updateConversation(msg tea.Msg, m Model) (tea.Model, tea.Cmd) {
     m.textarea, tiCmd = m.textarea.Update(msg)
     m.viewport, vpCmd = m.viewport.Update(msg)
 
-    if len(m.messages[m.conversation]) > -1 {
-        // Wrap content before setting it
-        m.viewport.SetContent(lipgloss.NewStyle().Width(m.viewport.Width).
-            Render(strings.Join(m.messages[m.conversation], "\n")))
-    }
+    // if len(m.messages[m.conversation]) > -1 {
+    //     // Wrap content before setting it
+    //     m.viewport.SetContent(lipgloss.NewStyle().Width(m.viewport.Width).
+    //         Render(strings.Join(m.messages[m.conversation], "\n")))
+    // }
     m.viewport.GotoBottom()
 
     switch msg := msg.(type) {
@@ -374,10 +378,9 @@ func contactsView(m Model) string {
 
 func conversationView(m Model) string {
     return fmt.Sprintf(
-        "\n%s\n\n%s%s%s",
-        m.conversation,
+        conversationWrapping,
+        converstionStyle.Render(m.conversation),
         m.viewport.View(),
-        conversationGap,
         m.textarea.View(),
     )
 }
@@ -395,7 +398,7 @@ func (m Model) resize(width, height int) (Model) {
         height - lipgloss.Height(contactWrapping) - 2*contactMargin.height)
     m.viewport.Width = width
     m.textarea.SetWidth(width)
-    m.viewport.Height = height - m.textarea.Height() - 2*lipgloss.Height(conversationGap)
+    m.viewport.Height = height - m.textarea.Height() - lipgloss.Height(conversationWrapping)
     return m
 }
 
