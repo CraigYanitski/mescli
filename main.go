@@ -70,8 +70,8 @@ func runTests() {
     fmt.Printf("---------------\n")
 
     // Try to send a message from Alice to Bob
-    alicePub, _ := alice.Identity()
-    bobPub, _ := bob.Identity()
+    alicePub, _ := alice.IdentityECDH()
+    bobPub, _ := bob.IdentityECDH()
     message := "Hi Bob!!"
     ciphertext, err := alice.SendMessage(message, []string{"blue"}, bobPub)
     if err != nil {

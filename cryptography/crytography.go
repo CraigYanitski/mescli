@@ -4,6 +4,8 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/ecdh"
+	"crypto/ecdsa"
+	"crypto/elliptic"
 	"crypto/rand"
 	"crypto/sha256"
 	"fmt"
@@ -57,6 +59,17 @@ func generateSalt(length int) ([]byte, error) {
 func GenerateECDH() (*ecdh.PrivateKey, error) {
     // Generate private key
     key, err := ecdh.P256().GenerateKey(rand.Reader)
+
+    // Return error if failed, else return key
+    if err != nil {
+        return nil, fmt.Errorf("error generating private key: %v", err)
+    }
+    return key, nil
+}
+
+func GenerateECDSA() (*ecdsa.PrivateKey, error) {
+    // Generate private key
+    key, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 
     // Return error if failed, else return key
     if err != nil {

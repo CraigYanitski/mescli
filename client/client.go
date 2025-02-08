@@ -3,6 +3,8 @@ package client
 import (
 	"bytes"
 	"crypto/ecdh"
+	"crypto/ecdsa"
+	"crypto/rand"
 	"crypto/sha256"
 	"fmt"
 	"slices"
@@ -15,8 +17,9 @@ import (
 type Client struct {
     Name           string
     password       string
-    identityKey    *ecdh.PrivateKey
+    identityKey    *ecdsa.PrivateKey
     signedPrekey   *ecdh.PrivateKey
+    SignedKey      []byte
     onetimePrekey  *ecdh.PrivateKey
     ephemeralKey   *ecdh.PrivateKey
     secret         []byte
@@ -27,41 +30,74 @@ type Client struct {
 
 func (c *Client) Initialise() error {
     // generate identity key
-    key, err := cryptography.GenerateECDH()
+    ik, err := generateECDSA()
     if err != nil {
         return err
     }
-    c.identityKey = key
+    c.identityKey = ik
 
     // generate signedPrekey
-    key, err = cryptography.GenerateECDH()
+    spk, err := generateECDH()
     if err != nil {
         return err
     }
-    c.signedPrekey = key
+    c.signedPrekey = spk
+
+    // sign the prekey (required for sender verification)
+    sk, err := ecdsa.SignASN1(rand.Reader, c.identityKey, encodeKey(c.signedPrekey.PublicKey()))
+    if err != nil {
+        return err
+    }
+    c.SignedKey = sk
 
     // generate onetime prekey
-    key, err = cryptography.GenerateECDH()
+    opk, err := generateECDH()
     if err != nil {
         return err
     }
-    c.onetimePrekey = key
+    c.onetimePrekey = opk
 
     // generate ephemeral key
-    key, err = cryptography.GenerateECDH()
+    ek, err := generateECDH()
     if err != nil {
         return err
     }
-    c.ephemeralKey = key
+    c.ephemeralKey = ek
 
     return nil
 }
 
-func (c *Client) Identity() (*ecdh.PublicKey, error) {
+func (c *Client) identityECDH() (*ecdh.PrivateKey, error) {
     if c.identityKey == nil {
         return nil, fmt.Errorf("error returning identity key -- client not yet initialised")
     }
-    return c.identityKey.PublicKey(), nil
+    key, err := c.identityKey.ECDH()
+    if err != nil {
+        return nil, err
+    }
+    return key, nil
+}
+
+func (c *Client) IdentityECDH() (*ecdh.PublicKey, error) {
+    if c.identityKey == nil {
+        return nil, fmt.Errorf("error returning identity key -- client not yet initialised")
+    }
+    key, err := c.identityECDH()
+    if err != nil {
+        return nil, err
+    }
+    return key.PublicKey(), nil
+}
+
+func (c *Client) IdentityECDSA() (*ecdsa.PublicKey, error) {
+    if c.identityKey == nil {
+        return nil, fmt.Errorf("error returning identity key -- client not yet initialised")
+    }
+    // key, ok := c.identityKey.Public().(ecdsa.PublicKey)
+    // if !ok {
+    //     return nil, fmt.Errorf("error in recasting identity public key to ecdsa.PublicKey")
+    // }
+    return &c.identityKey.PublicKey, nil
 }
 
 func (c *Client) SignedPrekey() (*ecdh.PublicKey, error) {
@@ -87,23 +123,38 @@ func (c *Client) EphemeralKey() (*ecdh.PublicKey, error) {
 
 func (c *Client) EstablishX3DH(recipient *Client) error {
     // get recipient public keys
-    rIK, err := recipient.Identity()
+    rIKdsa, err := recipient.IdentityECDSA()
     if err != nil {
         return err
     }
-    rSK, err := recipient.SignedPrekey()
+    rIK, err := recipient.IdentityECDH()
     if err != nil {
         return err
     }
+    rSPK, err := recipient.SignedPrekey()
+    if err != nil {
+        return err
+    }
+    rSK := recipient.SignedKey
     rOK, err := recipient.OnetimePrekey()
     if err != nil {
         return err
     }
 
     // verify signed prekey
+    if !ecdsa.VerifyASN1(rIKdsa, encodeKey(rSPK), rSK) {
+        err = fmt.Errorf("error verifying signed key during X3DH")
+        return err
+    }
+
+    // get private ECDH
+    iK, err := c.identityECDH()
+    if err != nil {
+        return err
+    }
 
     // calculate four DH secrets
-    dh1, err := c.identityKey.ECDH(rSK)
+    dh1, err := iK.ECDH(rSPK)
     if err != nil {
         return err
     }
@@ -111,7 +162,7 @@ func (c *Client) EstablishX3DH(recipient *Client) error {
     if err != nil {
         return err
     }
-    dh3, err := c.ephemeralKey.ECDH(rSK)
+    dh3, err := c.ephemeralKey.ECDH(rSPK)
     if err != nil {
         return err
     }
@@ -147,7 +198,7 @@ func (c *Client) EstablishX3DH(recipient *Client) error {
 
 func (c *Client) CompleteX3DH(sender *Client) error {
     // get sender public keys
-    sIK, err := sender.Identity()
+    sIK, err := sender.IdentityECDH()
     if err != nil {
         return err
     }
@@ -156,14 +207,18 @@ func (c *Client) CompleteX3DH(sender *Client) error {
         return err
     }
 
-    // verify signed prekey
+    // get private ECDH key
+    iK, err := c.identityECDH()
+    if err != nil {
+        return err
+    }
 
     // calculate four DH secrets
     dh1, err := c.signedPrekey.ECDH(sIK)
     if err != nil {
         return err
     }
-    dh2, err := c.identityKey.ECDH(sEK)
+    dh2, err := iK.ECDH(sEK)
     if err != nil {
         return err
     }
@@ -205,6 +260,12 @@ func (c *Client) CheckSecretEqual(contact *Client) bool {
     return bytes.Equal(c.secret, contact.secret)
 }
 
+func encodeKey(key *ecdh.PublicKey) []byte {
+    h := sha256.New()
+    h.Write(key.Bytes())
+    return h.Sum(nil)
+}
+
 func (c *Client) HashPassword(password string) error {
     // Hash password
     hash, err := cryptography.HashPassword(password)
@@ -231,12 +292,15 @@ func (c *Client) SendMessage(plaintext string, format []string, pubkey *ecdh.Pub
     }
 
     // Renew Diffie-Hellman key for encryption
-    key, err := generateKey()
+    // key, err := generateKey()
+    // if err != nil {
+    //     err = fmt.Errorf("error generating DH key to send message: %v", err)
+    //     return nil, err
+    // }
+    key, err := c.identityECDH()
     if err != nil {
-        err = fmt.Errorf("error generating DH key to send message: %v", err)
         return nil, err
     }
-    key = c.identityKey
 
     // Calculate shared secret
     secret, err := key.ECDH(pubkey)
@@ -268,12 +332,15 @@ func (c *Client) SendMessage(plaintext string, format []string, pubkey *ecdh.Pub
 
 func (c *Client) ReceiveMessage(ciphertext []byte, pubkey *ecdh.PublicKey) (string, error) {
     // Renew Diffie-Hellman key
-    key, err := generateKey()
+    // key, err := generateECDSA()
+    // if err != nil {
+    //     err = fmt.Errorf("error generating DH key for decryption: %v", err)
+    //     return "", err
+    // }
+    key, err := c.identityECDH()
     if err != nil {
-        err = fmt.Errorf("error generating DH key for decryption: %v", err)
         return "", err
     }
-    key = c.identityKey
 
     // Calculate shared secret
     secret, err := key.ECDH(pubkey)
@@ -303,9 +370,20 @@ func (c *Client) ReceiveMessage(ciphertext []byte, pubkey *ecdh.PublicKey) (stri
     return string(plaintext), nil
 }
 
-func generateKey() (*ecdh.PrivateKey, error) {
+func generateECDH() (*ecdh.PrivateKey, error) {
     // generate private key
     key, err := cryptography.GenerateECDH()
+
+    // Return error if failed, else save key
+    if err != nil {
+        return nil, err
+    }
+    return key, nil
+}
+
+func generateECDSA() (*ecdsa.PrivateKey, error) {
+    // generate private key
+    key, err := cryptography.GenerateECDSA()
 
     // Return error if failed, else save key
     if err != nil {
