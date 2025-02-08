@@ -394,6 +394,13 @@ func updateContacts(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
         case tea.KeyEnter:
             c, _ := m.contacts.SelectedItem().(contact)
             m.conversation = c.name
+
+            if len(m.messages[m.conversation]) > -1 {
+                // Wrap content before setting it
+                m.viewport.SetContent(lipgloss.NewStyle().Width(m.viewport.Width).
+                    Render(strings.Join(m.messages[m.conversation], "\n")))
+            }
+            m.viewport.GotoBottom()
         }
     case tea.WindowSizeMsg:
         m = m.resize(msg.Width, msg.Height)
@@ -494,7 +501,7 @@ func contactsView(m model) string {
 
 func conversationView(m model) string {
     return fmt.Sprintf(
-        "%s%s%s%s",
+        "%s\n%s%s%s",
         m.conversation,
         m.viewport.View(),
         conversationGap,
