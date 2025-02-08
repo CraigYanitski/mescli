@@ -23,40 +23,46 @@ type margin struct{
 var (
     optionMargin = margin{2, 1}
     contactMargin = margin{2, 1}
+    convMargin = margin{2, 1}
 )
 
 // styles
 var (
     // option styles
-    optionStyle        = lipgloss.NewStyle()
-    selectedItemStyle  = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("170"))
-    titleStyle         = lipgloss.NewStyle()
-    paginationStyle    = list.DefaultStyles().PaginationStyle
-    helpStyle          = list.DefaultStyles().HelpStyle
-    subtleStyle        = lipgloss.NewStyle().Foreground(lipgloss.Color("241"))
-    dotStyle           = lipgloss.NewStyle().Foreground(lipgloss.Color("236")).Render(" • ")
+    optionStyle          = lipgloss.NewStyle()
+    selectedOptionStyle  = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("164"))
+    titleStyle           = lipgloss.NewStyle()
+    paginationStyle      = list.DefaultStyles().PaginationStyle
+    helpStyle            = list.DefaultStyles().HelpStyle
+    subtleStyle          = lipgloss.NewStyle().Foreground(lipgloss.Color("241"))
+    dotStyle             = lipgloss.NewStyle().Foreground(lipgloss.Color("236")).Render(" • ")
 
     // contact styles
-    contactStyle              = lipgloss.NewStyle()
-    selectedContactStyleName  = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("170"))
-    selectedContactStyleDesc  = lipgloss.NewStyle().Italic(true).Foreground(lipgloss.Color("170"))
+    contactStyleName          = lipgloss.NewStyle().Foreground(lipgloss.Color("255"))
+    contactStyleDesc          = lipgloss.NewStyle().Italic(true).Foreground(lipgloss.Color("245"))
+    selectedContactStyleName  = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("164"))
+    selectedContactStyleDesc  = lipgloss.NewStyle().Italic(true).Foreground(lipgloss.Color("164"))
 
     // chat styles
-    senderStyle  = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("5"))
+    senderStyle  = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("164"))
     promptStyle  = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("220"))
 )
 
 // additional output
 var (
     conversationGap = "\n\n"
-    optionWrapping = "\nPlease choose an option\n%s\n" +
-        subtleStyle.Render("j/k, up/down: select") + dotStyle +
-        subtleStyle.Render("enter: choose") + dotStyle +
-        subtleStyle.Render("q, esc: quit")
-    contactWrapping = "\nConversations\n%s\n" +
-        subtleStyle.Render("j/k, up/down: select") + dotStyle +
-        subtleStyle.Render("enter: choose") + dotStyle +
-        subtleStyle.Render("q, esc: quit")
+    optionWrapping = optionStyle.Margin(optionMargin.height, optionMargin.width).
+        Render("\nPlease choose an option\n%s\n")
+        //+
+        // subtleStyle.Render("j/k, up/down: select") + dotStyle +
+        // subtleStyle.Render("enter: choose") + dotStyle +
+        // subtleStyle.Render("q, esc: quit")
+    contactWrapping = contactStyleName.Margin(contactMargin.height, contactMargin.width).
+        Render("\nConversations\n%s\n")
+        //+
+        // subtleStyle.Render("j/k, up/down: select") + dotStyle +
+        // subtleStyle.Render("enter: choose") + dotStyle +
+        // subtleStyle.Render("q, esc: quit")
 )
 
 func main() {
@@ -206,16 +212,16 @@ func (d optionDelegate) Render(w io.Writer, m list.Model, index int, listItem li
 		return
 	}
 
-	str := fmt.Sprintf("%s", i.str)
+	option := fmt.Sprintf("%s", i.str)
 
-	fn := optionStyle.Render
+    var str string
 	if index == m.Index() {
-		fn = func(s ...string) string {
-			return selectedItemStyle.Render("> " + strings.Join(s, " "))
-		}
-	}
+		str = selectedOptionStyle.Render("> " + option)
+	} else {
+	    str = optionStyle.Render("  " + option)
+    }
 
-	fmt.Fprint(w, fn(str))
+	fmt.Fprint(w, str)
 }
 
 // list information for contacts
@@ -234,20 +240,15 @@ func (d contactDelegate) Render(w io.Writer, m list.Model, index int, listItem l
 	}
 
     var str string
-	// name := fmt.Sprintf("%s\n  %s", i.name, i.desc)
-
-	// fn := contactStyle.Render
 	if index == m.Index() {
         str = selectedContactStyleName.Render(i.name) + "\n" + 
             selectedContactStyleDesc.Render(i.desc)
-		// fn = func(s ...string) string {
-		// 	return selectedItemStyle.Render(strings.Join(s, " "))
-		// }
 	} else {
-        str = contactStyle.Render(strings.Join([]string{i.name, i.desc}, "\n"))
+        str = contactStyleName.Render(i.name) + "\n" +
+            contactStyleDesc.Render(i.desc)
     }
 
-	fmt.Fprint(w, str)
+	fmt.Fprint(w, str + "\n")
 }
 
 // model parameters
@@ -302,26 +303,21 @@ func initialModel() model {
     ta := textarea.New()
     ta.Placeholder = "Message"
     ta.Focus()
-
     ta.Prompt = "| "
     ta.CharLimit = 256
-
     ta.FocusedStyle.Prompt = promptStyle
-
     ta.SetWidth(30)
     ta.SetHeight(3)
-
     ta.FocusedStyle.CursorLine = lipgloss.NewStyle()
-
     ta.ShowLineNumbers = false
+    ta.KeyMap.InsertNewline.SetEnabled(false)
 
     vp := viewport.New(30, 5)
     welcomeMsg := lipgloss.NewStyle().Bold(true).Render(
         "Welcome to the chat room!\nType a message and press Enter to send.",
     )
     vp.SetContent(welcomeMsg)
-    
-    ta.KeyMap.InsertNewline.SetEnabled(false)
+    vp.Style.Margin(convMargin.height, convMargin.width)
 
     return model {
         options:      o,
@@ -501,7 +497,7 @@ func contactsView(m model) string {
 
 func conversationView(m model) string {
     return fmt.Sprintf(
-        "%s\n%s%s%s",
+        "\n%s\n\n%s%s%s",
         m.conversation,
         m.viewport.View(),
         conversationGap,
@@ -522,7 +518,7 @@ func (m model) resize(width, height int) (model) {
         height - lipgloss.Height(contactWrapping) - 2*contactMargin.height)
     m.viewport.Width = width
     m.textarea.SetWidth(width)
-    m.viewport.Height = height - m.textarea.Height() - lipgloss.Height(conversationGap)
+    m.viewport.Height = height - m.textarea.Height() - 2*lipgloss.Height(conversationGap)
     return m
 }
 
