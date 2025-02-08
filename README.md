@@ -6,14 +6,15 @@
 MESCLI will be a CLI messaging app, and is currently in development.
 I want secure end-to-end encryption of the messages, as well as a double ratchet for improved security.
 There will preferably be markup support, eventually including a maths mode.
-It is not yet known whether a server will be made public.
-More likely than not, this will have iterations over several stages.
+It is not yet known whether a server will be made public (obviously a public server is necessary
+to make this functional beyond testing).
+More likely than not, this will have many iterations over several stages.
 
 ## Motivation
 
 I am fascinated by cryptology, so I wanted to attempt my own implementation of an end-to-end messaging 
 service.
-
+I will also use this as a platform to test my own cryptographic algorithms.
 
 ## Development
 
@@ -25,11 +26,15 @@ Many of the more complex features making it useful will be deferred to a later r
 - [x] Synchronise client KDFs
 - [x] Encrypt messages before sending through server
 - [x] Decrypt server response
-- [x] Format display -- create TUI
-- [ ] ~Format maths env~ DEFERRED
-- [ ] ~Create a TUI (possibly using bubbletea)~ DEFERRED
+- [x] Format display
+- [ ] Use DH generation for each message with KDF
+- [ ] Create a TUI
+  - [x] create TUI framework (bubbletea)
+  - [ ] implement Markdown rendering
+  - [ ] implement encrypted messaging
 - [ ] ~Allow non-local users~ DEFERRED
-- [ ] ~Use DH generation for each message with KDF~ DEFERRED
+  - [ ] develop server code
+- [ ] ~Format maths env~ DEFERRED
 
 ## Issues
 
@@ -44,6 +49,9 @@ I do not want to go through this just for a small project; I just want to test a
 
 ## Contributing
 
+Consider contacting me before trying to contribute.
+I am happy to review any improvements you devise.
+
 ### clone the repo
 
 ```bash
@@ -51,5 +59,6 @@ git clone https://github.com/CraigYanitski/mescli@latest
 cd mescli
 ```
 
-Then create some tests for your contribution and submit a pull request.
+Then implement a new process, create some tests for your contribution, and submit a pull request.
+I should be able to respond within a day :-)
 
