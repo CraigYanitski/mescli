@@ -189,93 +189,93 @@ func InitialModel() Model {
     var textareaKeyMap = textarea.KeyMap{
     	CharacterForward: key.NewBinding(
             key.WithKeys("right", "ctrl+f"), 
-            key.WithHelp("right", "character forward")
+            key.WithHelp("right", "character forward"),
         ),
     	CharacterBackward: key.NewBinding(
             key.WithKeys("left", "ctrl+b"), 
-            key.WithHelp("left", "character backward")
+            key.WithHelp("left", "character backward"),
         ),
     	WordForward: key.NewBinding(
-            key.WithKeys("alt+right", "alt+f"), 
-            key.WithHelp("alt+right", "word forward")
+            key.WithKeys("ctrl+right", "alt+f"), 
+            key.WithHelp("ctrl+right", "word forward"),
         ),
     	WordBackward: key.NewBinding(
-            key.WithKeys("alt+left", "alt+b"), 
-            key.WithHelp("alt+left", "word backward")
+            key.WithKeys("ctrl+left", "alt+b"), 
+            key.WithHelp("ctrl+left", "word backward"),
         ),
     	LineNext: key.NewBinding(
             key.WithKeys("down", "ctrl+n"), 
-            key.WithHelp("down", "next line")
+            key.WithHelp("down", "next line"),
         ),
     	LinePrevious: key.NewBinding(
             key.WithKeys("up", "ctrl+p"), 
-            key.WithHelp("up", "previous line")
+            key.WithHelp("up", "previous line"),
         ),
     	DeleteWordBackward: key.NewBinding(
             key.WithKeys("alt+backspace", "ctrl+w"), 
-            key.WithHelp("alt+backspace", "delete word backward")
+            key.WithHelp("alt+backspace", "delete word backward"),
         ),
     	DeleteWordForward: key.NewBinding(
             key.WithKeys("alt+delete", "alt+d"), 
-            key.WithHelp("alt+delete", "delete word forward")
+            key.WithHelp("alt+delete", "delete word forward"),
         ),
     	DeleteAfterCursor: key.NewBinding(
             key.WithKeys("ctrl+k"), 
-            key.WithHelp("ctrl+k", "delete after cursor")
+            key.WithHelp("ctrl+k", "delete after cursor"),
         ),
     	DeleteBeforeCursor: key.NewBinding(
             key.WithKeys("ctrl+u"), 
-            key.WithHelp("ctrl+u", "delete before cursor")
+            key.WithHelp("ctrl+u", "delete before cursor"),
         ),
     	InsertNewline: key.NewBinding(
-            key.WithKeys("enter", "ctrl+m"), 
-            key.WithHelp("enter", "insert newline")
+            key.WithKeys("ctrl+s"), 
+            key.WithHelp("ctrl+s", "insert newline"),
         ),
     	DeleteCharacterBackward: key.NewBinding(
             key.WithKeys("backspace", "ctrl+h"), 
-            key.WithHelp("backspace", "delete character backward")
+            key.WithHelp("backspace", "delete character backward"),
         ),
     	DeleteCharacterForward: key.NewBinding(
             key.WithKeys("delete", "ctrl+d"), 
-            key.WithHelp("delete", "delete character forward")
+            key.WithHelp("delete", "delete character forward"),
         ),
     	LineStart: key.NewBinding(
             key.WithKeys("home", "ctrl+a"), 
-            key.WithHelp("home", "line start")
+            key.WithHelp("home", "line start"),
         ),
     	LineEnd: key.NewBinding(
             key.WithKeys("end", "ctrl+e"), 
-            key.WithHelp("end", "line end")
+            key.WithHelp("end", "line end"),
         ),
     	Paste: key.NewBinding(
             key.WithKeys("ctrl+v"), 
-            key.WithHelp("ctrl+v", "paste")
+            key.WithHelp("ctrl+v", "paste"),
         ),
     	InputBegin: key.NewBinding(
             key.WithKeys("alt+<", "ctrl+home"), 
-            key.WithHelp("alt+<", "input begin")
+            key.WithHelp("alt+<", "input begin"),
         ),
     	InputEnd: key.NewBinding(
             key.WithKeys("alt+>", "ctrl+end"), 
-            key.WithHelp("alt+>", "input end")
+            key.WithHelp("alt+>", "input end"),
         ),
     
     	CapitalizeWordForward: key.NewBinding(
             key.WithKeys("alt+c"), 
-            key.WithHelp("alt+c", "capitalize word forward")
+            key.WithHelp("alt+c", "capitalize word forward"),
         ),
     	LowercaseWordForward: key.NewBinding(
             key.WithKeys("alt+l"), 
-            key.WithHelp("alt+l", "lowercase word forward")
+            key.WithHelp("alt+l", "lowercase word forward"),
         ),
     	UppercaseWordForward: key.NewBinding(
             key.WithKeys("alt+u"), 
-            key.WithHelp("alt+u", "uppercase word forward")
+            key.WithHelp("alt+u", "uppercase word forward"),
         ),
     
     	TransposeCharacterBackward: key.NewBinding(
             key.WithKeys("ctrl+t"), 
-            key.WithHelp("ctrl+t", "transpose character backward")
+            key.WithHelp("ctrl+t", "transpose character backward"),
         ),
     }
     ta.KeyMap = textareaKeyMap
@@ -293,37 +293,37 @@ func InitialModel() Model {
     vp := viewport.New(30, 5)
     viewportKeyMap := viewport.KeyMap{
 		PageDown: key.NewBinding(
-			key.WithKeys("pgdown", " ", "f"),
-			key.WithHelp("f/pgdn", "page down"),
+			key.WithKeys("pgdown"),
+			key.WithHelp("pgdn", "page down"),
 		),
 		PageUp: key.NewBinding(
-			key.WithKeys("pgup", "b"),
-			key.WithHelp("b/pgup", "page up"),
+			key.WithKeys("pgup"),
+			key.WithHelp("pgup", "page up"),
 		),
 		HalfPageUp: key.NewBinding(
-			key.WithKeys("u", "ctrl+u"),
-			key.WithHelp("u", "½ page up"),
+			key.WithKeys("ctrl+u"),
+			key.WithHelp("ctrl+u", "½ page up"),
 		),
 		HalfPageDown: key.NewBinding(
-			key.WithKeys("d", "ctrl+d"),
-			key.WithHelp("d", "½ page down"),
+			key.WithKeys("ctrl+d"),
+			key.WithHelp("ctrl+d", "½ page down"),
 		),
 		Up: key.NewBinding(
-			key.WithKeys("up", "k"),
-			key.WithHelp("↑/k", "up"),
+			key.WithKeys("ctrl+up"),
+			key.WithHelp("ctrl+↑", "up"),
 		),
 		Down: key.NewBinding(
-			key.WithKeys("down", "j"),
-			key.WithHelp("↓/j", "down"),
+			key.WithKeys("ctrl+down"),
+			key.WithHelp("ctrl+↓", "down"),
 		),
-		Left: key.NewBinding(
-			key.WithKeys("left", "h"),
-			key.WithHelp("←/h", "move left"),
-		),
-		Right: key.NewBinding(
-			key.WithKeys("right", "l"),
-			key.WithHelp("→/l", "move right"),
-		),
+		// Left: key.NewBinding(
+		// 	key.WithKeys("left", "h"),
+		// 	key.WithHelp("←/h", "move left"),
+		// ),
+		// Right: key.NewBinding(
+		// 	key.WithKeys("right", "l"),
+		// 	key.WithHelp("→/l", "move right"),
+		// ),
 	}
     vp.KeyMap = viewportKeyMap
     welcomeMsg := lipgloss.NewStyle().Bold(true).Render(
