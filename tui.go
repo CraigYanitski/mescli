@@ -12,6 +12,7 @@ import (
 	"github.com/charmbracelet/bubbles/textarea"
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
+    "github.com/charmbracelet/glamour"
 	"github.com/charmbracelet/lipgloss"
 )
 
@@ -45,6 +46,7 @@ var (
 
     // chat styles
     converstionStyle  = lipgloss.NewStyle().Bold(true)
+    outputStyle       = lipgloss.NewStyle()
     senderStyle       = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("164"))
     promptStyle       = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("220"))
 )
@@ -141,13 +143,15 @@ type Model struct {
     contacts      list.Model
     conversation  string
     // conversation
-    viewport     viewport.Model
-    messages     map[string][]string
-    textarea     textarea.Model
-    senderStyle  lipgloss.Style
+    viewport      viewport.Model
+    messages      map[string][]string
+    textarea      textarea.Model
+    senderPrompt  string
+    senderStyle   lipgloss.Style
+    Prompt        string
     // misc
-    err       error
-    Quitting  bool
+    err         error
+    Quitting    bool
 }
 
 // model initialiser
@@ -179,10 +183,10 @@ func InitialModel() Model {
     messages := make(map[string][]string)
 
     ta := textarea.New()
-    ta.Placeholder = "Message"
+    ta.Placeholder = "Enter message to send"
     ta.Focus()
     ta.Prompt = "| "
-    ta.CharLimit = 256
+    ta.CharLimit = 1024
     ta.FocusedStyle.Prompt = promptStyle
     ta.SetWidth(30)
     ta.SetHeight(3)
@@ -196,15 +200,18 @@ func InitialModel() Model {
     )
     vp.SetContent(welcomeMsg)
     vp.Style.Margin(convMargin.height, convMargin.width)
+    senderPrompt := "You: "
 
     return Model {
-        options:      o,
-        contacts:     c,
-        textarea:     ta,
-        messages:     messages,
-        viewport:     vp,
-        senderStyle:  senderStyle,
-        err:          nil,
+        options:       o,
+        contacts:      c,
+        textarea:      ta,
+        messages:      messages,
+        viewport:      vp,
+        senderStyle:   senderStyle,
+        senderPrompt:  senderPrompt,
+        Prompt:        senderStyle.Render(senderPrompt),
+        err:           nil,
     }
 }
 
@@ -303,7 +310,7 @@ func updateConversation(msg tea.Msg, m Model) (tea.Model, tea.Cmd) {
     //     m.viewport.SetContent(lipgloss.NewStyle().Width(m.viewport.Width).
     //         Render(strings.Join(m.messages[m.conversation], "\n")))
     // }
-    m.viewport.GotoBottom()
+    // m.viewport.GotoBottom()
 
     switch msg := msg.(type) {
     case tea.WindowSizeMsg:
@@ -318,11 +325,22 @@ func updateConversation(msg tea.Msg, m Model) (tea.Model, tea.Cmd) {
             return m, nil
         case tea.KeyEnter:
             if strings.TrimSpace(m.textarea.Value()) != "" {
-                m.viewport.Style.Bold(false)
+                renderer, err := glamour.NewTermRenderer(
+                    glamour.WithStylePath("tokyo-night"), 
+                    glamour.WithWordWrap(m.viewport.Width - len(m.senderPrompt)),
+                )
+                if err != nil {
+                    renderer, _ = glamour.NewTermRenderer()
+                }
+                messageMD, err := renderer.Render(m.textarea.Value())
+                if err != nil {
+                    messageMD = m.textarea.Value()
+                }
+                messageMD = strings.TrimSpace(messageMD)
+                message := m.Prompt + strings.Replace(messageMD, "m  ", "m", 1)
                 m.messages[m.conversation] = append(m.messages[m.conversation], 
-                    m.senderStyle.Render("You: ") + m.textarea.Value())
-                m.viewport.SetContent(lipgloss.NewStyle().Width(m.viewport.Width).
-                    Render(strings.Join(m.messages[m.conversation], "\n")))
+                    message)
+                m.viewport.SetContent(strings.Join(m.messages[m.conversation], "\n"))
                 m.textarea.Reset()
                 m.viewport.GotoBottom()
             } else {
