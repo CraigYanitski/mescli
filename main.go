@@ -47,7 +47,7 @@ func runTests() {
     _ = bob.Initialise()
 
     // Perform extended triple Diffie-Hellman exchange
-    _ = alice.EstablishX3DH(bob)
+    _ = alice.InitiateX3DH(bob)
     fmt.Printf("\nX3DH initialised\n")
     _ = bob.CompleteX3DH(alice)
     fmt.Printf("\nX3DH established\n")

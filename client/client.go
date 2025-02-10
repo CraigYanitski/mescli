@@ -57,13 +57,6 @@ func (c *Client) Initialise() error {
     }
     c.onetimePrekey = opk
 
-    // generate ephemeral key
-    ek, err := generateECDH()
-    if err != nil {
-        return err
-    }
-    c.ephemeralKey = ek
-
     return nil
 }
 
@@ -121,7 +114,7 @@ func (c *Client) EphemeralKey() (*ecdh.PublicKey, error) {
     return c.ephemeralKey.PublicKey(), nil
 }
 
-func (c *Client) EstablishX3DH(recipient *Client) error {
+func (c *Client) InitiateX3DH(recipient *Client) error {
     // get recipient public keys
     rIKdsa, err := recipient.IdentityECDSA()
     if err != nil {
@@ -146,6 +139,13 @@ func (c *Client) EstablishX3DH(recipient *Client) error {
         err = fmt.Errorf("error verifying signed key during X3DH")
         return err
     }
+
+    // generate ephemeral key
+    ek, err := generateECDH()
+    if err != nil {
+        return err
+    }
+    c.ephemeralKey = ek
 
     // get private ECDH
     iK, err := c.identityECDH()
