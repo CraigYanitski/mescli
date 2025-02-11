@@ -22,6 +22,7 @@ Since the full project is rather complex, I will focus on a few features for the
 Many of the more complex features making it useful will be deferred to a later release.
 
 - [x] Format text with ANSI codes
+  - [ ] replace with glamour/lipgloss
 - [x] Generate client- and server-side keys
 - [x] Synchronise client KDFs
 - [x] Encrypt messages before sending through server
@@ -35,6 +36,7 @@ Many of the more complex features making it useful will be deferred to a later r
 - [ ] ~Allow non-local users~ DEFERRED
   - [ ] develop server code
 - [ ] ~Format maths env~ DEFERRED
+  - [ ] ~use MathJax with glamour~ deferred
 
 ## Issues
 
