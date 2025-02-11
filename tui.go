@@ -3,17 +3,19 @@ package main
 import (
 	"fmt"
 	"io"
+
 	// "log"
 	"strings"
 
 	// "github.com/CraigYanitski/mescli/client"
 	// "github.com/CraigYanitski/mescli/typeset"
-	"github.com/charmbracelet/bubbles/list"
+	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/key"
+	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/textarea"
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
-    "github.com/charmbracelet/glamour"
+	"github.com/charmbracelet/glamour"
 	"github.com/charmbracelet/lipgloss"
 )
 
@@ -67,6 +69,8 @@ var (
             // subtleStyle.Render("j/k, up/down: select") + dotStyle +
             // subtleStyle.Render("enter: choose") + dotStyle +
             // subtleStyle.Render("q, esc: quit")
+    helpWrapping = helpStyle.Margin(contactMargin.height, contactMargin.width).
+        Render("\nKey Bindings\n%s\n")
 )
 type (
     errMsg error
@@ -150,10 +154,62 @@ type Model struct {
     senderPrompt  string
     senderStyle   lipgloss.Style
     Prompt        string
+    help          help.Model
+    // help
+    viewHelp  bool
     // misc
     err         error
     Quitting    bool
 }
+
+// add struct functions to implement help.KeyMap
+
+// ShortHelp returns bindings to show in the abbreviated help view. It's part
+// of the help.KeyMap interface.
+func (m Model) ShortHelp() []key.Binding {
+	kb := []key.Binding{
+		m.viewport.KeyMap.Up,
+		m.viewport.KeyMap.Down,
+	}
+
+	kb = append(kb,
+		m.viewport.KeyMap.HalfPageUp,
+		m.viewport.KeyMap.HalfPageDown,
+	)
+
+	return append(kb,
+		m.viewport.KeyMap.PageUp,
+		m.viewport.KeyMap.PageDown,
+	)
+}
+
+// FullHelp returns bindings to show the full help view. It's part of the
+// help.KeyMap interface.
+func (m Model) FullHelp() [][]key.Binding {
+	kb := [][]key.Binding{{
+		m.viewport.KeyMap.Up,
+		m.viewport.KeyMap.Down,
+        m.viewport.KeyMap.HalfPageUp,
+		m.viewport.KeyMap.HalfPageDown,
+        m.viewport.KeyMap.PageUp,
+        m.viewport.KeyMap.PageDown,
+	}}
+
+    taKB := [][]key.Binding {{
+        key.NewBinding(key.WithKeys("esc"), key.WithHelp("esc", "return to previous screen")),
+        key.NewBinding(key.WithKeys("ctrl+h"), key.WithHelp("ctrl+h", "show this help screen")),
+        m.textarea.KeyMap.Paste,
+        m.textarea.KeyMap.InsertNewline,
+        m.textarea.KeyMap.CharacterForward,
+        m.textarea.KeyMap.CharacterBackward,
+    }}
+
+	return append(kb, taKB...)
+}
+
+/////////////////
+// INITIALIZER //
+/////////////////
 
 // model initialiser
 func InitialModel() Model {
@@ -204,11 +260,11 @@ func InitialModel() Model {
             key.WithHelp("ctrl+left", "word backward"),
         ),
     	LineNext: key.NewBinding(
-            key.WithKeys("down", "ctrl+n"), 
+            key.WithKeys("down"), 
             key.WithHelp("down", "next line"),
         ),
     	LinePrevious: key.NewBinding(
-            key.WithKeys("up", "ctrl+p"), 
+            key.WithKeys("up"), 
             key.WithHelp("up", "previous line"),
         ),
     	DeleteWordBackward: key.NewBinding(
@@ -288,33 +344,33 @@ func InitialModel() Model {
     ta.SetHeight(3)
     ta.FocusedStyle.CursorLine = lipgloss.NewStyle()
     ta.ShowLineNumbers = false
-    ta.KeyMap.InsertNewline.SetEnabled(false)
+    ta.KeyMap.InsertNewline.SetEnabled(true)
 
     vp := viewport.New(30, 5)
     viewportKeyMap := viewport.KeyMap{
 		PageDown: key.NewBinding(
 			key.WithKeys("pgdown"),
-			key.WithHelp("pgdn", "page down"),
+			key.WithHelp("pgdn", "conversation page down"),
 		),
 		PageUp: key.NewBinding(
 			key.WithKeys("pgup"),
-			key.WithHelp("pgup", "page up"),
+			key.WithHelp("pgup", "conversation page up"),
 		),
 		HalfPageUp: key.NewBinding(
 			key.WithKeys("ctrl+u"),
-			key.WithHelp("ctrl+u", "½ page up"),
+			key.WithHelp("ctrl+u", "conversation ½ page up"),
 		),
 		HalfPageDown: key.NewBinding(
 			key.WithKeys("ctrl+d"),
-			key.WithHelp("ctrl+d", "½ page down"),
+			key.WithHelp("ctrl+d", "conversation ½ page down"),
 		),
 		Up: key.NewBinding(
 			key.WithKeys("ctrl+up"),
-			key.WithHelp("ctrl+↑", "up"),
+			key.WithHelp("ctrl+↑", "conversation up"),
 		),
 		Down: key.NewBinding(
 			key.WithKeys("ctrl+down"),
-			key.WithHelp("ctrl+↓", "down"),
+			key.WithHelp("ctrl+↓", "conversation down"),
 		),
 		// Left: key.NewBinding(
 		// 	key.WithKeys("left", "h"),
@@ -342,6 +398,7 @@ func InitialModel() Model {
         senderStyle:   senderStyle,
         senderPrompt:  senderPrompt,
         Prompt:        senderStyle.Render(senderPrompt),
+        help:          help.New(),
         err:           nil,
     }
 }
@@ -358,6 +415,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
     // Use the appropriate update function
     if m.Chosen == 0 {
         return updateChoices(msg, m)
+    } else if m.viewHelp {
+        return updateHelp(msg, m)
     } else if m.conversation != "" {
         return updateConversation(msg, m)
     } else {
@@ -454,6 +513,8 @@ func updateConversation(msg tea.Msg, m Model) (tea.Model, tea.Cmd) {
         case tea.KeyEsc:
             m.conversation = ""
             return m, nil
+        case tea.KeyCtrlH:
+            m.viewHelp = true
         case tea.KeyEnter:
             if strings.TrimSpace(m.textarea.Value()) != "" {
                 renderer, err := glamour.NewTermRenderer(
@@ -486,6 +547,19 @@ func updateConversation(msg tea.Msg, m Model) (tea.Model, tea.Cmd) {
     return m, tea.Batch(tiCmd, vpCmd)
 }
 
+func updateHelp(msg tea.Msg, m Model) (tea.Model, tea.Cmd) {
+    switch msg := msg.(type) {
+    case tea.KeyMsg:
+        switch msg.Type {
+        case tea.KeyCtrlC:
+            return m, tea.Quit
+        case tea.KeyEsc, tea.KeyCtrlQ:
+            m.viewHelp = false
+        }
+    }
+    return m, nil
+}
+
 //////////
 // VIEW //
 //////////
@@ -496,6 +570,8 @@ func (m Model) View() string {
         s = optionsView(m)
     } else if m.Chosen == 2 {
         s = ""
+    } else if m.viewHelp {
+        s = helpView(m)
     } else if m.conversation != "" {
         s = conversationView(m)
     } else {
@@ -532,6 +608,13 @@ func conversationView(m Model) string {
         m.viewport.View(),
         m.textarea.View(),
     )
+}
+
+func helpView(m Model) string {
+    m.help.ShowAll = true
+    help := helpStyle.Width(m.viewport.Width - 6).Margin(optionMargin.height, optionMargin.width).
+        Render(m.help.View(m))
+    return fmt.Sprintf(helpWrapping, help)
 }
 
 ///////////////////
