@@ -46,10 +46,16 @@ func runTests() {
     bob := &client.Client{Name: "Bob"}
     _ = bob.Initialise()
 
+    // get Bob's prekey package
+    bobPKP := bob.GetPrekeyPacket()
+
     // Perform extended triple Diffie-Hellman exchange
-    _ = alice.InitiateX3DH(bob)
+    aliceMP := alice.InitiateX3DH(bobPKP)
     fmt.Printf("\nX3DH initialised\n")
-    _ = bob.CompleteX3DH(alice)
+    err := bob.CompleteX3DH(aliceMP)
+    if err != nil {
+        panic(err)
+    }
     fmt.Printf("\nX3DH established\n")
 
     // Check if exchange was successful
@@ -70,8 +76,8 @@ func runTests() {
     fmt.Printf("---------------\n")
 
     // Try to send a message from Alice to Bob
-    alicePub, _ := alice.IdentityECDH()
-    bobPub, _ := bob.IdentityECDH()
+    alicePub, _ := alice.IdentityECDSA().ECDH()
+    bobPub, _ := bob.IdentityECDSA().ECDH()
     message := "Hi Bob!!"
     ciphertext, err := alice.SendMessage(message, []string{"blue"}, bobPub)
     if err != nil {

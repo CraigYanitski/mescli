@@ -60,115 +60,88 @@ func (c *Client) Initialise() error {
     return nil
 }
 
-func (c *Client) identityECDH() (*ecdh.PrivateKey, error) {
+func (c *Client) identityECDH() (*ecdh.PrivateKey) {
     if c.identityKey == nil {
-        return nil, fmt.Errorf("error returning identity key -- client not yet initialised")
+        panic(fmt.Errorf("error returning identity key -- client not yet initialised"))
     }
     key, err := c.identityKey.ECDH()
     if err != nil {
-        return nil, err
+        panic(err)
     }
-    return key, nil
+    return key
 }
 
-func (c *Client) IdentityECDH() (*ecdh.PublicKey, error) {
+func (c *Client) IdentityECDSA() (*ecdsa.PublicKey) {
     if c.identityKey == nil {
-        return nil, fmt.Errorf("error returning identity key -- client not yet initialised")
+        panic(fmt.Errorf("error returning identity key -- client not yet initialised"))
     }
-    key, err := c.identityECDH()
-    if err != nil {
-        return nil, err
-    }
-    return key.PublicKey(), nil
+    return &c.identityKey.PublicKey
 }
 
-func (c *Client) IdentityECDSA() (*ecdsa.PublicKey, error) {
-    if c.identityKey == nil {
-        return nil, fmt.Errorf("error returning identity key -- client not yet initialised")
-    }
-    // key, ok := c.identityKey.Public().(ecdsa.PublicKey)
-    // if !ok {
-    //     return nil, fmt.Errorf("error in recasting identity public key to ecdsa.PublicKey")
-    // }
-    return &c.identityKey.PublicKey, nil
-}
-
-func (c *Client) SignedPrekey() (*ecdh.PublicKey, error) {
+func (c *Client) SignedPrekey() (*ecdh.PublicKey) {
     if c.signedPrekey == nil {
-        return nil, fmt.Errorf("error returning signed prekey -- client not yet initialised")
+        panic(fmt.Errorf("error returning signed prekey -- client not yet initialised"))
     }
-    return c.signedPrekey.PublicKey(), nil
+    return c.signedPrekey.PublicKey()
 }
 
-func (c *Client) OnetimePrekey() (*ecdh.PublicKey, error) {
+func (c *Client) OnetimePrekey() (*ecdh.PublicKey) {
     if c.onetimePrekey == nil {
-        return nil, fmt.Errorf("error returning one-time prekey -- client not yet initialised")
+        panic(fmt.Errorf("error returning one-time prekey -- client not yet initialised"))
     }
-    return c.onetimePrekey.PublicKey(), nil
+    return c.onetimePrekey.PublicKey()
 }
 
-func (c *Client) EphemeralKey() (*ecdh.PublicKey, error) {
+func (c *Client) EphemeralKey() (*ecdh.PublicKey) {
     if c.ephemeralKey == nil {
-        return nil, fmt.Errorf("error returning ephemeral key -- client not yet initialised")
+        panic(fmt.Errorf("error returning ephemeral key -- client not yet initialised"))
     }
-    return c.ephemeralKey.PublicKey(), nil
+    return c.ephemeralKey.PublicKey()
 }
 
-func (c *Client) InitiateX3DH(recipient *Client) error {
+func (c *Client) InitiateX3DH(contact *PrekeyPacket) *MessagePacket {
     // get recipient public keys
-    rIKdsa, err := recipient.IdentityECDSA()
+    rIKdsa := contact.Identity
+    rIK, err := rIKdsa.ECDH()
     if err != nil {
-        return err
+        panic(err)
     }
-    rIK, err := recipient.IdentityECDH()
-    if err != nil {
-        return err
-    }
-    rSPK, err := recipient.SignedPrekey()
-    if err != nil {
-        return err
-    }
-    rSK := recipient.SignedKey
-    rOK, err := recipient.OnetimePrekey()
-    if err != nil {
-        return err
-    }
+    rSPK := contact.SignedPrekey
+    rSK := contact.SignedKey
+    rOK := contact.OnetimePrekey
 
     // verify signed prekey
     if !ecdsa.VerifyASN1(rIKdsa, encodeKey(rSPK), rSK) {
         err = fmt.Errorf("error verifying signed key during X3DH")
-        return err
+        panic(err)
     }
 
     // generate ephemeral key
     ek, err := generateECDH()
     if err != nil {
-        return err
+        panic(err)
     }
     c.ephemeralKey = ek
 
     // get private ECDH
-    iK, err := c.identityECDH()
-    if err != nil {
-        return err
-    }
+    iK := c.identityECDH()
 
     // calculate four DH secrets
     dh1, err := iK.ECDH(rSPK)
     if err != nil {
-        return err
+        panic(err)
     }
     dh2, err := c.ephemeralKey.ECDH(rIK)
     if err != nil {
-        return err
+        panic(err)
     }
     dh3, err := c.ephemeralKey.ECDH(rSPK)
     if err != nil {
-        return err
+        panic(err)
     }
     dh4, err := c.ephemeralKey.ECDH(rOK)
     if err != nil {
-        return err
+        panic(err)
     }
 
     // calculate secret key
@@ -176,7 +149,7 @@ func (c *Client) InitiateX3DH(recipient *Client) error {
     secret := make([]byte, 32)
     _, err = hkdf.New(sha256.New, concat, nil, nil).Read(secret)
     if err != nil {
-        return err
+        panic(err)
     }
 
     // save secret
@@ -189,29 +162,26 @@ func (c *Client) InitiateX3DH(recipient *Client) error {
     // initialise sending ratchet
     sendSecret, _, err := c.root_ratchet.Extract(nil, nil, nil)
     if err != nil {
-        return err
+        panic(err)
     }
     c.send_ratchet = &cryptography.Ratchet{}
     c.send_ratchet.NewKDF(sendSecret, nil, nil)
-    return nil
+    return &MessagePacket{
+        Identity: c.IdentityECDSA(), 
+        Ephemeral: ek.PublicKey(),
+    }
 }
 
-func (c *Client) CompleteX3DH(sender *Client) error {
+func (c *Client) CompleteX3DH(contact *MessagePacket) error {
     // get sender public keys
-    sIK, err := sender.IdentityECDH()
+    sIK, err := contact.Identity.ECDH()
     if err != nil {
         return err
     }
-    sEK, err := sender.EphemeralKey()
-    if err != nil {
-        return err
-    }
+    sEK := contact.Ephemeral
 
     // get private ECDH key
-    iK, err := c.identityECDH()
-    if err != nil {
-        return err
-    }
+    iK := c.identityECDH()
 
     // calculate four DH secrets
     dh1, err := c.signedPrekey.ECDH(sIK)
@@ -297,10 +267,7 @@ func (c *Client) SendMessage(plaintext string, format []string, pubkey *ecdh.Pub
     //     err = fmt.Errorf("error generating DH key to send message: %v", err)
     //     return nil, err
     // }
-    key, err := c.identityECDH()
-    if err != nil {
-        return nil, err
-    }
+    key := c.identityECDH()
 
     // Calculate shared secret
     secret, err := key.ECDH(pubkey)
@@ -337,10 +304,7 @@ func (c *Client) ReceiveMessage(ciphertext []byte, pubkey *ecdh.PublicKey) (stri
     //     err = fmt.Errorf("error generating DH key for decryption: %v", err)
     //     return "", err
     // }
-    key, err := c.identityECDH()
-    if err != nil {
-        return "", err
-    }
+    key := c.identityECDH()
 
     // Calculate shared secret
     secret, err := key.ECDH(pubkey)
