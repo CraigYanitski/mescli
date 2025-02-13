@@ -31,7 +31,7 @@ Many of the more complex features making it useful will be deferred to a later r
 - [ ] Use DH generation for each message with KDF
 - [ ] Create a TUI
   - [x] create TUI framework (bubbletea)
-  - [ ] implement Markdown rendering
+  - [x] implement Markdown rendering
   - [ ] implement encrypted messaging
 - [ ] ~Allow non-local users~ DEFERRED
   - [ ] develop server code
