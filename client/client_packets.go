@@ -3,6 +3,9 @@ package client
 import (
 	"crypto/ecdh"
 	"crypto/ecdsa"
+	"crypto/x509"
+	"encoding/hex"
+	"log"
 )
 
 type PrekeyPacket struct {
@@ -16,11 +19,23 @@ type PrekeyPacket struct {
     SignedKey      []byte
 }
 
+type PrekeyPacketJSON struct {
+    IdentityKey    []byte  `json:"identity_key"`
+    SignedPrekey   []byte  `json:"signed_prekey"`
+    SignedKey      []byte  `json:"signed_key"`
+    OnetimePrekey  []byte  `json:"onetime_prekey"`
+}
+
 type MessagePacket struct {
     // long-term 
     Identity   *ecdsa.PublicKey
     Ephemeral  *ecdh.PublicKey
     Message    []byte
+}
+
+type MessagePacketJSON struct {
+    IdentityKey   []byte  `json:"identity_key"`
+    EphemeralKey  []byte  `json:"ephemeral_key"`
 }
 
 func (c Client) GetPrekeyPacket() (*PrekeyPacket) {
@@ -35,6 +50,40 @@ func (c Client) GetPrekeyPacket() (*PrekeyPacket) {
     }
 }
 
+func (c Client) SendPrekeyPacketJSON() (*PrekeyPacketJSON, error) {
+    // encode identity key in DER format
+    idk := c.IdentityECDSA()
+    idkBytes, err := x509.MarshalPKIXPublicKey(idk)
+    if err != nil {
+        return nil, err
+    }
+
+    // encode signed prekey in DER format
+    spk := c.SignedPrekey()
+    spkBytes, err := x509.MarshalPKIXPublicKey(spk)
+    if err != nil {
+        return nil, err
+    }
+
+    // encode signed prekey in DER format
+    opk := c.OnetimePrekey()
+    opkBytes, err := x509.MarshalPKIXPublicKey(opk)
+    if err != nil {
+        return nil, err
+    }
+
+    // encode signed key in DER format
+    skBytes := c.SignedKey
+
+    // return stringified keys
+    return &PrekeyPacketJSON{
+        IdentityKey: idkBytes, 
+        SignedPrekey: spkBytes,
+        SignedKey: skBytes,
+        OnetimePrekey: opkBytes,
+    }, nil
+}
+
 func (c Client) GetMessagePacket() (*MessagePacket) {
     ik := c.IdentityECDSA()
     ek := c.EphemeralKey()
@@ -42,5 +91,62 @@ func (c Client) GetMessagePacket() (*MessagePacket) {
         Identity: ik,
         Ephemeral: ek,
     }
+}
+
+func (c Client) SendMessagePacketJSON() (*MessagePacketJSON, error) {
+    // encode identity key in DER format
+    idk := c.IdentityECDSA()
+    idkBytes, err := x509.MarshalPKIXPublicKey(idk)
+    if err != nil {
+        return nil, err
+    }
+
+    // encode ephemeral key in DER format
+    epk := c.EphemeralKey()
+    epkBytes, err := x509.MarshalPKIXPublicKey(epk)
+    if err != nil {
+        return nil, err
+    }
+
+    // return stringified keys
+    return &MessagePacketJSON{
+        IdentityKey: idkBytes, 
+        EphemeralKey: epkBytes,
+    }, nil
+}
+
+func ParsePrekeyPacket(packet *PrekeyPacketJSON) (*ecdsa.PublicKey, *ecdh.PublicKey, []byte, *ecdh.PublicKey) {
+    ridkInterface, err := x509.ParsePKIXPublicKey(packet.IdentityKey)
+    if err != nil {
+        log.Fatal(err)
+    }
+    rIKdsa, ok := ridkInterface.(*ecdsa.PublicKey)
+    if !ok {
+        log.Fatal(err)
+    }
+    rIK, err := rIKdsa.ECDH()
+    if err != nil {
+        log.Fatal(err)
+    }
+    // rSPK := contact.SignedPrekey
+    rspkInterface, err := x509.ParsePKIXPublicKey(packet.SignedPrekey)
+    if err != nil {
+        log.Fatal(err)
+    }
+    rSPK, ok := rspkInterface.(*ecdsa.PublicKey)
+    if !ok {
+        log.Fatal(err)
+    }
+    rSK := packet.SignedKey
+    // rOK := contact.OnetimePrekey
+    rotkInterface, err := x509.ParsePKIXPublicKey(packet.OnetimePrekey)
+    if err != nil {
+        log.Fatal(err)
+    }
+    rOK, ok := rotkInterface.(*ecdh.PublicKey)
+    if !ok {
+        log.Fatal(err)
+    }
+    return fIK, rSPK, rSK, rOK
 }
 

@@ -7,6 +7,7 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"fmt"
+	"log"
 	"slices"
 
 	"github.com/CraigYanitski/mescli/cryptography"
@@ -99,16 +100,40 @@ func (c *Client) EphemeralKey() (*ecdh.PublicKey) {
     return c.ephemeralKey.PublicKey()
 }
 
-func (c *Client) InitiateX3DH(contact *PrekeyPacket) *MessagePacket {
-    // get recipient public keys
-    rIKdsa := contact.Identity
+func (c *Client) InitiateX3DH(contact *PrekeyPacketJSON) *MessagePacket {
+    // get recipient identity public keys
+    //ridkInterface, err := x509.ParsePKIXPublicKey(contact.Identity)
+    //if err != nil {
+    //    log.Fatal(err)
+    //}
+    //rIKdsa, ok := ridkInterface.(*ecdsa.PublicKey)
+    //if !ok {
+    //    log.Fatal(err)
+    //}
+    rIKdsa, rSPK, rSK, rOK := ParsePrekeyPacket(contact)
     rIK, err := rIKdsa.ECDH()
     if err != nil {
-        panic(err)
+        log.Fatal(err)
     }
-    rSPK := contact.SignedPrekey
-    rSK := contact.SignedKey
-    rOK := contact.OnetimePrekey
+    //// rSPK := contact.SignedPrekey
+    //rspkInterface, err := x509.ParsePKIXPublicKey(contact.signedPrekey)
+    //if err != nil {
+    //    log.Fatal(err)
+    //}
+    //rSPK, ok := rspkInterface.(*ecdsa.PublicKey)
+    //if !ok {
+    //    log.Fatal(err)
+    //}
+    //rSK := contact.SignedKey
+    //// rOK := contact.OnetimePrekey
+    //rotkInterface, err := x509.ParsePKIXPublicKey(contact.OnetimePrekey)
+    //if err != nil {
+    //    log.Fatal(err)
+    //}
+    //rOK, ok := rotkInterface.(*ecdh.PublicKey)
+    //if !ok {
+    //    log.Fatal(err)
+    //}
 
     // verify signed prekey
     if !ecdsa.VerifyASN1(rIKdsa, encodeKey(rSPK), rSK) {
