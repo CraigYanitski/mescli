@@ -4,7 +4,6 @@ import (
 	"crypto/ecdh"
 	"crypto/ecdsa"
 	"crypto/x509"
-	"encoding/hex"
 	"log"
 )
 
@@ -124,16 +123,12 @@ func ParsePrekeyPacket(packet *PrekeyPacketJSON) (*ecdsa.PublicKey, *ecdh.Public
     if !ok {
         log.Fatal(err)
     }
-    rIK, err := rIKdsa.ECDH()
-    if err != nil {
-        log.Fatal(err)
-    }
     // rSPK := contact.SignedPrekey
     rspkInterface, err := x509.ParsePKIXPublicKey(packet.SignedPrekey)
     if err != nil {
         log.Fatal(err)
     }
-    rSPK, ok := rspkInterface.(*ecdsa.PublicKey)
+    rSPK, ok := rspkInterface.(*ecdh.PublicKey)
     if !ok {
         log.Fatal(err)
     }
@@ -147,6 +142,27 @@ func ParsePrekeyPacket(packet *PrekeyPacketJSON) (*ecdsa.PublicKey, *ecdh.Public
     if !ok {
         log.Fatal(err)
     }
-    return fIK, rSPK, rSK, rOK
+    return rIKdsa, rSPK, rSK, rOK
+}
+
+func ParseMessagePacket(packet *MessagePacketJSON) (*ecdsa.PublicKey, *ecdh.PublicKey) {
+    ridkInterface, err := x509.ParsePKIXPublicKey(packet.IdentityKey)
+    if err != nil {
+        log.Fatal(err)
+    }
+    rIKdsa, ok := ridkInterface.(*ecdsa.PublicKey)
+    if !ok {
+        log.Fatal(err)
+    }
+    // rSPK := contact.SignedPrekey
+    repkInterface, err := x509.ParsePKIXPublicKey(packet.EphemeralKey)
+    if err != nil {
+        log.Fatal(err)
+    }
+    rEPK, ok := repkInterface.(*ecdh.PublicKey)
+    if !ok {
+        log.Fatal(err)
+    }
+    return rIKdsa, rEPK
 }
 
