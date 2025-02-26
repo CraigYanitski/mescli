@@ -7,6 +7,8 @@ package database
 
 import (
 	"context"
+
+	"github.com/google/uuid"
 )
 
 const createUser = `-- name: CreateUser :one
@@ -79,5 +81,23 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error
 		&i.SignedPrekey,
 		&i.SignedKey,
 	)
+	return i, err
+}
+
+const getUserKeyPacket = `-- name: GetUserKeyPacket :one
+SELECT identity_key, signed_prekey, signed_key FROM users 
+WHERE id = $1
+`
+
+type GetUserKeyPacketRow struct {
+	IdentityKey  string
+	SignedPrekey string
+	SignedKey    string
+}
+
+func (q *Queries) GetUserKeyPacket(ctx context.Context, id uuid.UUID) (GetUserKeyPacketRow, error) {
+	row := q.db.QueryRowContext(ctx, getUserKeyPacket, id)
+	var i GetUserKeyPacketRow
+	err := row.Scan(&i.IdentityKey, &i.SignedPrekey, &i.SignedKey)
 	return i, err
 }

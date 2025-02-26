@@ -22,3 +22,7 @@ INSERT INTO users (
 -- name: GetUserByEmail :one
 SELECT * FROM users 
 WHERE email = $1 ;
+
+-- name: GetUserKeyPacket :one
+SELECT identity_key, signed_prekey, signed_key FROM users 
+WHERE id = $1 ;
