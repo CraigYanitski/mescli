@@ -17,31 +17,35 @@ type apiConfig struct {
 }
 
 func main() {
+    // get environment variables
     godotenv.Load()
     dbURL := os.Getenv("DB_URL")
 
+    // open database
     db, err := sql.Open("postgres", dbURL)
     if err != nil {
         log.Fatalf("cannot open database %s: %s", dbURL, err)
     }
     dbQueries := database.New(db)
 
+    // define database persistent configuration
     apiCfg := apiConfig{
         dbQueries: dbQueries,
     }
 
+    // create server multiplexer
     mux := http.NewServeMux()
 
-    // Handlers
+    // define endpoint handlers
     mux.HandleFunc("POST /api/users", http.HandlerFunc(apiCfg.handleCreateUser))
+    mux.HandleFunc("GET /api/users", http.HandlerFunc(apiCfg.handleGetUserKeyPacket))
 
-    //const fsPATH = "."
+    // define server and listen for requests
     const port = "8080"
     server := http.Server{
         Addr: ":" + port,
         Handler: mux,
     }
-
     fmt.Printf("Serving mescli api on port: %v\n", port)
     log.Fatal(server.ListenAndServe())
 }
