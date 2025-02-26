@@ -8,9 +8,11 @@ help:
 		"At the moment there is no local storage, so any messages will be deleted after closing the program."
 
 build:
-	@cat assets/logo.txt
 	go build -o mescli ./frontend
+	@echo "\n\n\n"
+	@cat assets/logo.txt
 
 build_server:
-	@cat assets/logo.txt
 	go build -o server .
+	@echo "\n\n\n"
+	@cat assets/logo.txt
