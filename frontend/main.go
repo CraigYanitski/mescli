@@ -47,12 +47,15 @@ func runTests() {
     _ = bob.Initialise()
 
     // get Bob's prekey package
-    bobPKP := bob.GetPrekeyPacket()
+    bobPKP, err := bob.SendPrekeyPacketJSON()
+    if err != nil {
+        log.Fatal(err)
+    }
 
     // Perform extended triple Diffie-Hellman exchange
     aliceMP := alice.InitiateX3DH(bobPKP)
     fmt.Printf("\nX3DH initialised\n")
-    err := bob.CompleteX3DH(aliceMP)
+    err = bob.CompleteX3DH(aliceMP)
     if err != nil {
         panic(err)
     }
