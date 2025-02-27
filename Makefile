@@ -12,7 +12,7 @@ build:
 	@echo "\n\n\n"
 	@cat assets/logo.txt
 
-build_server:
+build-server:
 	go build -o server .
 	@echo "\n\n\n"
 	@cat assets/logo.txt
