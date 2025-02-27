@@ -102,49 +102,21 @@ func (c *Client) EphemeralKey() (*ecdh.PublicKey) {
 
 func (c *Client) InitiateX3DH(contact *PrekeyPacketJSON) *MessagePacket {
     // get recipient identity public keys
-    //ridkInterface, err := x509.ParsePKIXPublicKey(contact.Identity)
-    //if err != nil {
-    //    log.Fatal(err)
-    //}
-    //rIKdsa, ok := ridkInterface.(*ecdsa.PublicKey)
-    //if !ok {
-    //    log.Fatal(err)
-    //}
     rIKdsa, rSPK, rSK, rOK := ParsePrekeyPacket(contact)
     rIK, err := rIKdsa.ECDH()
     if err != nil {
         log.Fatal(err)
     }
-    //// rSPK := contact.SignedPrekey
-    //rspkInterface, err := x509.ParsePKIXPublicKey(contact.signedPrekey)
-    //if err != nil {
-    //    log.Fatal(err)
-    //}
-    //rSPK, ok := rspkInterface.(*ecdsa.PublicKey)
-    //if !ok {
-    //    log.Fatal(err)
-    //}
-    //rSK := contact.SignedKey
-    //// rOK := contact.OnetimePrekey
-    //rotkInterface, err := x509.ParsePKIXPublicKey(contact.OnetimePrekey)
-    //if err != nil {
-    //    log.Fatal(err)
-    //}
-    //rOK, ok := rotkInterface.(*ecdh.PublicKey)
-    //if !ok {
-    //    log.Fatal(err)
-    //}
 
     // verify signed prekey
     if !ecdsa.VerifyASN1(rIKdsa, encodeKey(rSPK), rSK) {
-        err = fmt.Errorf("error verifying signed key during X3DH")
-        panic(err)
+        log.Fatal("error verifying signed key during X3DH")
     }
 
     // generate ephemeral key
     ek, err := generateECDH()
     if err != nil {
-        panic(err)
+        log.Fatal(err)
     }
     c.ephemeralKey = ek
 
@@ -154,19 +126,19 @@ func (c *Client) InitiateX3DH(contact *PrekeyPacketJSON) *MessagePacket {
     // calculate four DH secrets
     dh1, err := iK.ECDH(rSPK)
     if err != nil {
-        panic(err)
+        log.Fatal(err)
     }
     dh2, err := c.ephemeralKey.ECDH(rIK)
     if err != nil {
-        panic(err)
+        log.Fatal(err)
     }
     dh3, err := c.ephemeralKey.ECDH(rSPK)
     if err != nil {
-        panic(err)
+        log.Fatal(err)
     }
     dh4, err := c.ephemeralKey.ECDH(rOK)
     if err != nil {
-        panic(err)
+        log.Fatal(err)
     }
 
     // calculate secret key
@@ -174,7 +146,7 @@ func (c *Client) InitiateX3DH(contact *PrekeyPacketJSON) *MessagePacket {
     secret := make([]byte, 32)
     _, err = hkdf.New(sha256.New, concat, nil, nil).Read(secret)
     if err != nil {
-        panic(err)
+        log.Fatal(err)
     }
 
     // save secret
@@ -187,7 +159,7 @@ func (c *Client) InitiateX3DH(contact *PrekeyPacketJSON) *MessagePacket {
     // initialise sending ratchet
     sendSecret, _, err := c.root_ratchet.Extract(nil, nil, nil)
     if err != nil {
-        panic(err)
+        log.Fatal(err)
     }
     c.send_ratchet = &cryptography.Ratchet{}
     c.send_ratchet.NewKDF(sendSecret, nil, nil)
@@ -197,13 +169,13 @@ func (c *Client) InitiateX3DH(contact *PrekeyPacketJSON) *MessagePacket {
     }
 }
 
-func (c *Client) CompleteX3DH(contact *MessagePacket) error {
+func (c *Client) CompleteX3DH(contact *MessagePacketJSON) error {
     // get sender public keys
-    sIK, err := contact.Identity.ECDH()
+    sIKdsa, sEK := ParseMessagePacket(contact)
+    sIK, err := sIKdsa.ECDH()
     if err != nil {
-        return err
+        log.Fatal(err)
     }
-    sEK := contact.Ephemeral
 
     // get private ECDH key
     iK := c.identityECDH()
