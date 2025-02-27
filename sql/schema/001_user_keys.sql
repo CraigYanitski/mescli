@@ -5,9 +5,9 @@ CREATE TABLE users (
     updated_at TIMESTAMP NOT NULL,
     email TEXT UNIQUE NOT NULL,
     hashed_password TEXT NOT NULL DEFAULT 'unset',
-    identity_key TEXT NOT NULL,
-    signed_prekey TEXT NOT NULL,
-    signed_key TEXT NOT NULL
+    identity_key BYTEA NOT NULL,
+    signed_prekey BYTEA NOT NULL,
+    signed_key BYTEA NOT NULL
 ) ;
 
 -- +goose Down

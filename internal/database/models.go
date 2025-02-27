@@ -16,7 +16,7 @@ type User struct {
 	UpdatedAt      time.Time
 	Email          string
 	HashedPassword string
-	IdentityKey    string
-	SignedPrekey   string
-	SignedKey      string
+	IdentityKey    []byte
+	SignedPrekey   []byte
+	SignedKey      []byte
 }

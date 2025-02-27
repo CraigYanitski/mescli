@@ -36,9 +36,9 @@ INSERT INTO users (
 type CreateUserParams struct {
 	Email          string
 	HashedPassword string
-	IdentityKey    string
-	SignedPrekey   string
-	SignedKey      string
+	IdentityKey    []byte
+	SignedPrekey   []byte
+	SignedKey      []byte
 }
 
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, error) {
@@ -90,9 +90,9 @@ WHERE id = $1
 `
 
 type GetUserKeyPacketRow struct {
-	IdentityKey  string
-	SignedPrekey string
-	SignedKey    string
+	IdentityKey  []byte
+	SignedPrekey []byte
+	SignedKey    []byte
 }
 
 func (q *Queries) GetUserKeyPacket(ctx context.Context, id uuid.UUID) (GetUserKeyPacketRow, error) {
