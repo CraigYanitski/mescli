@@ -17,9 +17,9 @@ import (
 type InitUser struct {
     Email           string  `json:"email"`
     HashedPassword  string  `json:"hashed_password,omitempty"`
-    IdentityKey     string  `json:"identity_key"`
-    SignedPrekey    string  `json:"signed_key"`
-    SignedKey       string  `json:"signed_prekey"`
+    IdentityKey     []byte  `json:"identity_key"`
+    SignedPrekey    []byte  `json:"signed_key"`
+    SignedKey       []byte  `json:"signed_prekey"`
 }
 type User struct {
     ID              uuid.UUID  `json:"id"`
@@ -27,15 +27,15 @@ type User struct {
     UpdatedAt       time.Time  `json:"updated_at"`
     Email           string     `json:"email"`
     HashedPassword  string     `json:"hashed_password,omitempty"`
-    IdentityKey     string     `json:"identity_key"`
-    SignedPrekey    string     `json:"signed_key"`
-    SignedKey       string     `json:"signed_prekey"`
+    IdentityKey     []byte     `json:"identity_key"`
+    SignedPrekey    []byte     `json:"signed_key"`
+    SignedKey       []byte     `json:"signed_prekey"`
 }
 
 type PrekeyPacketJSON struct {
-    IdentityKey   string  `json:"identity_key"`
-    SignedPrekey  string  `json:"signed_prekey"`
-    SignedKey     string  `json:"signed_key"`
+    IdentityKey   []byte  `json:"identity_key"`
+    SignedPrekey  []byte  `json:"signed_prekey"`
+    SignedKey     []byte  `json:"signed_key"`
 }
 
 func (cfg *apiConfig) handleCreateUser(w http.ResponseWriter, r *http.Request) {
@@ -46,22 +46,6 @@ func (cfg *apiConfig) handleCreateUser(w http.ResponseWriter, r *http.Request) {
         respondWithError(w, http.StatusInternalServerError, "unable to unmarshal user", err)
         return
     }
-
-    //idkBytes, err := x509.MarshalPKIXPublicKey(&u.IdentityKey)
-    //if err != nil {
-    //    respondWithError(w, http.StatusInternalServerError, "error marshalling identity key", err)
-    //    return
-    //}
-    //spkBytes, err := x509.MarshalPKIXPublicKey(&u.SignedPrekey)
-    //if err != nil {
-    //    respondWithError(w, http.StatusInternalServerError, "error marshalling signed prekey", err)
-    //    return
-    //}
-    //skBytes, err := x509.MarshalPKIXPublicKey(&u.SignedKey)
-    //if err != nil {
-    //    respondWithError(w, http.StatusInternalServerError, "error marshalling signed key", err)
-    //    return
-    //}
 
     params := database.CreateUserParams{
         Email: u.Email,
