@@ -100,7 +100,7 @@ func (c *Client) EphemeralKey() (*ecdh.PublicKey) {
     return c.ephemeralKey.PublicKey()
 }
 
-func (c *Client) InitiateX3DH(contact *PrekeyPacketJSON) *MessagePacket {
+func (c *Client) InitiateX3DH(contact *PrekeyPacketJSON) *MessagePacketJSON {
     // get recipient identity public keys
     rIKdsa, rSPK, rSK, rOK := ParsePrekeyPacket(contact)
     rIK, err := rIKdsa.ECDH()
@@ -163,10 +163,12 @@ func (c *Client) InitiateX3DH(contact *PrekeyPacketJSON) *MessagePacket {
     }
     c.send_ratchet = &cryptography.Ratchet{}
     c.send_ratchet.NewKDF(sendSecret, nil, nil)
-    return &MessagePacket{
-        Identity: c.IdentityECDSA(), 
-        Ephemeral: ek.PublicKey(),
+
+    packet, err := c.SendMessagePacketJSON()
+    if err != nil {
+        log.Fatal(err)
     }
+    return packet
 }
 
 func (c *Client) CompleteX3DH(contact *MessagePacketJSON) error {
