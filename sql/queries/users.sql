@@ -4,6 +4,7 @@ INSERT INTO users (
     created_at, 
     updated_at, 
     email, 
+    name,
     hashed_password, 
     identity_key, 
     signed_prekey, 
@@ -16,8 +17,13 @@ INSERT INTO users (
     $2,
     $3,
     $4,
-    $5
+    $5,
+    $6
 ) RETURNING * ;
+
+-- name: GetUser :one
+SELECT * FROM users 
+WHERE id = $1 ;
 
 -- name: GetUserByEmail :one
 SELECT * FROM users 

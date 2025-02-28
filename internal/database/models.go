@@ -15,8 +15,10 @@ type User struct {
 	CreatedAt      time.Time
 	UpdatedAt      time.Time
 	Email          string
+	Name           string
 	HashedPassword string
 	IdentityKey    []byte
 	SignedPrekey   []byte
 	SignedKey      []byte
+	Initialised    bool
 }

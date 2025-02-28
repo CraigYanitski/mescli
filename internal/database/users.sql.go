@@ -17,6 +17,7 @@ INSERT INTO users (
     created_at, 
     updated_at, 
     email, 
+    name,
     hashed_password, 
     identity_key, 
     signed_prekey, 
@@ -29,12 +30,14 @@ INSERT INTO users (
     $2,
     $3,
     $4,
-    $5
-) RETURNING id, created_at, updated_at, email, hashed_password, identity_key, signed_prekey, signed_key
+    $5,
+    $6
+) RETURNING id, created_at, updated_at, email, name, hashed_password, identity_key, signed_prekey, signed_key, initialised
 `
 
 type CreateUserParams struct {
 	Email          string
+	Name           string
 	HashedPassword string
 	IdentityKey    []byte
 	SignedPrekey   []byte
@@ -44,6 +47,7 @@ type CreateUserParams struct {
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, error) {
 	row := q.db.QueryRowContext(ctx, createUser,
 		arg.Email,
+		arg.Name,
 		arg.HashedPassword,
 		arg.IdentityKey,
 		arg.SignedPrekey,
@@ -55,16 +59,41 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.Email,
+		&i.Name,
 		&i.HashedPassword,
 		&i.IdentityKey,
 		&i.SignedPrekey,
 		&i.SignedKey,
+		&i.Initialised,
+	)
+	return i, err
+}
+
+const getUser = `-- name: GetUser :one
+SELECT id, created_at, updated_at, email, name, hashed_password, identity_key, signed_prekey, signed_key, initialised FROM users 
+WHERE id = $1
+`
+
+func (q *Queries) GetUser(ctx context.Context, id uuid.UUID) (User, error) {
+	row := q.db.QueryRowContext(ctx, getUser, id)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.Email,
+		&i.Name,
+		&i.HashedPassword,
+		&i.IdentityKey,
+		&i.SignedPrekey,
+		&i.SignedKey,
+		&i.Initialised,
 	)
 	return i, err
 }
 
 const getUserByEmail = `-- name: GetUserByEmail :one
-SELECT id, created_at, updated_at, email, hashed_password, identity_key, signed_prekey, signed_key FROM users 
+SELECT id, created_at, updated_at, email, name, hashed_password, identity_key, signed_prekey, signed_key, initialised FROM users 
 WHERE email = $1
 `
 
@@ -76,10 +105,12 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.Email,
+		&i.Name,
 		&i.HashedPassword,
 		&i.IdentityKey,
 		&i.SignedPrekey,
 		&i.SignedKey,
+		&i.Initialised,
 	)
 	return i, err
 }
