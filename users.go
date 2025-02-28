@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/CraigYanitski/mescli/internal/database"
@@ -16,6 +17,7 @@ import (
 
 type InitUser struct {
     Email           string  `json:"email"`
+    Name            string  `json:"name"`
     HashedPassword  string  `json:"hashed_password,omitempty"`
     IdentityKey     []byte  `json:"identity_key"`
     SignedPrekey    []byte  `json:"signed_key"`
@@ -26,10 +28,12 @@ type User struct {
     CreatedAt       time.Time  `json:"created_at"`
     UpdatedAt       time.Time  `json:"updated_at"`
     Email           string     `json:"email"`
+    Name            string     `json:"name"`
     HashedPassword  string     `json:"hashed_password,omitempty"`
     IdentityKey     []byte     `json:"identity_key"`
     SignedPrekey    []byte     `json:"signed_key"`
     SignedKey       []byte     `json:"signed_prekey"`
+    Initialised     bool       `json:"initialised"`
 }
 
 type PrekeyPacketJSON struct {
@@ -39,6 +43,7 @@ type PrekeyPacketJSON struct {
 }
 
 func (cfg *apiConfig) handleCreateUser(w http.ResponseWriter, r *http.Request) {
+    // Unmarshal request JSON
     decoder := json.NewDecoder(r.Body)
     u := &InitUser{}
     err := decoder.Decode(u)
@@ -46,9 +51,27 @@ func (cfg *apiConfig) handleCreateUser(w http.ResponseWriter, r *http.Request) {
         respondWithError(w, http.StatusInternalServerError, "unable to unmarshal user", err)
         return
     }
+    // verify required fields are set
+    if u.Email == "" {
+        respondWithError(w, http.StatusBadRequest, "error: email required to create user", nil)
+        return
+    } else if u.HashedPassword == "" {
+        respondWithError(w, http.StatusBadRequest, "error: hashed password required to create user", nil)
+        return
+    }
+    // set name if unset
+    if u.Name == "" {
+        // respondWithError(w, http.StatusBadRequest, "error: name required to create user", nil)
+        // return
+        u.Name = strings.Split(u.Email, "@")[0]
+    }
+    u.IdentityKey = []byte{0, 0}
+    u.SignedPrekey = []byte{0, 0}
+    u.SignedKey = []byte{0, 0}
 
     params := database.CreateUserParams{
         Email: u.Email,
+        Name: u.Name,
         HashedPassword: u.HashedPassword,
         IdentityKey: u.IdentityKey,//hex.EncodeToString(idkBytes),
         SignedPrekey: u.SignedPrekey,//hex.EncodeToString(spkBytes),
