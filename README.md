@@ -15,6 +15,10 @@ More likely than not, this will have many iterations over several stages.
 I am fascinated by cryptology, so I wanted to attempt my own implementation of an end-to-end messaging 
 service.
 I will also use this as a platform to test my own cryptographic algorithms.
+For the double-ratchet algorithm I am implementing for this app, I am using as a guide the 
+very thorough [Signal protocol](https://signal.org/docs/specifications/doubleratchet/) specifications.
+One can also find there a [description](https://signal.org/docs/specifications/x3dh/) of the Extended 
+triple-Diffie-Hellman (X3DH) asynchronous key exchange that is also implemented in `mescli`.
 
 ## Development
 
