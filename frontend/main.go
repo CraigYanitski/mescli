@@ -2,12 +2,15 @@ package main
 
 import (
 	"fmt"
+	"path"
 	// "io"
 	"log"
 	"strings"
 
 	"github.com/CraigYanitski/mescli/client"
 	"github.com/CraigYanitski/mescli/typeset"
+	"github.com/spf13/viper"
+
 	// "github.com/charmbracelet/bubbles/list"
 	// "github.com/charmbracelet/bubbles/textarea"
 	// "github.com/charmbracelet/bubbles/viewport"
@@ -16,6 +19,26 @@ import (
 )
 
 func main() {
+    // set default user configuration
+    home := "."
+    viper.SetConfigFile(path.Join(home, ".mescli.yaml"))
+    viper.SetDefault("api_url", "localhost:8080")
+    viper.SetDefault("access_token", "")
+    viper.SetDefault("refresh_token", "")
+    viper.SetDefault("last_refresh", 0)
+    viper.SetDefault("identity_token", nil)
+    viper.SetDefault("signed_prekey", nil)
+    viper.SetDefault("signed_key", nil)
+    viper.SafeWriteConfig()
+
+    // load configuration
+    err := viper.ReadInConfig()
+    if err != nil {
+        log.Fatalln(err)
+    }
+    viper.SetEnvPrefix("mescli")
+    viper.AutomaticEnv()
+
     // bubble tea interface
     p := tea.NewProgram(InitialModel())
 
