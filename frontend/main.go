@@ -65,9 +65,9 @@ func runTests() {
 
     // Initialise clients in conversation
     alice := &client.Client{Name: "Alice"}
-    _ = alice.Initialise()
+    _ = alice.Initialise(true)
     bob := &client.Client{Name: "Bob"}
-    _ = bob.Initialise()
+    _ = bob.Initialise(true)
 
     // get Bob's prekey package
     bobPKP, err := bob.SendPrekeyPacketJSON()

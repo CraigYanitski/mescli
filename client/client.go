@@ -12,6 +12,7 @@ import (
 
 	"github.com/CraigYanitski/mescli/cryptography"
 	"github.com/CraigYanitski/mescli/typeset"
+	"github.com/spf13/viper"
 	"golang.org/x/crypto/hkdf"
 )
 
@@ -29,7 +30,7 @@ type Client struct {
     recv_ratchet   *cryptography.Ratchet
 }
 
-func (c *Client) Initialise() error {
+func (c *Client) Initialise(test bool) error {
     // generate identity key
     ik, err := generateECDSA()
     if err != nil {
@@ -57,6 +58,18 @@ func (c *Client) Initialise() error {
         return err
     }
     c.onetimePrekey = opk
+
+    // store keys in config file if not testing encryption
+    if !test {
+        viper.Set("identity_key", ik)
+        viper.Set("signed_prekey", ik)
+        viper.Set("signed_key", ik)
+        viper.Set("onetime_prekey", ik)
+        err = viper.WriteConfig()
+        if err != nil {
+            return fmt.Errorf("error saving cryptographic keys: %s", err)
+        }
+    }
 
     return nil
 }
