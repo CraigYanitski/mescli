@@ -5,11 +5,9 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 	"path"
 
 	"github.com/CraigYanitski/mescli/internal/database"
-	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 	"github.com/spf13/viper"
 )
@@ -23,11 +21,10 @@ func main() {
     home := "."
     viper.SetConfigFile(path.Join(home, ".env"))
     viper.ReadInConfig()
-    log.Println(viper.GetString("DB_URL"))
 
     // get environment variables
-    godotenv.Load()
-    dbURL := os.Getenv("DB_URL")
+    dbURL := viper.GetString("DB_URL")
+    log.Println(dbURL)
 
     // open database
     db, err := sql.Open("postgres", dbURL)
