@@ -6,10 +6,12 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path"
 
 	"github.com/CraigYanitski/mescli/internal/database"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
+	"github.com/spf13/viper"
 )
 
 type apiConfig struct {
@@ -17,6 +19,12 @@ type apiConfig struct {
 }
 
 func main() {
+    // load config file
+    home := "."
+    viper.SetConfigFile(path.Join(home, ".env"))
+    viper.ReadInConfig()
+    log.Println(viper.GetString("DB_URL"))
+
     // get environment variables
     godotenv.Load()
     dbURL := os.Getenv("DB_URL")
