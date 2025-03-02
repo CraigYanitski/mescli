@@ -58,18 +58,18 @@ func (c Client) SendPrekeyPacketJSON() (*PrekeyPacketJSON, error) {
     }
 
     // encode signed prekey in DER format
-    spk := c.SignedPrekey()
-    spkBytes, err := x509.MarshalPKIXPublicKey(spk)
-    if err != nil {
-        return nil, err
-    }
+    spkBytes := c.SignedPrekey().Bytes()
+    //spkBytes, err := x509.MarshalPKIXPublicKey(&spk)
+    //if err != nil {
+    //    return nil, err
+    //}
 
     // encode signed prekey in DER format
-    opk := c.OnetimePrekey()
-    opkBytes, err := x509.MarshalPKIXPublicKey(opk)
-    if err != nil {
-        return nil, err
-    }
+    opkBytes := c.OnetimePrekey().Bytes()
+    //opkBytes, err := x509.MarshalPKIXPublicKey(&opk)
+    //if err != nil {
+    //    return nil, err
+    //}
 
     // encode signed key in DER format
     skBytes := c.SignedKey
@@ -101,11 +101,11 @@ func (c Client) SendMessagePacketJSON() (*MessagePacketJSON, error) {
     }
 
     // encode ephemeral key in DER format
-    epk := c.EphemeralKey()
-    epkBytes, err := x509.MarshalPKIXPublicKey(epk)
-    if err != nil {
-        return nil, err
-    }
+    epkBytes := c.EphemeralKey().Bytes()
+    //epkBytes, err := x509.MarshalPKIXPublicKey(epk)
+    //if err != nil {
+    //    return nil, err
+    //}
 
     // return stringified keys
     return &MessagePacketJSON{
@@ -121,27 +121,33 @@ func ParsePrekeyPacket(packet *PrekeyPacketJSON) (*ecdsa.PublicKey, *ecdh.Public
     }
     rIKdsa, ok := ridkInterface.(*ecdsa.PublicKey)
     if !ok {
-        log.Fatal(err)
+        log.Fatal("error recasting identity key as ECDSA")
     }
-    // rSPK := contact.SignedPrekey
-    rspkInterface, err := x509.ParsePKIXPublicKey(packet.SignedPrekey)
+
+    //rSPK := contact.SignedPrekey
+    //rspkInterface, err := x509.ParsePKIXPublicKey(packet.SignedPrekey)
+    rSPK, err := ecdh.P256().NewPublicKey(packet.SignedPrekey)
     if err != nil {
         log.Fatal(err)
     }
-    rSPK, ok := rspkInterface.(*ecdh.PublicKey)
-    if !ok {
-        log.Fatal(err)
-    }
+    //rSPK, ok := rspkInterface.(*ecdh.PublicKey)
+    //if !ok {
+    //    log.Fatal("error recasting signed prekey as ECDH")
+    //}
+
     rSK := packet.SignedKey
+    
     // rOK := contact.OnetimePrekey
-    rotkInterface, err := x509.ParsePKIXPublicKey(packet.OnetimePrekey)
+    //rotkInterface, err := x509.ParsePKIXPublicKey(packet.OnetimePrekey)
+    rOK, err := ecdh.P256().NewPublicKey(packet.OnetimePrekey)
     if err != nil {
         log.Fatal(err)
     }
-    rOK, ok := rotkInterface.(*ecdh.PublicKey)
-    if !ok {
-        log.Fatal(err)
-    }
+    //rOK, ok := rotkInterface.(*ecdh.PublicKey)
+    //if !ok {
+    //    log.Fatal("error recasting onetime key as ECDH")
+    //}
+
     return rIKdsa, rSPK, rSK, rOK
 }
 
@@ -154,15 +160,18 @@ func ParseMessagePacket(packet *MessagePacketJSON) (*ecdsa.PublicKey, *ecdh.Publ
     if !ok {
         log.Fatal(err)
     }
+
     // rSPK := contact.SignedPrekey
-    repkInterface, err := x509.ParsePKIXPublicKey(packet.EphemeralKey)
+    //repkInterface, err := x509.ParsePKIXPublicKey(packet.EphemeralKey)
+    rEPK, err := ecdh.P256().NewPublicKey(packet.EphemeralKey)
     if err != nil {
         log.Fatal(err)
     }
-    rEPK, ok := repkInterface.(*ecdh.PublicKey)
-    if !ok {
-        log.Fatal(err)
-    }
+    //rEPK, ok := repkInterface.(*ecdh.PublicKey)
+    //if !ok {
+    //    log.Fatal(err)
+    //}
+
     return rIKdsa, rEPK
 }
 

@@ -2,7 +2,9 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"path"
+
 	// "io"
 	"log"
 	"strings"
@@ -20,16 +22,26 @@ import (
 
 func main() {
     // set default user configuration
-    home := "."
-    viper.SetConfigFile(path.Join(home, ".mescli.yaml"))
+    home, _ := os.UserHomeDir()
+    viper.AddConfigPath(path.Join(home, "projects/bootdev/courses/13-personal-project/mescli"))
+    viper.SetConfigName(".mescli")
+    viper.SetConfigType("yaml")
     viper.SetDefault("api_url", "localhost:8080")
     viper.SetDefault("access_token", "")
     viper.SetDefault("refresh_token", "")
     viper.SetDefault("last_refresh", 0)
-    viper.SetDefault("identity_token", nil)
-    viper.SetDefault("signed_prekey", nil)
-    viper.SetDefault("signed_key", nil)
-    viper.SafeWriteConfig()
+    viper.SetDefault("email", "")
+    viper.SetDefault("name", "")
+    // viper.SetDefault("identity_token", nil)
+    // viper.SetDefault("signed_prekey", nil)
+    // viper.SetDefault("signed_key", nil)
+    // viper.SetDefault("root_ratchet", nil)
+    // viper.SetDefault("send_ratchets", nil)
+    // viper.SetDefault("recv_ratchets", nil)
+    _ = viper.SafeWriteConfig()
+    //if err != nil {
+    //    log.Fatal(err)
+    //}
 
     // load configuration
     err := viper.ReadInConfig()
@@ -38,6 +50,14 @@ func main() {
     }
     viper.SetEnvPrefix("mescli")
     viper.AutomaticEnv()
+
+    // check if client is initialised
+    c := client.Client{
+        Name: "test",//viper.GetString("name"),
+    }
+    if viper.Get("identity_token") == nil {
+        c.Initialise(false)
+    }
 
     // bubble tea interface
     p := tea.NewProgram(InitialModel())
@@ -68,19 +88,21 @@ func runTests() {
     _ = alice.Initialise(true)
     bob := &client.Client{Name: "Bob"}
     _ = bob.Initialise(true)
+    log.Println("initialised")
 
     // get Bob's prekey package
     bobPKP, err := bob.SendPrekeyPacketJSON()
     if err != nil {
         log.Fatal(err)
     }
+    log.Println("have prekey packet")
 
     // Perform extended triple Diffie-Hellman exchange
-    aliceMP := alice.InitiateX3DH(bobPKP)
+    aliceMP := alice.InitiateX3DH(bobPKP, true)
     fmt.Printf("\nX3DH initialised\n")
-    err = bob.CompleteX3DH(aliceMP)
+    err = bob.CompleteX3DH(aliceMP, true)
     if err != nil {
-        panic(err)
+        log.Fatal(err)
     }
     fmt.Printf("\nX3DH established\n")
 

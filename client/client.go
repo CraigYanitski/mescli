@@ -61,10 +61,14 @@ func (c *Client) Initialise(test bool) error {
 
     // store keys in config file if not testing encryption
     if !test {
-        viper.Set("identity_key", ik)
-        viper.Set("signed_prekey", ik)
-        viper.Set("signed_key", ik)
-        viper.Set("onetime_prekey", ik)
+        //var send_ratchets map[string]cryptography.Ratchet
+        //var recv_ratchets map[string]cryptography.Ratchet
+        //viper.Set("identity_key", ik)
+        //viper.Set("signed_prekey", spk)
+        //viper.Set("signed_key", sk)
+        //viper.Set("onetime_prekey", opk)
+        //viper.Set("send_ratchets", send_ratchets)
+        //viper.Set("recv_ratchets", recv_ratchets)
         err = viper.WriteConfig()
         if err != nil {
             return fmt.Errorf("error saving cryptographic keys: %s", err)
@@ -96,6 +100,10 @@ func (c *Client) SignedPrekey() (*ecdh.PublicKey) {
     if c.signedPrekey == nil {
         panic(fmt.Errorf("error returning signed prekey -- client not yet initialised"))
     }
+    var key interface{} = c.signedPrekey.PublicKey()
+    if _, ok := key.(*ecdh.PublicKey); ok {
+        log.Println("prekey type *ecdh.PublicKey")
+    }
     return c.signedPrekey.PublicKey()
 }
 
@@ -113,13 +121,14 @@ func (c *Client) EphemeralKey() (*ecdh.PublicKey) {
     return c.ephemeralKey.PublicKey()
 }
 
-func (c *Client) InitiateX3DH(contact *PrekeyPacketJSON) *MessagePacketJSON {
+func (c *Client) InitiateX3DH(contact *PrekeyPacketJSON, test bool) *MessagePacketJSON {
     // get recipient identity public keys
     rIKdsa, rSPK, rSK, rOK := ParsePrekeyPacket(contact)
     rIK, err := rIKdsa.ECDH()
     if err != nil {
         log.Fatal(err)
     }
+    log.Println("parsed prekey packet")
 
     // verify signed prekey
     if !ecdsa.VerifyASN1(rIKdsa, encodeKey(rSPK), rSK) {
@@ -181,10 +190,22 @@ func (c *Client) InitiateX3DH(contact *PrekeyPacketJSON) *MessagePacketJSON {
     if err != nil {
         log.Fatal(err)
     }
+    
+    // save ratchets in config
+    if !test {
+        //viper.Set("root_ratchet", c.root_ratchet)
+        //send_ratchets := viper.GetStringMap("send_ratchets")
+        //send_ratchets["contact"] = c.send_ratchet
+        //viper.Set("send_ratchets", send_ratchets)
+        err = viper.WriteConfig()
+        if err != nil {
+            log.Fatal(err)
+        }
+    }
     return packet
 }
 
-func (c *Client) CompleteX3DH(contact *MessagePacketJSON) error {
+func (c *Client) CompleteX3DH(contact *MessagePacketJSON, test bool) error {
     // get sender public keys
     sIKdsa, sEK := ParseMessagePacket(contact)
     sIK, err := sIKdsa.ECDH()
@@ -235,6 +256,19 @@ func (c *Client) CompleteX3DH(contact *MessagePacketJSON) error {
     }
     c.recv_ratchet = &cryptography.Ratchet{}
     c.recv_ratchet.NewKDF(recvSecret, nil, nil)
+    
+    // save ratchets in config
+    if !test {
+        //viper.Set("root_ratchet", c.root_ratchet)
+        //recv_ratchets := viper.GetStringMap("recv_ratchets")
+        //recv_ratchets["contact"] = c.send_ratchet
+        //viper.Set("recv_ratchets", recv_ratchets)
+        err = viper.WriteConfig()
+        if err != nil {
+            log.Fatal(err)
+        }
+    }
+
     return nil
 }
 
