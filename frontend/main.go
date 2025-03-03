@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
-	"os"
-	"path"
+	//"os"
+	//"path"
 
 	// "io"
 	"log"
@@ -22,8 +22,9 @@ import (
 
 func main() {
     // set default user configuration
-    home, _ := os.UserHomeDir()
-    viper.AddConfigPath(path.Join(home, "projects/bootdev/courses/13-personal-project/mescli"))
+    //home, _ := os.UserHomeDir()
+    //viper.AddConfigPath(path.Join(home, "projects/bootdev/courses/13-personal-project/mescli"))
+    viper.AddConfigPath(".")
     viper.SetConfigName(".mescli")
     viper.SetConfigType("yaml")
     viper.SetDefault("api_url", "localhost:8080")
@@ -32,12 +33,12 @@ func main() {
     viper.SetDefault("last_refresh", 0)
     viper.SetDefault("email", "")
     viper.SetDefault("name", "")
-    // viper.SetDefault("identity_token", nil)
-    // viper.SetDefault("signed_prekey", nil)
-    // viper.SetDefault("signed_key", nil)
-    // viper.SetDefault("root_ratchet", nil)
-    // viper.SetDefault("send_ratchets", nil)
-    // viper.SetDefault("recv_ratchets", nil)
+    viper.SetDefault("identity_token", "")
+    viper.SetDefault("signed_prekey", "")
+    viper.SetDefault("signed_key", "")
+    //viper.SetDefault("root_ratchet", nil)
+    //viper.SetDefault("send_ratchets", nil)
+    //viper.SetDefault("recv_ratchets", nil)
     _ = viper.SafeWriteConfig()
     //if err != nil {
     //    log.Fatal(err)
@@ -85,7 +86,7 @@ func runTests() {
 
     // Initialise clients in conversation
     alice := &client.Client{Name: "Alice"}
-    _ = alice.Initialise(true)
+    _ = alice.Initialise(false)
     bob := &client.Client{Name: "Bob"}
     _ = bob.Initialise(true)
     log.Println("initialised")
@@ -98,7 +99,7 @@ func runTests() {
     log.Println("have prekey packet")
 
     // Perform extended triple Diffie-Hellman exchange
-    aliceMP := alice.InitiateX3DH(bobPKP, true)
+    aliceMP := alice.InitiateX3DH(bobPKP, false)
     fmt.Printf("\nX3DH initialised\n")
     err = bob.CompleteX3DH(aliceMP, true)
     if err != nil {
