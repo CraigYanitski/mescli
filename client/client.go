@@ -6,6 +6,7 @@ import (
 	"crypto/ecdsa"
 	"crypto/rand"
 	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"log"
 	"slices"
@@ -63,10 +64,13 @@ func (c *Client) Initialise(test bool) error {
     if !test {
         //var send_ratchets map[string]cryptography.Ratchet
         //var recv_ratchets map[string]cryptography.Ratchet
-        //viper.Set("identity_key", ik)
-        //viper.Set("signed_prekey", spk)
-        //viper.Set("signed_key", sk)
-        //viper.Set("onetime_prekey", opk)
+        ikString, _ := SerialiseECDSAPrivateKey(ik)
+        viper.Set("identity_key", ikString)
+        spkString := SerialiseECDHPrivateKey(spk)
+        viper.Set("signed_prekey", spkString)
+        viper.Set("signed_key", hex.EncodeToString(sk))
+        opkString := SerialiseECDHPrivateKey(opk)
+        viper.Set("onetime_prekey", opkString)
         //viper.Set("send_ratchets", send_ratchets)
         //viper.Set("recv_ratchets", recv_ratchets)
         err = viper.WriteConfig()
@@ -193,10 +197,10 @@ func (c *Client) InitiateX3DH(contact *PrekeyPacketJSON, test bool) *MessagePack
     
     // save ratchets in config
     if !test {
-        //viper.Set("root_ratchet", c.root_ratchet)
+        viper.Set("root_ratchet.key", hex.EncodeToString(c.root_ratchet.Key))
         //send_ratchets := viper.GetStringMap("send_ratchets")
         //send_ratchets["contact"] = c.send_ratchet
-        //viper.Set("send_ratchets", send_ratchets)
+        viper.Set("send_ratchets."+"user"+".key", hex.EncodeToString(c.send_ratchet.Key))
         err = viper.WriteConfig()
         if err != nil {
             log.Fatal(err)
@@ -259,10 +263,10 @@ func (c *Client) CompleteX3DH(contact *MessagePacketJSON, test bool) error {
     
     // save ratchets in config
     if !test {
-        //viper.Set("root_ratchet", c.root_ratchet)
+        viper.Set("root_ratchet", hex.EncodeToString(c.root_ratchet.Key))
         //recv_ratchets := viper.GetStringMap("recv_ratchets")
         //recv_ratchets["contact"] = c.send_ratchet
-        //viper.Set("recv_ratchets", recv_ratchets)
+        viper.Set("recv_ratchets", hex.EncodeToString(c.recv_ratchet.Key))
         err = viper.WriteConfig()
         if err != nil {
             log.Fatal(err)

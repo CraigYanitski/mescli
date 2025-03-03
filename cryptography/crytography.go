@@ -128,21 +128,21 @@ type Ratchet struct {
     // This is a KDF reader that will be used to generate new keys
     kdf  io.Reader
     // This is the root key to be concatenated with the input data
-    key  []byte
+    Key  []byte
 }
 
 // This is a function to create a new KDF Reader from which keys can be read
 func (r *Ratchet) NewKDF(secret, salt, info []byte) {
-    r.key = secret
+    r.Key = secret
     r.kdf = hkdf.New(sha256.New, secret, salt, info)
 }
 
 // This function performs an extract and expand on the KDF to derive a new key and initialisation vector
 func (r *Ratchet) Extract(input, salt, info []byte) (key []byte, iv []byte, err error) {
-    secret := append(r.key, input...)
+    secret := append(r.Key, input...)
     // kdf := hkdf.Extract(sha256.New, secret, salt)
     kdfKey := hkdf.Extract(sha256.New, secret, salt)
-    r.key = kdfKey
+    r.Key = kdfKey
     r.kdf = hkdf.Expand(sha256.New, kdfKey, info)
     key = make([]byte, 32)
     iv = make([]byte, NonceSize)
