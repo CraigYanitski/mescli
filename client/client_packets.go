@@ -54,10 +54,7 @@ func (c Client) GetPrekeyPacket() (*PrekeyPacket) {
 
 func (c Client) SendPrekeyPacketJSON() (*PrekeyPacketJSON, error) {
     // encode identity key in DER format
-    idkBytes, err := crypt.EncodeECDSAPublicKey(c.IdentityECDSA())
-    if err != nil {
-        return nil, err
-    }
+    idkBytes := crypt.EncodeECDSAPublicKey(c.IdentityECDSA())
 
     // encode signed prekey in DER format
     spkBytes := crypt.EncodeECDHPublicKey(c.SignedPrekey())
@@ -88,10 +85,7 @@ func (c Client) GetMessagePacket() (*MessagePacket) {
 
 func (c Client) SendMessagePacketJSON() (*MessagePacketJSON, error) {
     // encode identity key in DER format
-    idkBytes, err := crypt.EncodeECDSAPublicKey(c.IdentityECDSA())
-    if err != nil {
-        return nil, err
-    }
+    idkBytes := crypt.EncodeECDSAPublicKey(c.IdentityECDSA())
 
     // encode ephemeral key in DER format
     epkBytes := crypt.EncodeECDHPublicKey(c.EphemeralKey())
@@ -104,40 +98,19 @@ func (c Client) SendMessagePacketJSON() (*MessagePacketJSON, error) {
 }
 
 func ParsePrekeyPacket(packet *PrekeyPacketJSON) (*ecdsa.PublicKey, *ecdh.PublicKey, []byte, *ecdh.PublicKey) {
-    rIKdsa, err := crypt.DecodeECDSAPublicKey(packet.IdentityKey)
-    if err != nil {
-        log.Fatal(err)
-    }
-
-    rSPK, err := crypt.DecodeECDHPublicKey(packet.SignedPrekey)
-    if err != nil {
-        log.Fatal(err)
-    }
-
+    rIKdsa := crypt.DecodeECDSAPublicKey(packet.IdentityKey)
+    rSPK := crypt.DecodeECDHPublicKey(packet.SignedPrekey)
+    rOK := crypt.DecodeECDHPublicKey(packet.OnetimePrekey)
     rSK, err := hex.DecodeString(packet.SignedKey)
     if err != nil {
         log.Fatal(err)
     }
-    
-    rOK, err := crypt.DecodeECDHPublicKey(packet.OnetimePrekey)
-    if err != nil {
-        log.Fatal(err)
-    }
-
     return rIKdsa, rSPK, rSK, rOK
 }
 
 func ParseMessagePacket(packet *MessagePacketJSON) (*ecdsa.PublicKey, *ecdh.PublicKey) {
-    rIKdsa, err := crypt.DecodeECDSAPublicKey(packet.IdentityKey)
-    if err != nil {
-        log.Fatal(err)
-    }
-
-    rEPK, err := crypt.DecodeECDHPublicKey(packet.EphemeralKey)
-    if err != nil {
-        log.Fatal(err)
-    }
-
+    rIKdsa := crypt.DecodeECDSAPublicKey(packet.IdentityKey)
+    rEPK := crypt.DecodeECDHPublicKey(packet.EphemeralKey)
     return rIKdsa, rEPK
 }
 
