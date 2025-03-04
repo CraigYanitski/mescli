@@ -12,6 +12,8 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io"
+	"log"
+
 	//"log"
 
 	//"github.com/CraigYanitski/mescli/client"
@@ -163,13 +165,23 @@ func (r *Ratchet) Extract(input, salt, info []byte) (key []byte, iv []byte, err 
     return key, iv, nil
 }
 
-func (r *Ratchet) SerialiseRatchet() string {
+func (r *Ratchet) EncodeRatchet() string {
     return hex.EncodeToString(r.key)
+}
+
+func DecodeRatchet(code string, salt, info []byte) *Ratchet {
+    key, err := hex.DecodeString(code)
+    if err != nil {
+        log.Fatal(err)
+    }
+    ratchet := &Ratchet{}
+    ratchet.NewKDF(key, salt, info)
+    return ratchet
 }
 
 
 
-func SerialiseECDSAPublicKey(key *ecdsa.PublicKey) (string, error) {
+func EncodeECDSAPublicKey(key *ecdsa.PublicKey) (string, error) {
     keyBytes, err := x509.MarshalPKIXPublicKey(key)
     if err != nil {
         return "", err
@@ -177,7 +189,7 @@ func SerialiseECDSAPublicKey(key *ecdsa.PublicKey) (string, error) {
     return hex.EncodeToString(keyBytes), nil
 }
 
-func SerialiseECDSAPrivateKey(key *ecdsa.PrivateKey) (string, error) {
+func EncodeECDSAPrivateKey(key *ecdsa.PrivateKey) (string, error) {
     keyBytes, err := x509.MarshalPKCS8PrivateKey(key)
     if err != nil {
         return "", err
@@ -185,7 +197,7 @@ func SerialiseECDSAPrivateKey(key *ecdsa.PrivateKey) (string, error) {
     return hex.EncodeToString(keyBytes), nil
 }
 
-func RecoverECDSAPublicKey(code string) (*ecdsa.PublicKey, error) {
+func DecodeECDSAPublicKey(code string) (*ecdsa.PublicKey, error) {
     keyBytes, err := hex.DecodeString(code)
     if err != nil {
         return nil, err
@@ -201,7 +213,7 @@ func RecoverECDSAPublicKey(code string) (*ecdsa.PublicKey, error) {
     return key, nil
 }
 
-func RecoverECDSAPrivateKey(code string) (*ecdsa.PrivateKey, error) {
+func DecodeECDSAPrivateKey(code string) (*ecdsa.PrivateKey, error) {
     keyBytes, err := hex.DecodeString(code)
     if err != nil {
         return nil, err
@@ -217,15 +229,15 @@ func RecoverECDSAPrivateKey(code string) (*ecdsa.PrivateKey, error) {
     return key, nil
 }
 
-func SerialiseECDHPublicKey(key *ecdh.PublicKey) string {
+func EncodeECDHPublicKey(key *ecdh.PublicKey) string {
     return hex.EncodeToString(key.Bytes())
 }
 
-func SerialiseECDHPrivateKey(key *ecdh.PrivateKey) string {
+func EncodeECDHPrivateKey(key *ecdh.PrivateKey) string {
     return hex.EncodeToString(key.Bytes())
 }
 
-func RecoverECDHPublicKey(code string) (*ecdh.PublicKey, error) {
+func DecodeECDHPublicKey(code string) (*ecdh.PublicKey, error) {
     keyBytes, err := hex.DecodeString(code)
     if err != nil {
         return nil, err
@@ -237,7 +249,7 @@ func RecoverECDHPublicKey(code string) (*ecdh.PublicKey, error) {
     return key, nil
 }
 
-func RecoverECDHPrivateKey(code string) (*ecdh.PrivateKey, error) {
+func DecodeECDHPrivateKey(code string) (*ecdh.PrivateKey, error) {
     keyBytes, err := hex.DecodeString(code)
     if err != nil {
         return nil, err

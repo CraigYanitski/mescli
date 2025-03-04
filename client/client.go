@@ -62,17 +62,15 @@ func (c *Client) Initialise(test bool) error {
 
     // store keys in config file if not testing encryption
     if !test {
-        //var send_ratchets map[string]cryptography.Ratchet
-        //var recv_ratchets map[string]cryptography.Ratchet
-        ikString, _ := crypt.SerialiseECDSAPrivateKey(ik)
+        // save keys
+        ikString, _ := crypt.EncodeECDSAPrivateKey(ik)
         viper.Set("identity_key", ikString)
-        spkString := crypt.SerialiseECDHPrivateKey(spk)
+        spkString := crypt.EncodeECDHPrivateKey(spk)
         viper.Set("signed_prekey", spkString)
         viper.Set("signed_key", hex.EncodeToString(sk))
-        opkString := crypt.SerialiseECDHPrivateKey(opk)
+        opkString := crypt.EncodeECDHPrivateKey(opk)
         viper.Set("onetime_prekey", opkString)
-        //viper.Set("send_ratchets", send_ratchets)
-        //viper.Set("recv_ratchets", recv_ratchets)
+        // write to config
         err = viper.WriteConfig()
         if err != nil {
             return fmt.Errorf("error saving cryptographic keys: %s", err)
@@ -205,11 +203,11 @@ func (c *Client) InitiateX3DH(contact *PrekeyPacketJSON, test bool) *MessagePack
     
     // save ratchets in config
     if !test {
-        viper.Set("root_ratchet.key", c.rootRatchet.SerialiseRatchet())
-        //send_ratchets := viper.GetStringMap("send_ratchets")
-        //send_ratchets["contact"] = c.send_ratchet
-        viper.Set("send_ratchets."+"user"+".key", c.sendRatchet.SerialiseRatchet())
-        viper.Set("recv_ratchets."+"user"+".key", c.recvRatchet.SerialiseRatchet())
+        // save ratchets
+        viper.Set("root_ratchet.key", c.rootRatchet.EncodeRatchet())
+        viper.Set("send_ratchets."+"user"+".key", c.sendRatchet.EncodeRatchet())
+        viper.Set("recv_ratchets."+"user"+".key", c.recvRatchet.EncodeRatchet())
+        // write config
         err = viper.WriteConfig()
         if err != nil {
             log.Fatal(err)
@@ -280,11 +278,11 @@ func (c *Client) CompleteX3DH(contact *MessagePacketJSON, test bool) error {
     
     // save ratchets in config
     if !test {
-        viper.Set("root_ratchet", c.rootRatchet.SerialiseRatchet())
-        //recv_ratchets := viper.GetStringMap("recv_ratchets")
-        //recv_ratchets["contact"] = c.send_ratchet
-        viper.Set("recv_ratchets."+"user"+".key", c.recvRatchet.SerialiseRatchet())
-        viper.Set("send_ratchets."+"user"+".key", c.sendRatchet.SerialiseRatchet())
+        // save ratchets
+        viper.Set("root_ratchet", c.rootRatchet.EncodeRatchet())
+        viper.Set("recv_ratchets."+"user"+".key", c.recvRatchet.EncodeRatchet())
+        viper.Set("send_ratchets."+"user"+".key", c.sendRatchet.EncodeRatchet())
+        // write config
         err = viper.WriteConfig()
         if err != nil {
             log.Fatal(err)
@@ -364,7 +362,10 @@ func (c *Client) SendMessage(plaintext string, format []string, pubkey *ecdh.Pub
 
     // save sending key if not test
     if !test {
-        viper.Set("send_ratchet."+"user"+".key", c.sendRatchet.SerialiseRatchet())
+        // save ratchet
+        viper.Set("send_ratchet."+"user"+".key", c.sendRatchet.EncodeRatchet())
+        // write config
+        viper.WriteConfig()
     }
 
     return ciphertext, nil
@@ -372,11 +373,6 @@ func (c *Client) SendMessage(plaintext string, format []string, pubkey *ecdh.Pub
 
 func (c *Client) ReceiveMessage(ciphertext []byte, pubkey *ecdh.PublicKey, test bool) (string, error) {
     // Renew Diffie-Hellman key
-    // key, err := generateECDSA()
-    // if err != nil {
-    //     err = fmt.Errorf("error generating DH key for decryption: %v", err)
-    //     return "", err
-    // }
     key := c.identityECDH()
 
     // Calculate shared secret
@@ -406,7 +402,10 @@ func (c *Client) ReceiveMessage(ciphertext []byte, pubkey *ecdh.PublicKey, test 
 
     // save sending key if not test
     if !test {
-        viper.Set("recv_ratchet."+"user"+".key", c.recvRatchet.SerialiseRatchet())
+        // save ratchet
+        viper.Set("recv_ratchet."+"user"+".key", c.recvRatchet.EncodeRatchet())
+        // write config
+        viper.WriteConfig()
     }
 
     return string(plaintext), nil
