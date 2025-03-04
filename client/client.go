@@ -322,7 +322,7 @@ func (c *Client) CheckPassword(password string) bool {
     return ok
 }
 
-func (c *Client) SendMessage(plaintext string, format []string, pubkey *ecdh.PublicKey) ([]byte, error) {
+func (c *Client) SendMessage(plaintext string, format []string, pubkey *ecdh.PublicKey, test bool) ([]byte, error) {
     // Format message
     formattedMessage, err := typeset.FormatString(plaintext, format)
     if err != nil {
@@ -362,10 +362,15 @@ func (c *Client) SendMessage(plaintext string, format []string, pubkey *ecdh.Pub
         return nil, err
     }
 
+    // save sending key if not test
+    if !test {
+        viper.Set("send_ratchet."+"user"+".key", c.sendRatchet.SerialiseRatchet())
+    }
+
     return ciphertext, nil
 }
 
-func (c *Client) ReceiveMessage(ciphertext []byte, pubkey *ecdh.PublicKey) (string, error) {
+func (c *Client) ReceiveMessage(ciphertext []byte, pubkey *ecdh.PublicKey, test bool) (string, error) {
     // Renew Diffie-Hellman key
     // key, err := generateECDSA()
     // if err != nil {
@@ -397,6 +402,11 @@ func (c *Client) ReceiveMessage(ciphertext []byte, pubkey *ecdh.PublicKey) (stri
     if err != nil {
         err = fmt.Errorf("error decrypting message: %v", err)
         return "", err
+    }
+
+    // save sending key if not test
+    if !test {
+        viper.Set("recv_ratchet."+"user"+".key", c.recvRatchet.SerialiseRatchet())
     }
 
     return string(plaintext), nil
