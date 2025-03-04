@@ -8,9 +8,13 @@ import (
 	"crypto/elliptic"
 	"crypto/rand"
 	"crypto/sha256"
+	"crypto/x509"
+	"encoding/hex"
 	"fmt"
 	"io"
+	//"log"
 
+	//"github.com/CraigYanitski/mescli/client"
 	"golang.org/x/crypto/bcrypt"
 	"golang.org/x/crypto/hkdf"
 )
@@ -124,25 +128,27 @@ func DecryptMessage(key, ciphertext, nonce []byte) (plaintext []byte, err error)
 	return plaintext, nil
 }
 
+
+
 type Ratchet struct {
     // This is a KDF reader that will be used to generate new keys
     kdf  io.Reader
     // This is the root key to be concatenated with the input data
-    Key  []byte
+    key  []byte
 }
 
 // This is a function to create a new KDF Reader from which keys can be read
 func (r *Ratchet) NewKDF(secret, salt, info []byte) {
-    r.Key = secret
+    r.key = secret
     r.kdf = hkdf.New(sha256.New, secret, salt, info)
 }
 
 // This function performs an extract and expand on the KDF to derive a new key and initialisation vector
 func (r *Ratchet) Extract(input, salt, info []byte) (key []byte, iv []byte, err error) {
-    secret := append(r.Key, input...)
+    secret := append(r.key, input...)
     // kdf := hkdf.Extract(sha256.New, secret, salt)
     kdfKey := hkdf.Extract(sha256.New, secret, salt)
-    r.Key = kdfKey
+    r.key = kdfKey
     r.kdf = hkdf.Expand(sha256.New, kdfKey, info)
     key = make([]byte, 32)
     iv = make([]byte, NonceSize)
@@ -156,4 +162,91 @@ func (r *Ratchet) Extract(input, salt, info []byte) (key []byte, iv []byte, err 
     }
     return key, iv, nil
 }
+
+func (r *Ratchet) SerialiseRatchet() string {
+    return hex.EncodeToString(r.key)
+}
+
+
+
+func SerialiseECDSAPublicKey(key *ecdsa.PublicKey) (string, error) {
+    keyBytes, err := x509.MarshalPKIXPublicKey(key)
+    if err != nil {
+        return "", err
+    }
+    return hex.EncodeToString(keyBytes), nil
+}
+
+func SerialiseECDSAPrivateKey(key *ecdsa.PrivateKey) (string, error) {
+    keyBytes, err := x509.MarshalPKCS8PrivateKey(key)
+    if err != nil {
+        return "", err
+    }
+    return hex.EncodeToString(keyBytes), nil
+}
+
+func RecoverECDSAPublicKey(code string) (*ecdsa.PublicKey, error) {
+    keyBytes, err := hex.DecodeString(code)
+    if err != nil {
+        return nil, err
+    }
+    keyInterface, err := x509.ParsePKIXPublicKey(keyBytes)
+    if err != nil {
+        return nil, err
+    }
+    key, ok := keyInterface.(*ecdsa.PublicKey)
+    if !ok {
+        return nil, fmt.Errorf("error recasting bytes to ecdsa.PublicKey")
+    }
+    return key, nil
+}
+
+func RecoverECDSAPrivateKey(code string) (*ecdsa.PrivateKey, error) {
+    keyBytes, err := hex.DecodeString(code)
+    if err != nil {
+        return nil, err
+    }
+    keyInterface, err := x509.ParsePKCS8PrivateKey(keyBytes)
+    if err != nil {
+        return nil, err
+    }
+    key, ok := keyInterface.(*ecdsa.PrivateKey)
+    if !ok {
+        return nil, fmt.Errorf("error recasting bytes to ecdsa.PublicKey")
+    }
+    return key, nil
+}
+
+func SerialiseECDHPublicKey(key *ecdh.PublicKey) string {
+    return hex.EncodeToString(key.Bytes())
+}
+
+func SerialiseECDHPrivateKey(key *ecdh.PrivateKey) string {
+    return hex.EncodeToString(key.Bytes())
+}
+
+func RecoverECDHPublicKey(code string) (*ecdh.PublicKey, error) {
+    keyBytes, err := hex.DecodeString(code)
+    if err != nil {
+        return nil, err
+    }
+    key, err := ecdh.P256().NewPublicKey(keyBytes)
+    if err != nil {
+        return nil, err
+    }
+    return key, nil
+}
+
+func RecoverECDHPrivateKey(code string) (*ecdh.PrivateKey, error) {
+    keyBytes, err := hex.DecodeString(code)
+    if err != nil {
+        return nil, err
+    }
+    key, err := ecdh.P256().NewPrivateKey(keyBytes)
+    if err != nil {
+        return nil, err
+    }
+    return key, nil
+}
+
 

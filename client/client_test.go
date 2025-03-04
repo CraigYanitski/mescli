@@ -41,28 +41,28 @@ func TestClientCreation(t *testing.T) {
 
         c := &client.Client{Name: test.name}
         c.HashPassword(test.password)
-        c.Initialise()
+        c.Initialise(true)
 
-        ik, err := c.Identity()
-        if err != nil {
-            t.Errorf("error getting client %v's public identity key: %v", c.Name, err)
-            continue
-        }
-        spk, err := c.SignedPrekey()
-        if err != nil {
-            t.Errorf("error getting client %v's public signed prekey: %v", c.Name, err)
-            continue
-        }
-        opk, err := c.OnetimePrekey()
-        if err != nil {
-            t.Errorf("error getting client %v's public one-time prekey: %v", c.Name, err)
-            continue
-        }
-        ek, err := c.EphemeralKey()
-        if err != nil {
-            t.Errorf("error getting client %v's public ephemeral key: %v", c.Name, err)
-            continue
-        }
+        ik := c.IdentityECDSA()
+        //if err != nil {
+        //    t.Errorf("error getting client %v's public identity key: %v", c.Name, err)
+        //    continue
+        //}
+        spk := c.SignedPrekey()
+        //if err != nil {
+        //    t.Errorf("error getting client %v's public signed prekey: %v", c.Name, err)
+        //    continue
+        //}
+        opk := c.OnetimePrekey()
+        //if err != nil {
+        //    t.Errorf("error getting client %v's public one-time prekey: %v", c.Name, err)
+        //    continue
+        //}
+        ek := c.EphemeralKey()
+        //if err != nil {
+        //    t.Errorf("error getting client %v's public ephemeral key: %v", c.Name, err)
+        //    continue
+        //}
         
         if checkPrivate(ik) {
             t.Error("error: client private identity key exposed!")
@@ -162,7 +162,7 @@ func TestX3DH(t *testing.T) {
         fmt.Printf("Creating client %v\n", test.clientOneName)
 
         clientOne := &client.Client{Name: test.clientOneName}
-        err := clientOne.Initialise()
+        err := clientOne.Initialise(true)
         if err != nil {
             t.Errorf("error initialising client %s's keys: %v", clientOne.Name, err)
         }
@@ -170,21 +170,26 @@ func TestX3DH(t *testing.T) {
         fmt.Printf("Creating client %v\n", test.clientTwoName)
 
         clientTwo := &client.Client{Name: test.clientTwoName}
-        err = clientTwo.Initialise()
+        err = clientTwo.Initialise(true)
         if err != nil {
             t.Errorf("error initialising client %s's keys: %v", clientTwo.Name, err)
         }
 
         fmt.Printf("%v initiating X3DH exchange\n", clientOne.Name)
 
-        err = clientOne.EstablishX3DH(clientTwo)
+        clientTwoPacket, err := clientTwo.SendPrekeyPacketJSON()
+        if err != nil {
+            t.Errorf("error sending client 1 message packet: %v", err)
+        }
+
+        clientOnePacket := clientOne.InitiateX3DH(clientTwoPacket, true)
         if err != nil {
             t.Errorf("error for %v initiating X3DH with %v: %v", clientOne.Name, clientTwo.Name, err)
         }
 
         fmt.Printf("%v completing X3DH exchange\n", clientTwo.Name)
 
-        err = clientTwo.CompleteX3DH(clientOne)
+        err = clientTwo.CompleteX3DH(clientOnePacket, true)
         if err != nil {
             t.Errorf("error for %v completing X3DH with %v: %v", clientTwo.Name, clientOne.Name, err)
         }

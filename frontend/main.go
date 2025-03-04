@@ -124,6 +124,8 @@ func runTests() {
     fmt.Println("Encryption test")
     fmt.Printf("---------------\n")
 
+    fmt.Println("Alice -> Bob")
+
     // Try to send a message from Alice to Bob
     alicePub, _ := alice.IdentityECDSA().ECDH()
     bobPub, _ := bob.IdentityECDSA().ECDH()
@@ -163,17 +165,19 @@ func runTests() {
     fmt.Println("Message length test")
     fmt.Printf("---------------\n")
 
+    fmt.Println("Bob -> Alice")
+
     // Try to send a message from Alice to Bob
     message = "I am wondering about how much text I can put in a message before it encryption truncates. " +
               "There is obviously some entropy limit that cannot be surpassed given the SHA256 hashing function. " +
               "Perhaps this sentence will not make it through the transmission? " +
               "I should start splitting the message into chunks before finishing the encryption. " +
               "This message is clearly a good way to test this functionality."
-    ciphertext, err = alice.SendMessage(message, []string{}, bobPub)
+    ciphertext, err = bob.SendMessage(message, []string{}, alicePub)
     if err != nil {
         panic(err)
     }
-    plaintext, err = bob.ReceiveMessage(ciphertext, alicePub)
+    plaintext, err = alice.ReceiveMessage(ciphertext, bobPub)
     if err != nil {
         panic(err)
     }
