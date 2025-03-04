@@ -33,7 +33,7 @@ func main() {
     viper.SetDefault("last_refresh", 0)
     viper.SetDefault("email", "")
     viper.SetDefault("name", "")
-    viper.SetDefault("identity_token", "")
+    viper.SetDefault("identity_key", "")
     viper.SetDefault("signed_prekey", "")
     viper.SetDefault("signed_key", "")
     //viper.SetDefault("root_ratchet", nil)
