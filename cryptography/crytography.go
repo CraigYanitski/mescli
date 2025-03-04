@@ -172,7 +172,8 @@ func (r *Ratchet) EncodeRatchet() string {
 func DecodeRatchet(code string, salt, info []byte) *Ratchet {
     key, err := hex.DecodeString(code)
     if err != nil {
-        log.Fatal(err)
+        log.Println(err)
+        return nil
     }
     ratchet := &Ratchet{}
     ratchet.NewKDF(key, salt, info)
@@ -181,52 +182,60 @@ func DecodeRatchet(code string, salt, info []byte) *Ratchet {
 
 
 
-func EncodeECDSAPublicKey(key *ecdsa.PublicKey) (string, error) {
+func EncodeECDSAPublicKey(key *ecdsa.PublicKey) string {
     keyBytes, err := x509.MarshalPKIXPublicKey(key)
     if err != nil {
-        return "", err
+        log.Println(err)
+        return ""
     }
-    return hex.EncodeToString(keyBytes), nil
+    return hex.EncodeToString(keyBytes)
 }
 
-func EncodeECDSAPrivateKey(key *ecdsa.PrivateKey) (string, error) {
+func EncodeECDSAPrivateKey(key *ecdsa.PrivateKey) string {
     keyBytes, err := x509.MarshalPKCS8PrivateKey(key)
     if err != nil {
-        return "", err
+        log.Println(err)
+        return ""
     }
-    return hex.EncodeToString(keyBytes), nil
+    return hex.EncodeToString(keyBytes)
 }
 
-func DecodeECDSAPublicKey(code string) (*ecdsa.PublicKey, error) {
+func DecodeECDSAPublicKey(code string) *ecdsa.PublicKey {
     keyBytes, err := hex.DecodeString(code)
     if err != nil {
-        return nil, err
+        log.Println(err)
+        return nil
     }
     keyInterface, err := x509.ParsePKIXPublicKey(keyBytes)
     if err != nil {
-        return nil, err
+        log.Println(err)
+        return nil
     }
     key, ok := keyInterface.(*ecdsa.PublicKey)
     if !ok {
-        return nil, fmt.Errorf("error recasting bytes to ecdsa.PublicKey")
+        log.Println("error recasting bytes to ecdsa.PublicKey")
+        return nil
     }
-    return key, nil
+    return key
 }
 
-func DecodeECDSAPrivateKey(code string) (*ecdsa.PrivateKey, error) {
+func DecodeECDSAPrivateKey(code string) *ecdsa.PrivateKey {
     keyBytes, err := hex.DecodeString(code)
     if err != nil {
-        return nil, err
+        log.Println(err)
+        return nil
     }
     keyInterface, err := x509.ParsePKCS8PrivateKey(keyBytes)
     if err != nil {
-        return nil, err
+        log.Println(err)
+        return nil
     }
     key, ok := keyInterface.(*ecdsa.PrivateKey)
     if !ok {
-        return nil, fmt.Errorf("error recasting bytes to ecdsa.PublicKey")
+        log.Println("error recasting bytes to ecdsa.PublicKey")
+        return nil
     }
-    return key, nil
+    return key
 }
 
 func EncodeECDHPublicKey(key *ecdh.PublicKey) string {
@@ -237,28 +246,32 @@ func EncodeECDHPrivateKey(key *ecdh.PrivateKey) string {
     return hex.EncodeToString(key.Bytes())
 }
 
-func DecodeECDHPublicKey(code string) (*ecdh.PublicKey, error) {
+func DecodeECDHPublicKey(code string) *ecdh.PublicKey {
     keyBytes, err := hex.DecodeString(code)
     if err != nil {
-        return nil, err
+        log.Println(err)
+        return nil
     }
     key, err := ecdh.P256().NewPublicKey(keyBytes)
     if err != nil {
-        return nil, err
+        log.Println(err)
+        return nil
     }
-    return key, nil
+    return key
 }
 
-func DecodeECDHPrivateKey(code string) (*ecdh.PrivateKey, error) {
+func DecodeECDHPrivateKey(code string) *ecdh.PrivateKey {
     keyBytes, err := hex.DecodeString(code)
     if err != nil {
-        return nil, err
+        log.Println(err)
+        return nil
     }
     key, err := ecdh.P256().NewPrivateKey(keyBytes)
     if err != nil {
-        return nil, err
+        log.Println(err)
+        return nil
     }
-    return key, nil
+    return key
 }
 
 
