@@ -24,7 +24,7 @@ triple-Diffie-Hellman (X3DH) asynchronous key exchange that is also implemented 
 
 You can test the current state of the client program using,
 
-```sh
+```bash
 make build
 ./mescli
 ```
@@ -36,7 +36,7 @@ tests of the X3DH handshake and encryption, but there is not yet a server.
 
 The current server code can also be run using,
 
-```sh
+```bash
 make build-server
 ./server
 ```
