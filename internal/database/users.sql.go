@@ -39,9 +39,9 @@ type CreateUserParams struct {
 	Email          string
 	Name           string
 	HashedPassword string
-	IdentityKey    []byte
-	SignedPrekey   []byte
-	SignedKey      []byte
+	IdentityKey    string
+	SignedPrekey   string
+	SignedKey      string
 }
 
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, error) {
@@ -121,9 +121,9 @@ WHERE id = $1
 `
 
 type GetUserKeyPacketRow struct {
-	IdentityKey  []byte
-	SignedPrekey []byte
-	SignedKey    []byte
+	IdentityKey  string
+	SignedPrekey string
+	SignedKey    string
 }
 
 func (q *Queries) GetUserKeyPacket(ctx context.Context, id uuid.UUID) (GetUserKeyPacketRow, error) {

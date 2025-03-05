@@ -17,8 +17,8 @@ type User struct {
 	Email          string
 	Name           string
 	HashedPassword string
-	IdentityKey    []byte
-	SignedPrekey   []byte
-	SignedKey      []byte
+	IdentityKey    string
+	SignedPrekey   string
+	SignedKey      string
 	Initialised    bool
 }
