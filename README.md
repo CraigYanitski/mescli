@@ -20,6 +20,30 @@ very thorough [Signal protocol](https://signal.org/docs/specifications/doublerat
 One can also find there a [description](https://signal.org/docs/specifications/x3dh/) of the extended 
 triple-Diffie-Hellman (X3DH) asynchronous key exchange that is also implemented in `mescli`.
 
+## Installing / Building
+
+You can test the current state of the client program using,
+
+```sh
+make build
+./mescli
+```
+
+It currently uses a configuration file in the current directory.
+This will hold the user's identifying keys and possibly at some point their messages.
+There is also not much to test now; you can either write messages to phony "contacts" or run some 
+tests of the X3DH handshake and encryption, but there is not yet a server.
+
+The current server code can also be run using,
+
+```sh
+make build-server
+./server
+```
+
+however it should be noted that there aren't many endpoints at the moment.
+This is primarily what is being developed at the moment.
+
 ## Development
 
 Since the full project is rather complex, I will focus on a few features for the first stage.
