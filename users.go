@@ -19,9 +19,9 @@ type InitUser struct {
     Email           string  `json:"email"`
     Name            string  `json:"name"`
     HashedPassword  string  `json:"hashed_password,omitempty"`
-    IdentityKey     []byte  `json:"identity_key"`
-    SignedPrekey    []byte  `json:"signed_key"`
-    SignedKey       []byte  `json:"signed_prekey"`
+    IdentityKey     string  `json:"identity_key"`
+    SignedPrekey    string  `json:"signed_key"`
+    SignedKey       string  `json:"signed_prekey"`
 }
 type User struct {
     ID              uuid.UUID  `json:"id"`
@@ -30,16 +30,16 @@ type User struct {
     Email           string     `json:"email"`
     Name            string     `json:"name"`
     HashedPassword  string     `json:"hashed_password,omitempty"`
-    IdentityKey     []byte     `json:"identity_key"`
-    SignedPrekey    []byte     `json:"signed_key"`
-    SignedKey       []byte     `json:"signed_prekey"`
+    IdentityKey     string     `json:"identity_key"`
+    SignedPrekey    string     `json:"signed_key"`
+    SignedKey       string     `json:"signed_prekey"`
     Initialised     bool       `json:"initialised"`
 }
 
 type PrekeyPacketJSON struct {
-    IdentityKey   []byte  `json:"identity_key"`
-    SignedPrekey  []byte  `json:"signed_prekey"`
-    SignedKey     []byte  `json:"signed_key"`
+    IdentityKey   string  `json:"identity_key"`
+    SignedPrekey  string  `json:"signed_prekey"`
+    SignedKey     string  `json:"signed_key"`
 }
 
 func (cfg *apiConfig) handleCreateUser(w http.ResponseWriter, r *http.Request) {
@@ -58,6 +58,15 @@ func (cfg *apiConfig) handleCreateUser(w http.ResponseWriter, r *http.Request) {
     } else if u.HashedPassword == "" {
         respondWithError(w, http.StatusBadRequest, "error: hashed password required to create user", nil)
         return
+    } else if u.IdentityKey == "" {
+        respondWithError(w, http.StatusBadRequest, "error: hashed identity key required to create user", nil)
+        return
+    } else if u.SignedPrekey == "" {
+        respondWithError(w, http.StatusBadRequest, "error: signed prekey required to create user", nil)
+        return
+    } else if u.SignedKey == "" {
+        respondWithError(w, http.StatusBadRequest, "error: signed key required to create user", nil)
+        return
     }
     // set name if unset
     if u.Name == "" {
@@ -65,9 +74,9 @@ func (cfg *apiConfig) handleCreateUser(w http.ResponseWriter, r *http.Request) {
         // return
         u.Name = strings.Split(u.Email, "@")[0]
     }
-    u.IdentityKey = []byte{0, 0}
-    u.SignedPrekey = []byte{0, 0}
-    u.SignedKey = []byte{0, 0}
+    //u.IdentityKey = []byte{0, 0}
+    //u.SignedPrekey = []byte{0, 0}
+    //u.SignedKey = []byte{0, 0}
 
     params := database.CreateUserParams{
         Email: u.Email,
