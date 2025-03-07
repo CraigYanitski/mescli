@@ -72,10 +72,9 @@ func main() {
     // run tests if selected
     if m, ok := m.(Model); ok && m.Chosen == 2 {
         runTests()
+        // output additional padding
+        fmt.Print("\n\n")
     }
-
-    // output additional padding
-    fmt.Print("\n\n")
 }
 
 func runTests() {

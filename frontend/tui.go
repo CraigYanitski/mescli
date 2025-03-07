@@ -136,11 +136,51 @@ func (d contactDelegate) Render(w io.Writer, m list.Model, index int, listItem l
 	fmt.Fprint(w, str + "\n")
 }
 
+// list key map
+type listKeyMap struct {
+    optionUp        key.Binding
+    optionDown      key.Binding
+    toggleHelpMenu  key.Binding
+    Enter           key.Binding
+    Back            key.Binding
+    Quit            key.Binding
+}
+func newListKeyMap() *listKeyMap {
+    return &listKeyMap{
+        optionUp: key.NewBinding(
+            key.WithKeys("up", "k"),
+            key.WithHelp("up", "previous option"),
+        ),
+        optionDown: key.NewBinding(
+            key.WithKeys("down", "j"),
+            key.WithHelp("down", "next option"),
+        ),
+        toggleHelpMenu: key.NewBinding(
+            key.WithKeys("ctrl+h", "h"),
+            key.WithHelp("ctrl+h | h", "display help menu"),
+        ),
+        Enter: key.NewBinding(
+            key.WithKeys("enter"),
+            key.WithHelp("enter", "select option"),
+        ),
+        Back: key.NewBinding(
+            key.WithKeys("esc", "backspace"),
+            key.WithHelp("esc | backspace", "previous menu"),
+        ),
+        Quit: key.NewBinding(
+            key.WithKeys("ctrl+c", "q"),
+            key.WithHelp("ctrl+c | q", "quit mescli"),
+        ),
+    }
+}
+
 // model parameters
 type Model struct {
     // geometry
     height  int
     width   int
+    // list key map
+    keys    *listKeyMap
     // options
     options  list.Model
     Chosen   int
@@ -390,6 +430,7 @@ func InitialModel() Model {
     senderPrompt := "You: "
 
     return Model {
+        keys:          newListKeyMap(),
         options:       o,
         contacts:      c,
         textarea:      ta,
@@ -415,12 +456,15 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
     // Use the appropriate update function
     if m.Chosen == 0 {
         return updateChoices(msg, m)
+    } else if m.Chosen == 1 {
+        return updateContacts(msg, m)
     } else if m.viewHelp {
         return updateHelp(msg, m)
     } else if m.conversation != "" {
         return updateConversation(msg, m)
     } else {
-        return updateContacts(msg, m)
+        // m.View()
+        return m, tea.Quit
     }
 }
 
@@ -431,11 +475,12 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func updateChoices(msg tea.Msg, m Model) (tea.Model, tea.Cmd) {
     switch msg := msg.(type) {
     case tea.KeyMsg:
-        switch msg.Type {
-        case tea.KeyEsc, tea.KeyCtrlC:
+        switch {
+        case key.Matches(msg, m.keys.Back, m.keys.Quit):
             m.Quitting = true
+            m.Chosen = 3
             return m, tea.Quit
-        case tea.KeyEnter:
+        case key.Matches(msg, m.keys.Enter):
             o, _ := m.options.SelectedItem().(option)
             m.Chosen = o.o
             if m.Chosen == 2 {
@@ -455,14 +500,15 @@ func updateChoices(msg tea.Msg, m Model) (tea.Model, tea.Cmd) {
 func updateContacts(msg tea.Msg, m Model) (tea.Model, tea.Cmd) {
     switch msg := msg.(type) {
     case tea.KeyMsg:
-        switch msg.Type {
-        case tea.KeyCtrlC:
+        switch {
+        case key.Matches(msg, m.keys.Quit):
             m.Quitting = true
+            m.Chosen = 3
             return m, tea.Quit
-        case tea.KeyEsc, tea.KeyBackspace:
+        case key.Matches(msg, m.keys.Back):
             m.Chosen = 0
             return m, nil
-        case tea.KeyEnter:
+        case key.Matches(msg, m.keys.Enter):
             c, _ := m.contacts.SelectedItem().(contact)
             m.conversation = c.name
 
@@ -509,6 +555,9 @@ func updateConversation(msg tea.Msg, m Model) (tea.Model, tea.Cmd) {
         switch msg.Type {
         case tea.KeyCtrlC:
             fmt.Println(m.textarea.Value())
+            m.Quitting = true
+            m.Chosen = 3
+            m.conversation = ""
             return m, tea.Quit
         case tea.KeyEsc:
             m.conversation = ""
@@ -552,6 +601,9 @@ func updateHelp(msg tea.Msg, m Model) (tea.Model, tea.Cmd) {
     case tea.KeyMsg:
         switch msg.Type {
         case tea.KeyCtrlC:
+            m.Quitting = true
+            m.Chosen = 3
+            m.viewHelp = false
             return m, tea.Quit
         case tea.KeyEsc, tea.KeyCtrlQ:
             m.viewHelp = false
@@ -565,9 +617,14 @@ func updateHelp(msg tea.Msg, m Model) (tea.Model, tea.Cmd) {
 //////////
 
 func (m Model) View() string {
+    if m.Quitting {
+        return "Bye!"
+    }
     var s string
     if m.Chosen == 0 {
         s = optionsView(m)
+    } else if m.Chosen == 1 {
+        s = contactsView(m)
     } else if m.Chosen == 2 {
         s = ""
     } else if m.viewHelp {
@@ -575,7 +632,7 @@ func (m Model) View() string {
     } else if m.conversation != "" {
         s = conversationView(m)
     } else {
-        s = contactsView(m)
+        s = ""
     }
     return s
 }
