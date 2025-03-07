@@ -280,7 +280,6 @@ func InitialModel() Model {
     inputs[loginEmail].Prompt = ""
     inputs[loginPassword] = textinput.New()
     inputs[loginPassword].Placeholder = "password"
-    inputs[loginPassword].Focus()
     inputs[loginPassword].CharLimit = 256
     inputs[loginPassword].Width = 50
     inputs[loginPassword].Prompt = ""
