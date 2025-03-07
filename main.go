@@ -14,6 +14,7 @@ import (
 
 type apiConfig struct {
     dbQueries  *database.Queries
+    secret     string
 }
 
 func main() {
@@ -24,6 +25,7 @@ func main() {
 
     // get environment variables
     dbURL := viper.GetString("DB_URL")
+    secret := viper.GetString("JWT_SECRET")
     log.Println(dbURL)
 
     // open database
@@ -36,6 +38,7 @@ func main() {
     // define database persistent configuration
     apiCfg := apiConfig{
         dbQueries: dbQueries,
+        secret: secret,
     }
 
     // create server multiplexer
@@ -44,6 +47,9 @@ func main() {
     // define endpoint handlers
     mux.HandleFunc("POST /api/users", http.HandlerFunc(apiCfg.handleCreateUser))
     mux.HandleFunc("GET /api/users", http.HandlerFunc(apiCfg.handleGetUserKeyPacket))
+    mux.HandleFunc("POST /api/login", http.HandlerFunc(apiCfg.handlerLogin))
+    mux.HandleFunc("POST /api/refresh", http.HandlerFunc(apiCfg.handlerRefresh))
+    mux.HandleFunc("POST /api/revoke", http.HandlerFunc(apiCfg.handlerRevoke))
 
     // define server and listen for requests
     const port = "8080"
