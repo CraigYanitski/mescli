@@ -49,7 +49,7 @@ func main() {
     if err != nil {
         log.Fatalln(err)
     }
-    viper.SetEnvPrefix("mescli")
+    viper.SetEnvPrefix("MESCLI_")
     viper.AutomaticEnv()
 
     // check if client is initialised
@@ -72,11 +72,11 @@ func main() {
     // run tests if selected
     if m, ok := m.(Model); ok && m.Chosen == 2 {
         runTests()
-        // output additional padding
         fmt.Print("\n\n")
     }
 }
 
+// test encryption functionality
 func runTests() {
     // Test prelude
     fmt.Printf("\n---------------\n")
