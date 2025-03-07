@@ -13,10 +13,12 @@ import (
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/textarea"
+	"github.com/charmbracelet/bubbles/textinput"
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/glamour"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/spf13/viper"
 )
 
 // margins
@@ -32,6 +34,9 @@ var (
 
 // styles
 var (
+    // login styles
+    inputStyle = lipgloss.NewStyle().Foreground(lipgloss.Color(164))
+
     // option styles
     optionStyle          = lipgloss.NewStyle()
     selectedOptionStyle  = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("164"))
@@ -56,6 +61,7 @@ var (
 
 // additional output
 var (
+    loginWrapping = "\n%s\n\n%s\n"
     conversationWrapping = "\n%s\n\n%s\n\n%s"
     optionWrapping = optionStyle.Margin(optionMargin.height, optionMargin.width).
         Render("\nPlease choose an option\n%s\n")
@@ -174,13 +180,24 @@ func newListKeyMap() *listKeyMap {
     }
 }
 
+// login struct
+const (
+    loginEmail = iota
+    loginPassword
+)
+
+
 // model parameters
 type Model struct {
     // geometry
     height  int
     width   int
     // list key map
-    keys    *listKeyMap
+    keys  *listKeyMap
+    // login
+    loggedIn  bool
+    inputs    []textinput.Model
+    focused   int
     // options
     options  list.Model
     Chosen   int
@@ -253,6 +270,22 @@ func (m Model) FullHelp() [][]key.Binding {
 
 // model initialiser
 func InitialModel() Model {
+    // login textinput
+    inputs := make([]textinput.Model, 2)
+    inputs[loginEmail] = textinput.New()
+    inputs[loginEmail].Placeholder = "email"
+    inputs[loginEmail].Focus()
+    inputs[loginEmail].CharLimit = 256
+    inputs[loginEmail].Width = 50
+    inputs[loginEmail].Prompt = ""
+    inputs[loginPassword] = textinput.New()
+    inputs[loginPassword].Placeholder = "password"
+    inputs[loginPassword].Focus()
+    inputs[loginPassword].CharLimit = 256
+    inputs[loginPassword].Width = 50
+    inputs[loginPassword].Prompt = ""
+
+    // option list
     options := []list.Item{
         option{str: "View conversations", o: 1},
         option{str: "Run custom tests", o: 2},
@@ -263,7 +296,9 @@ func InitialModel() Model {
     o.SetFilteringEnabled(false)
     o.Styles.PaginationStyle = paginationStyle
     o.Styles.HelpStyle = helpStyle
-
+    o.SetShowHelp(false)
+    
+    // contact list
     contacts := []list.Item{
         contact{name: "Test contact 1", desc: "encrypted"},
         contact{name: "Test contact 2", desc: "encrypted"},
@@ -276,9 +311,12 @@ func InitialModel() Model {
     c.Styles.Title = titleStyle
     c.Styles.PaginationStyle = paginationStyle
     c.Styles.HelpStyle = helpStyle
+    c.SetShowHelp(false)
 
+    // contact messages
     messages := make(map[string][]string)
 
+    // conversation textarea
     ta := textarea.New()
     // DefaultKeyMap is the default set of key bindings for navigating and acting
     // upon the textarea.
@@ -385,7 +423,7 @@ func InitialModel() Model {
     ta.FocusedStyle.CursorLine = lipgloss.NewStyle()
     ta.ShowLineNumbers = false
     ta.KeyMap.InsertNewline.SetEnabled(true)
-
+    // conversation viewport
     vp := viewport.New(30, 5)
     viewportKeyMap := viewport.KeyMap{
 		PageDown: key.NewBinding(
@@ -430,6 +468,9 @@ func InitialModel() Model {
     senderPrompt := "You: "
 
     return Model {
+        loggedIn:      false,
+        inputs:        inputs,
+        focused:       0,
         keys:          newListKeyMap(),
         options:       o,
         contacts:      c,
@@ -454,7 +495,9 @@ func (m Model) Init() tea.Cmd {
 
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
     // Use the appropriate update function
-    if m.Chosen == 0 {
+    if !m.loggedIn {
+        return updateLogin(msg, m)
+    } else if m.Chosen == 0 {
         return updateChoices(msg, m)
     } else if m.Chosen == 1 {
         return updateContacts(msg, m)
@@ -471,6 +514,38 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 ////////////////
 // SUB-UPDATE //
 ////////////////
+
+func updateLogin(msg tea.Msg, m Model) (tea.Model, tea.Cmd) {
+    if viper.GetString("refresh_token") != "" {
+        m.loggedIn = true
+        return m, nil
+    }
+
+    cmds := make([]tea.Cmd, len(m.inputs))
+    switch msg := msg.(type) {
+    case tea.KeyMsg:
+        switch msg.Type {
+        case tea.KeyCtrlC:
+            m.Quitting = true
+            return m, nil
+        case tea.KeyTab:
+            m.focused = (m.focused + 1) % len(m.inputs)
+        case tea.KeyShiftTab:
+            m.focused = (m.focused % len(m.inputs) + len(m.inputs)) % len(m.inputs)
+        case tea.KeyEnter:
+            // loginUsingPassword()
+            m.loggedIn = true
+        }
+        for i := range m.inputs {
+            m.inputs[i].Blur()
+        }
+        m.inputs[m.focused].Focus()
+    }
+    for i := range m.inputs {
+        m.inputs[i], cmds[i] = m.inputs[i].Update(msg)
+    }
+    return m, tea.Batch(cmds...)
+}
 
 func updateChoices(msg tea.Msg, m Model) (tea.Model, tea.Cmd) {
     switch msg := msg.(type) {
@@ -621,7 +696,9 @@ func (m Model) View() string {
         return "Bye!"
     }
     var s string
-    if m.Chosen == 0 {
+    if !m.loggedIn {
+        s = loginView(m)
+    } else if m.Chosen == 0 {
         s = optionsView(m)
     } else if m.Chosen == 1 {
         s = contactsView(m)
@@ -640,6 +717,14 @@ func (m Model) View() string {
 //////////////
 // SUB-VIEW //
 //////////////
+
+func loginView(m Model) string{
+    return fmt.Sprintf(
+        loginWrapping, 
+        m.inputs[loginEmail].View(), 
+        m.inputs[loginPassword].View(),
+    )
+}
 
 func optionsView(m Model) string {
     options := lipgloss.NewStyle().Margin(optionMargin.height, optionMargin.width).
