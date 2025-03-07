@@ -61,7 +61,7 @@ func main() {
     }
 
     // bubble tea interface
-    p := tea.NewProgram(InitialModel())
+    p := tea.NewProgram(InitialModel(), tea.WithAltScreen())
 
     // run
     m, err := p.Run()

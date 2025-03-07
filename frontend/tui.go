@@ -4,11 +4,8 @@ import (
 	"fmt"
 	"io"
 
-	// "log"
 	"strings"
 
-	// "github.com/CraigYanitski/mescli/client"
-	// "github.com/CraigYanitski/mescli/typeset"
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
@@ -493,17 +490,21 @@ func (m Model) Init() tea.Cmd {
 ////////////
 
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+    // Check if program exits
+    if m.Quitting {
+        return m, tea.Quit
+    }
     // Use the appropriate update function
     if !m.loggedIn {
         return updateLogin(msg, m)
+    } else if m.conversation != "" {
+        return updateConversation(msg, m)
     } else if m.Chosen == 0 {
         return updateChoices(msg, m)
     } else if m.Chosen == 1 {
         return updateContacts(msg, m)
     } else if m.viewHelp {
         return updateHelp(msg, m)
-    } else if m.conversation != "" {
-        return updateConversation(msg, m)
     } else {
         // m.View()
         return m, tea.Quit
@@ -524,9 +525,9 @@ func updateLogin(msg tea.Msg, m Model) (tea.Model, tea.Cmd) {
     switch msg := msg.(type) {
     case tea.KeyMsg:
         switch msg.Type {
-        case tea.KeyCtrlC:
+        case tea.KeyCtrlC, tea.KeyEsc:
             m.Quitting = true
-            return m, nil
+            return m, tea.Quit 
         case tea.KeyTab:
             m.focused = (m.focused + 1) % len(m.inputs)
         case tea.KeyShiftTab:
@@ -550,10 +551,12 @@ func updateChoices(msg tea.Msg, m Model) (tea.Model, tea.Cmd) {
     switch msg := msg.(type) {
     case tea.KeyMsg:
         switch {
-        case key.Matches(msg, m.keys.Back, m.keys.Quit):
+        case key.Matches(msg, m.keys.Quit):
             m.Quitting = true
-            m.Chosen = 3
             return m, tea.Quit
+        case key.Matches(msg, m.keys.Back):
+            m.loggedIn = false
+            return m, nil
         case key.Matches(msg, m.keys.Enter):
             o, _ := m.options.SelectedItem().(option)
             m.Chosen = o.o
@@ -577,7 +580,6 @@ func updateContacts(msg tea.Msg, m Model) (tea.Model, tea.Cmd) {
         switch {
         case key.Matches(msg, m.keys.Quit):
             m.Quitting = true
-            m.Chosen = 3
             return m, tea.Quit
         case key.Matches(msg, m.keys.Back):
             m.Chosen = 0
@@ -628,10 +630,8 @@ func updateConversation(msg tea.Msg, m Model) (tea.Model, tea.Cmd) {
     case tea.KeyMsg:
         switch msg.Type {
         case tea.KeyCtrlC:
-            fmt.Println(m.textarea.Value())
+            //fmt.Println(m.textarea.Value())
             m.Quitting = true
-            m.Chosen = 3
-            m.conversation = ""
             return m, tea.Quit
         case tea.KeyEsc:
             m.conversation = ""
@@ -697,6 +697,8 @@ func (m Model) View() string {
     var s string
     if !m.loggedIn {
         s = loginView(m)
+    } else if m.conversation != "" {
+        s = conversationView(m)
     } else if m.Chosen == 0 {
         s = optionsView(m)
     } else if m.Chosen == 1 {
@@ -705,8 +707,6 @@ func (m Model) View() string {
         s = ""
     } else if m.viewHelp {
         s = helpView(m)
-    } else if m.conversation != "" {
-        s = conversationView(m)
     } else {
         s = ""
     }
@@ -718,11 +718,16 @@ func (m Model) View() string {
 //////////////
 
 func loginView(m Model) string{
-    return fmt.Sprintf(
+    pw := m.inputs[loginPassword].Value()
+    san := strings.Repeat("*", len(pw))
+    m.inputs[loginPassword].SetValue(san)
+    s := fmt.Sprintf(
         loginWrapping, 
         m.inputs[loginEmail].View(), 
         m.inputs[loginPassword].View(),
     )
+    m.inputs[loginPassword].SetValue(pw)
+    return s
 }
 
 func optionsView(m Model) string {
