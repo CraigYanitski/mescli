@@ -111,10 +111,10 @@ func (c *Client) SignedPrekey() (*ecdh.PublicKey) {
     if c.signedPrekey == nil {
         panic(fmt.Errorf("error returning signed prekey -- client not yet initialised"))
     }
-    var key interface{} = c.signedPrekey.PublicKey()
-    if _, ok := key.(*ecdh.PublicKey); ok {
-        log.Println("prekey type *ecdh.PublicKey")
-    }
+    //var key interface{} = c.signedPrekey.PublicKey()
+    //if _, ok := key.(*ecdh.PublicKey); ok {
+    //    log.Println("prekey type *ecdh.PublicKey")
+    //}
     return c.signedPrekey.PublicKey()
 }
 
