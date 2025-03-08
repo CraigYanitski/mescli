@@ -27,7 +27,7 @@ func main() {
     viper.AddConfigPath(".")
     viper.SetConfigName(".mescli")
     viper.SetConfigType("yaml")
-    viper.SetDefault("api_url", "localhost:8080")
+    viper.SetDefault("api_url", "http://localhost:8080/api")
     viper.SetDefault("access_token", "")
     viper.SetDefault("refresh_token", "")
     viper.SetDefault("last_refresh", 0)
@@ -98,7 +98,7 @@ func runTests() {
     log.Println("have prekey packet")
 
     // Perform extended triple Diffie-Hellman exchange
-    aliceMP := alice.InitiateX3DH(bobPKP, false)
+    aliceMP := alice.InitiateX3DH(bobPKP, true)
     fmt.Printf("\nX3DH initialised\n")
     err = bob.CompleteX3DH(aliceMP, true)
     if err != nil {
@@ -129,7 +129,7 @@ func runTests() {
     alicePub, _ := alice.IdentityECDSA().ECDH()
     bobPub, _ := bob.IdentityECDSA().ECDH()
     message := "Hi Bob!!"
-    ciphertext, err := alice.SendMessage(message, []string{"blue"}, bobPub, false)
+    ciphertext, err := alice.SendMessage(message, []string{"blue"}, bobPub, true)
     if err != nil {
         panic(err)
     }
@@ -172,7 +172,7 @@ func runTests() {
               "Perhaps this sentence will not make it through the transmission? " +
               "I should start splitting the message into chunks before finishing the encryption. " +
               "This message is clearly a good way to test this functionality."
-    ciphertext, err = bob.SendMessage(message, []string{}, alicePub, false)
+    ciphertext, err = bob.SendMessage(message, []string{}, alicePub, true)
     if err != nil {
         panic(err)
     }
