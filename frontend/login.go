@@ -46,15 +46,17 @@ func loginWithPassword(email, password string) (bool, error) {
         return false, err
     }
     // unmarshal response
-    var creds LoginResponse
-    err = json.Unmarshal(body, &creds)
+    var user UserResponse
+    err = json.Unmarshal(body, &user)
     if err != nil {
         log.Println(err)
         return false, err
     }
     // update tokens in config file
-    viper.Set("refresh_token", creds.RefreshToken)
-    viper.Set("access_token", creds.AccessToken)
+    viper.Set("name", user.Name)
+    viper.Set("email", user.Email)
+    viper.Set("refresh_token", user.RefreshToken)
+    viper.Set("access_token", user.AccessToken)
     viper.Set("last_refresh", time.Now().Unix())
     viper.WriteConfig()
     return true, nil

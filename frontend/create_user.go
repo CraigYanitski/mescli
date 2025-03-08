@@ -81,8 +81,8 @@ func createAccount(email, password string) (bool, error) {
         return false, err
     }
     // update config
-    viper.Set("email", user.Email)
     viper.Set("name",  user.Name)
+    viper.Set("email", user.Email)
     viper.Set("refresh_token", user.RefreshToken)
     viper.Set("access_token",  user.AccessToken)
     viper.Set("last_refresh",  time.Now().Unix())
