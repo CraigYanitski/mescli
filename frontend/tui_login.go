@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -32,8 +33,29 @@ func updateLogin(msg tea.Msg, m Model) (tea.Model, tea.Cmd) {
         case tea.KeyShiftTab:
             m.focused = (m.focused % len(m.inputs) + len(m.inputs)) % len(m.inputs)
         case tea.KeyEnter:
-            // loginUsingPassword()
-            m.loggedIn = true
+            ok, err := loginWithPassword(
+                m.inputs[loginEmail].Value(), 
+                m.inputs[loginPassword].Value(),
+            )
+            if err != nil {
+                log.Println(err)
+                m.loginMsg += "\n\nInvalid login"
+            }
+            if ok {
+                m.loggedIn = true
+            }
+        case tea.KeyCtrlN:
+            ok, err := createAccount(
+                m.inputs[loginEmail].Value(),
+                m.inputs[loginPassword].Value(),
+            )
+            if err != nil {
+                log.Println(err)
+                m.loginMsg += "\n\nInvalid login"
+            }
+            if ok {
+                m.loggedIn = true
+            }
         }
         for i := range m.inputs {
             m.inputs[i].Blur()
@@ -57,6 +79,7 @@ func loginView(m Model) string{
         m.logo,
         m.inputs[loginEmail].View(), 
         m.inputs[loginPassword].View(),
+        m.loginMsg,
     )
     // restore password
     m.inputs[loginPassword].SetValue(pw)
