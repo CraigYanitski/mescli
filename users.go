@@ -39,7 +39,7 @@ type User struct {
 }
 type ValidUser struct {
     User
-    Token         string  `json:"token"`
+    AccessToken   string  `json:"access_token"`
     RefreshToken  string  `json:"refresh_token"`
 }
 
@@ -185,7 +185,7 @@ func (cfg *apiConfig) handlerLogin(w http.ResponseWriter, r *http.Request) {
     // recast database user to validated one, adding JWT
     validUser := &ValidUser{}
     validUser.User = User(foundUser)
-    validUser.Token = token
+    validUser.AccessToken = token
     validUser.RefreshToken = refreshToken.Token
 
     // check validity of password
