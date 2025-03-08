@@ -53,12 +53,12 @@ func main() {
     viper.AutomaticEnv()
 
     // check if client is initialised
-    c := client.Client{
-        Name: "test",//viper.GetString("name"),
-    }
-    if viper.Get("identity_token") == nil {
-        c.Initialise(false)
-    }
+    //c := client.Client{
+    //    Name: "test",//viper.GetString("name"),
+    //}
+    //if viper.Get("identity_token") == nil {
+    //    c.Initialise(false)
+    //}
 
     // bubble tea interface
     p := tea.NewProgram(InitialModel(), tea.WithAltScreen())
