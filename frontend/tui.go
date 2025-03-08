@@ -66,11 +66,13 @@ func InitialModel() Model {
     inputs[loginEmail].CharLimit = 256
     inputs[loginEmail].Width = 50
     inputs[loginEmail].Prompt = ""
+    inputs[loginEmail].Validate = emailValidator
     inputs[loginPassword] = textinput.New()
     inputs[loginPassword].Placeholder = "password"
     inputs[loginPassword].CharLimit = 256
     inputs[loginPassword].Width = 50
     inputs[loginPassword].Prompt = ""
+    inputs[loginPassword].Validate = passwordValidator
 
     // option list
     options := []list.Item{

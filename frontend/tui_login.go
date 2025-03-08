@@ -1,8 +1,10 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"log"
+	"regexp"
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -45,6 +47,13 @@ func updateLogin(msg tea.Msg, m Model) (tea.Model, tea.Cmd) {
                 m.loggedIn = true
             }
         case tea.KeyCtrlN:
+            if err := m.inputs[loginEmail].Err; err != nil {
+                m.loginMsg += fmt.Sprintf("\n\n%s", err)
+                return m, nil
+            } else if err = m.inputs[loginPassword].Err; err != nil {
+                m.loginMsg += fmt.Sprintf("\n\n%s", err)
+                return m, nil
+            }
             ok, err := createAccount(
                 m.inputs[loginEmail].Value(),
                 m.inputs[loginPassword].Value(),
@@ -52,6 +61,7 @@ func updateLogin(msg tea.Msg, m Model) (tea.Model, tea.Cmd) {
             if err != nil {
                 log.Println(err)
                 m.loginMsg += "\n\nInvalid login"
+                return m, nil
             }
             if ok {
                 m.loggedIn = true
@@ -84,5 +94,56 @@ func loginView(m Model) string{
     // restore password
     m.inputs[loginPassword].SetValue(pw)
     return s
+}
+
+func emailValidator(s string) error {
+    ok, err := regexp.MatchString(`([a-zA-Z0-9\._-]+)\@`, s)
+    if err == nil && !ok {
+        err = errors.New("not a valid email")
+    }
+    if err != nil {
+        return err
+    }
+    ok, err = regexp.MatchString(`(\@[a-zA-Z0-9\._-]+)\.`, s)
+    if err == nil && !ok {
+        err = errors.New("not a valid email")
+    }
+    if err != nil {
+        return err
+    }
+    ok, err = regexp.MatchString(`(\.[a-zA-Z0-9]+)`, s)
+    if err == nil && !ok {
+        err = errors.New("not a valid email")
+    }
+    return err
+}
+
+func passwordValidator(s string) error {
+    ok, err := regexp.MatchString(`[a-z]+`, s)
+    if err == nil && !ok {
+        err = errors.New("password does not contain lowercase characters")
+    }
+    if err != nil {
+        return err
+    }
+    ok, err = regexp.MatchString(`[A-Z]+`, s)
+    if err == nil && !ok {
+        err = errors.New("password does not contain uppercase characters")
+    }
+    if err != nil {
+        return err
+    }
+    ok, err = regexp.MatchString(`[^a-zA-Z0-9]+`, s)
+    if err == nil && !ok {
+        err = errors.New("password does not contain special characters")
+    }
+    if err != nil {
+        return err
+    }
+    ok, err = regexp.MatchString(`.{8,}`, s)
+    if err == nil && !ok {
+        err = errors.New("password not long enough")
+    }
+    return err
 }
 
