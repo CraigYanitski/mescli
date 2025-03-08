@@ -45,7 +45,7 @@ var (
 
 // additional output
 var (
-    loginWrapping = "\n%s\n\n\n\n\n%s\n\n%s\n"
+    loginWrapping = "\n%s\n\n\n\n\n\n%s\n\n%s\n\n\n%s\n"
     conversationWrapping = "\n%s\n\n%s\n\n%s"
     optionWrapping = optionStyle.Margin(optionMargin.height, optionMargin.width).
         Render("\nPlease choose an option\n%s\n")

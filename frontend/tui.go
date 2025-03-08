@@ -25,6 +25,7 @@ type Model struct {
     loggedIn  bool
     inputs    []textinput.Model
     focused   int
+    loginMsg  string
     // options
     options  list.Model
     Chosen   int
@@ -257,6 +258,7 @@ func InitialModel() Model {
         loggedIn:      false,
         inputs:        inputs,
         focused:       0,
+        loginMsg:      "enter to submit credentials\nctrl+n to create a new user",
         keys:          newListKeyMap(),
         options:       o,
         contacts:      c,
