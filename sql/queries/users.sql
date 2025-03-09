@@ -32,3 +32,16 @@ WHERE email = $1 ;
 -- name: GetUserKeyPacket :one
 SELECT identity_key, signed_prekey, signed_key FROM users 
 WHERE id = $1 ;
+
+-- name: UpdateUser :one
+UPDATE users 
+SET updated_at = NOW(),
+    email = $2,
+    name = $3,
+    hashed_password = $4,
+    identity_key = $5,
+    signed_prekey = $6,
+    signed_key = $7
+WHERE id = $1
+RETURNING * ;
+

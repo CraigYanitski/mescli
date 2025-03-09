@@ -132,3 +132,52 @@ func (q *Queries) GetUserKeyPacket(ctx context.Context, id uuid.UUID) (GetUserKe
 	err := row.Scan(&i.IdentityKey, &i.SignedPrekey, &i.SignedKey)
 	return i, err
 }
+
+const updateUser = `-- name: UpdateUser :one
+UPDATE users 
+SET updated_at = NOW(),
+    email = $2,
+    name = $3,
+    hashed_password = $4,
+    identity_key = $5,
+    signed_prekey = $6,
+    signed_key = $7
+WHERE id = $1
+RETURNING id, created_at, updated_at, email, name, hashed_password, identity_key, signed_prekey, signed_key, initialised
+`
+
+type UpdateUserParams struct {
+	ID             uuid.UUID
+	Email          string
+	Name           string
+	HashedPassword string
+	IdentityKey    string
+	SignedPrekey   string
+	SignedKey      string
+}
+
+func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, error) {
+	row := q.db.QueryRowContext(ctx, updateUser,
+		arg.ID,
+		arg.Email,
+		arg.Name,
+		arg.HashedPassword,
+		arg.IdentityKey,
+		arg.SignedPrekey,
+		arg.SignedKey,
+	)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.Email,
+		&i.Name,
+		&i.HashedPassword,
+		&i.IdentityKey,
+		&i.SignedPrekey,
+		&i.SignedKey,
+		&i.Initialised,
+	)
+	return i, err
+}
