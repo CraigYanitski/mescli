@@ -11,7 +11,7 @@ type Token struct {
     Token  string  `json:"token"`
 }
 
-func (cfg *apiConfig) handlerRefresh(w http.ResponseWriter, r *http.Request) {
+func (cfg *apiConfig) handleRefresh(w http.ResponseWriter, r *http.Request) {
     token, err := auth.GetBearerToken(r.Header)
     if err != nil {
         respondWithError(w, http.StatusUnauthorized, "missing token", err)
@@ -33,7 +33,7 @@ func (cfg *apiConfig) handlerRefresh(w http.ResponseWriter, r *http.Request) {
     return
 }
 
-func (cfg *apiConfig) handlerRevoke(w http.ResponseWriter, r *http.Request) {
+func (cfg *apiConfig) handleRevoke(w http.ResponseWriter, r *http.Request) {
     token, err := auth.GetBearerToken(r.Header)
     if err != nil {
         respondWithError(w, http.StatusUnauthorized, "missing token", err)

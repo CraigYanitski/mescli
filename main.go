@@ -48,9 +48,9 @@ func main() {
     mux.HandleFunc("POST /api/users", http.HandlerFunc(apiCfg.handleCreateUser))
     mux.HandleFunc("GET /api/users", http.HandlerFunc(apiCfg.handleGetUserKeyPacket))
     mux.HandleFunc("PUT /api/users", http.HandlerFunc(apiCfg.handleUpdateUser))
-    mux.HandleFunc("POST /api/login", http.HandlerFunc(apiCfg.handlerLogin))
-    mux.HandleFunc("POST /api/refresh", http.HandlerFunc(apiCfg.handlerRefresh))
-    mux.HandleFunc("POST /api/revoke", http.HandlerFunc(apiCfg.handlerRevoke))
+    mux.HandleFunc("POST /api/login", http.HandlerFunc(apiCfg.handleLogin))
+    mux.HandleFunc("POST /api/refresh", http.HandlerFunc(apiCfg.handleRefresh))
+    mux.HandleFunc("POST /api/revoke", http.HandlerFunc(apiCfg.handleRevoke))
 
     // define server and listen for requests
     const port = "8080"

@@ -133,7 +133,7 @@ func (cfg *apiConfig) handleGetUserKeyPacket(w http.ResponseWriter, r *http.Requ
     return
 }
 
-func (cfg *apiConfig) handlerLogin(w http.ResponseWriter, r *http.Request) {
+func (cfg *apiConfig) handleLogin(w http.ResponseWriter, r *http.Request) {
     // unmarshal the POST JSON and verify required fields are valid
     decoder := json.NewDecoder(r.Body)
     u := &InitUser{}
@@ -202,7 +202,7 @@ func (cfg *apiConfig) handlerLogin(w http.ResponseWriter, r *http.Request) {
     return
 }
 
-func (cfg *apiConfig) handlerUpdateUser(w http.ResponseWriter, r *http.Request) {
+func (cfg *apiConfig) handleUpdateUser(w http.ResponseWriter, r *http.Request) {
     // check user authentication
     token, err := auth.GetBearerToken(r.Header)
     if err != nil {
