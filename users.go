@@ -202,3 +202,68 @@ func (cfg *apiConfig) handlerLogin(w http.ResponseWriter, r *http.Request) {
     return
 }
 
+func (cfg *apiConfig) handlerUpdateUser(w http.ResponseWriter, r *http.Request) {
+    // check user authentication
+    token, err := auth.GetBearerToken(r.Header)
+    if err != nil {
+        respondWithError(w, http.StatusUnauthorized, "", err)
+        return
+    }
+    id, err := auth.ValidateJWT(token, cfg.secret)
+    if err != nil {
+        respondWithError(w, http.StatusUnauthorized, token, err)
+        return
+    }
+
+    // unmarshal the POST JSON and verify required fields are valid
+    decoder := json.NewDecoder(r.Body)
+    u := &InitUser{}
+    err = decoder.Decode(u)
+    if err != nil {
+        respondWithError(w, http.StatusInternalServerError, "unable to unmarshal request", err)
+        return
+    } else if u.Email == "" || u.Password == "" {
+        respondWithError(
+            w, 
+            http.StatusInternalServerError, 
+            fmt.Sprintf("error decoding JSON with email '%s' and password '%s'", u.Email, u.Password), 
+            nil,
+        )
+        return
+    } else if u.IdentityKey == "" {
+        respondWithError(w, http.StatusBadRequest, "error: hashed identity key required for user update", nil)
+        return
+    } else if u.SignedPrekey == "" {
+        respondWithError(w, http.StatusBadRequest, "error: signed prekey required for user update", nil)
+        return
+    } else if u.SignedKey == "" {
+        respondWithError(w, http.StatusBadRequest, "error: signed key required for user update", nil)
+        return
+    }
+
+    hash, err := crypt.HashPassword(u.Password)
+    if err != nil {
+        respondWithError(w, http.StatusInternalServerError, "failed to hash password", err)
+        return
+    }
+
+    params := database.UpdateUserParams{
+        ID: id,
+        Email: u.Email,
+        Name: u.Name,
+        HashedPassword: hash,
+        IdentityKey: u.IdentityKey,//hex.EncodeToString(idkBytes),
+        SignedPrekey: u.SignedPrekey,//hex.EncodeToString(spkBytes),
+        SignedKey: u.SignedKey,//hex.EncodeToString(skBytes),
+    }
+    createdUser, err := cfg.dbQueries.UpdateUser(r.Context(), params)
+    if err != nil {
+        respondWithError(w, http.StatusInternalServerError, "error adding to database", err)
+        return
+    }
+
+    createdUser.HashedPassword = ""
+    respondWithJSON(w, http.StatusCreated, User(createdUser))
+    return
+}
+
