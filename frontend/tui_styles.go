@@ -46,6 +46,9 @@ var (
 // additional output
 var (
     loginWrapping = "\n%s\n\n\n\n\n\n%s\n\n%s\n\n\n%s\n"
+    loginMsgWrapping = "enter to submit credentials\nctrl+n to create a new account\n\n%s"
+    updateWrapping = "\n%s\n\n\n\n\n\n%s\n\n%s\n\n%s\n\n%s\n\n\n%s\n"
+    updateMsgWrapping = "enter to submit credentials\nctrl+n to update your account\n\n%s"
     conversationWrapping = "\n%s\n\n%s\n\n%s"
     optionWrapping = optionStyle.Margin(optionMargin.height, optionMargin.width).
         Render("\nPlease choose an option\n%s\n")

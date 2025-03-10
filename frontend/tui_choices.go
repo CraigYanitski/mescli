@@ -22,7 +22,8 @@ func updateChoices(msg tea.Msg, m Model) (tea.Model, tea.Cmd) {
             o, _ := m.options.SelectedItem().(option)
             m.Chosen = o.o
             if m.Chosen == 2 {
-                return m, tea.Quit
+                m.updated = false
+                m.updateMsg = fmt.Sprintf(updateMsgWrapping, "")
             }
         }
     case tea.WindowSizeMsg:

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 
@@ -22,10 +23,15 @@ type Model struct {
     // list key map
     keys  *listKeyMap
     // login
-    loggedIn  bool
-    inputs    []textinput.Model
-    focused   int
-    loginMsg  string
+    loggedIn     bool
+    loginInputs  []textinput.Model
+    loginFocus   int
+    loginMsg     string
+    // update
+    updated       bool
+    updateInputs  []textinput.Model
+    updateFocus   int
+    updateMsg     string
     // options
     options  list.Model
     Chosen   int
@@ -52,32 +58,60 @@ type Model struct {
 func InitialModel() Model {
     // open logo
     var logo string
-    file, err := os.ReadFile("assets/logo.txt")
+    logoDir := os.Getenv("MESCLI_DIR")+"assets/logo.txt"
+    file, err := os.ReadFile(logoDir)
     if err != nil {
         log.Printf("error: %s", err)
         logo = "mescli"
     }
     logo = string(file)
     // login textinput
-    inputs := make([]textinput.Model, 2)
-    inputs[loginEmail] = textinput.New()
-    inputs[loginEmail].Placeholder = "email"
-    inputs[loginEmail].Focus()
-    inputs[loginEmail].CharLimit = 256
-    inputs[loginEmail].Width = 50
-    inputs[loginEmail].Prompt = ""
-    inputs[loginEmail].Validate = emailValidator
-    inputs[loginPassword] = textinput.New()
-    inputs[loginPassword].Placeholder = "password"
-    inputs[loginPassword].CharLimit = 256
-    inputs[loginPassword].Width = 50
-    inputs[loginPassword].Prompt = ""
-    inputs[loginPassword].Validate = passwordValidator
+    loginInputs := make([]textinput.Model, 2)
+    loginInputs[loginEmail] = textinput.New()
+    loginInputs[loginEmail].Placeholder = "email"
+    loginInputs[loginEmail].Focus()
+    loginInputs[loginEmail].CharLimit = 256
+    loginInputs[loginEmail].Width = 50
+    loginInputs[loginEmail].Prompt = ""
+    loginInputs[loginEmail].Validate = emailValidator
+    loginInputs[loginPassword] = textinput.New()
+    loginInputs[loginPassword].Placeholder = "password"
+    loginInputs[loginPassword].CharLimit = 256
+    loginInputs[loginPassword].Width = 50
+    loginInputs[loginPassword].Prompt = ""
+    loginInputs[loginPassword].Validate = passwordValidator
+
+    //update textinput
+    updateInputs := make([]textinput.Model, 4)
+    updateInputs[updateName] = textinput.New()
+    updateInputs[updateName].Placeholder = "name"
+    updateInputs[updateName].Focus()
+    updateInputs[updateName].CharLimit = 256
+    updateInputs[updateName].Width = 50
+    updateInputs[updateName].Prompt = ""
+    updateInputs[updateEmail] = textinput.New()
+    updateInputs[updateEmail].Placeholder = "email"
+    updateInputs[updateEmail].CharLimit = 256
+    updateInputs[updateEmail].Width = 50
+    updateInputs[updateEmail].Prompt = ""
+    updateInputs[updateEmail].Validate = emailValidator
+    updateInputs[updatePassword] = textinput.New()
+    updateInputs[updatePassword].Placeholder = "password"
+    updateInputs[updatePassword].CharLimit = 256
+    updateInputs[updatePassword].Width = 50
+    updateInputs[updatePassword].Prompt = ""
+    updateInputs[updatePassword].Validate = passwordValidator
+    updateInputs[updateRetypePassword] = textinput.New()
+    updateInputs[updateRetypePassword].Placeholder = "retype password"
+    updateInputs[updateRetypePassword].CharLimit = 256
+    updateInputs[updateRetypePassword].Width = 50
+    updateInputs[updateRetypePassword].Prompt = ""
 
     // option list
     options := []list.Item{
         option{str: "View conversations", o: 1},
-        option{str: "Run custom tests", o: 2},
+        option{str: "Update account", o:2},
+        option{str: "Run custom tests", o: 3},
     }
     o := list.New(options, optionDelegate{}, 20, 10)
     o.SetShowTitle(false)
@@ -258,9 +292,13 @@ func InitialModel() Model {
 
     return Model {
         loggedIn:      false,
-        inputs:        inputs,
-        focused:       0,
-        loginMsg:      "enter to submit credentials\nctrl+n to create a new user",
+        loginInputs:   loginInputs,
+        loginFocus:    0,
+        loginMsg:      fmt.Sprintf(loginMsgWrapping, ""),
+        updated:       true,
+        updateInputs:  updateInputs,
+        updateFocus:   0,
+        updateMsg:     updateMsgWrapping,
         keys:          newListKeyMap(),
         options:       o,
         contacts:      c,
@@ -288,12 +326,16 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
     // Use the appropriate update function
     if !m.loggedIn {
         return updateLogin(msg, m)
+    } else if !m.updated {
+        return updateUpdate(msg, m)
     } else if m.conversation != "" {
         return updateConversation(msg, m)
     } else if m.Chosen == 0 {
         return updateChoices(msg, m)
     } else if m.Chosen == 1 {
         return updateContacts(msg, m)
+    } else if m.Chosen == 2 {
+        return updateUpdate(msg, m)
     } else if m.viewHelp {
         return updateHelp(msg, m)
     } else {
@@ -309,6 +351,8 @@ func (m Model) View() string {
     var s string
     if !m.loggedIn {
         s = loginView(m)
+    } else if !m.updated {
+        s = updateView(m)
     } else if m.conversation != "" {
         s = conversationView(m)
     } else if m.Chosen == 0 {
@@ -316,7 +360,7 @@ func (m Model) View() string {
     } else if m.Chosen == 1 {
         s = contactsView(m)
     } else if m.Chosen == 2 {
-        s = ""
+        s = updateView(m)
     } else if m.viewHelp {
         s = helpView(m)
     } else {
