@@ -23,76 +23,71 @@ func updateLogin(msg tea.Msg, m Model) (tea.Model, tea.Cmd) {
         return m, nil
     }
 
-    cmds := make([]tea.Cmd, len(m.inputs))
+    cmds := make([]tea.Cmd, len(m.loginInputs))
     switch msg := msg.(type) {
     case tea.KeyMsg:
         switch msg.Type {
         case tea.KeyCtrlC, tea.KeyEsc:
             m.Quitting = true
             return m, tea.Quit 
-        case tea.KeyTab:
-            m.focused = (m.focused + 1) % len(m.inputs)
-        case tea.KeyShiftTab:
-            m.focused = (m.focused % len(m.inputs) + len(m.inputs)) % len(m.inputs)
+        case tea.KeyTab, tea.KeyDown:
+            m.loginFocus = (m.loginFocus + 1) % len(m.loginInputs)
+        case tea.KeyShiftTab, tea.KeyUp:
+            m.loginFocus = (m.loginFocus % len(m.loginInputs) + len(m.loginInputs)) % len(m.loginInputs)
         case tea.KeyEnter:
-            ok, err := loginWithPassword(
-                m.inputs[loginEmail].Value(), 
-                m.inputs[loginPassword].Value(),
+            err := loginWithPassword(
+                m.loginInputs[loginEmail].Value(), 
+                m.loginInputs[loginPassword].Value(),
             )
             if err != nil {
-                log.Println(err)
-                m.loginMsg += "\n\nInvalid login"
+                m.loginMsg = fmt.Sprintf(loginMsgWrapping, "Invalid login")
             }
-            if ok {
-                m.loggedIn = true
-            }
+            m.loggedIn = true
         case tea.KeyCtrlN:
-            if err := m.inputs[loginEmail].Err; err != nil {
-                m.loginMsg += fmt.Sprintf("\n\n%s", err)
+            if err := m.loginInputs[loginEmail].Err; err != nil {
+                m.loginMsg = fmt.Sprintf(loginMsgWrapping, err)
                 return m, nil
-            } else if err = m.inputs[loginPassword].Err; err != nil {
-                m.loginMsg += fmt.Sprintf("\n\n%s", err)
+            } else if err = m.loginInputs[loginPassword].Err; err != nil {
+                m.loginMsg = fmt.Sprintf(loginMsgWrapping, err)
                 return m, nil
             }
-            ok, err := createAccount(
-                m.inputs[loginEmail].Value(),
-                m.inputs[loginPassword].Value(),
+            err := createAccount(
+                m.loginInputs[loginEmail].Value(),
+                m.loginInputs[loginPassword].Value(),
             )
             if err != nil {
                 log.Println(err)
-                m.loginMsg += "\n\nInvalid login"
+                m.loginMsg = fmt.Sprintf(loginMsgWrapping, "Invalid login")
                 return m, nil
             }
-            if ok {
-                m.loggedIn = true
-            }
+            m.loggedIn = true
         }
-        for i := range m.inputs {
-            m.inputs[i].Blur()
+        for i := range m.loginInputs {
+            m.loginInputs[i].Blur()
         }
-        m.inputs[m.focused].Focus()
+        m.loginInputs[m.loginFocus].Focus()
     }
-    for i := range m.inputs {
-        m.inputs[i], cmds[i] = m.inputs[i].Update(msg)
+    for i := range m.loginInputs {
+        m.loginInputs[i], cmds[i] = m.loginInputs[i].Update(msg)
     }
     return m, tea.Batch(cmds...)
 }
 
 func loginView(m Model) string{
     // obscure password
-    pw := m.inputs[loginPassword].Value()
+    pw := m.loginInputs[loginPassword].Value()
     san := strings.Repeat("*", len(pw))
-    m.inputs[loginPassword].SetValue(san)
+    m.loginInputs[loginPassword].SetValue(san)
     // set output string
     s := fmt.Sprintf(
         loginWrapping, 
         m.logo,
-        m.inputs[loginEmail].View(), 
-        m.inputs[loginPassword].View(),
+        m.loginInputs[loginEmail].View(), 
+        m.loginInputs[loginPassword].View(),
         m.loginMsg,
     )
     // restore password
-    m.inputs[loginPassword].SetValue(pw)
+    m.loginInputs[loginPassword].SetValue(pw)
     return s
 }
 

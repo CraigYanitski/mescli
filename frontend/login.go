@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
-	"log"
 	"net/http"
 	"time"
 
@@ -21,36 +20,32 @@ type LoginResponse struct {
     AccessToken   string  `json:"access_token"`
 }
 
-func loginWithPassword(email, password string) (bool, error) {
+func loginWithPassword(email, password string) error {
     apiURL := viper.GetString("api_url")
     login := LoginRequest{Email: email, Password: password}
     data, err := json.Marshal(login)
     if err != nil {
-        log.Println(err)
-        return false, err
+        return err
     }
     // send credentials to server
     resp, err := http.Post(apiURL+"/login", "application/json", bytes.NewReader(data))
     if err != nil {
-        log.Println(err)
-        return false, err
+        return err
     }
     // make sure the login is valid
     if resp.StatusCode != 200 {
-        log.Println(resp.Status)
-        return false, errors.New(resp.Status)
+        return errors.New(resp.Status)
     }
     // read body
     body, err := io.ReadAll(resp.Body)
     if err != nil {
-        return false, err
+        return err
     }
     // unmarshal response
     var user UserResponse
     err = json.Unmarshal(body, &user)
     if err != nil {
-        log.Println(err)
-        return false, err
+        return err
     }
     // update tokens in config file
     viper.Set("name", user.Name)
@@ -59,5 +54,5 @@ func loginWithPassword(email, password string) (bool, error) {
     viper.Set("access_token", user.AccessToken)
     viper.Set("last_refresh", time.Now().Unix())
     viper.WriteConfig()
-    return true, nil
+    return nil
 }
