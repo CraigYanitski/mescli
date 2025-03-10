@@ -23,6 +23,7 @@ func updateChoices(msg tea.Msg, m Model) (tea.Model, tea.Cmd) {
             m.Chosen = o.o
             if m.Chosen == 2 {
                 m.updated = false
+                m.Chosen = 0
                 m.updateMsg = fmt.Sprintf(updateMsgWrapping, "")
             }
         }

@@ -47,6 +47,7 @@ var (
 var (
     loginWrapping = "\n%s\n\n\n\n\n\n%s\n\n%s\n\n\n%s\n"
     loginMsgWrapping = "enter to submit credentials\nctrl+n to create a new account\n\n%s"
+    createMsgWrapping = "enter to create a new account\n\n%s"
     updateWrapping = "\n%s\n\n\n\n\n\n%s\n\n%s\n\n%s\n\n%s\n\n\n%s\n"
     updateMsgWrapping = "enter to submit credentials\nctrl+n to update your account\n\n%s"
     conversationWrapping = "\n%s\n\n%s\n\n%s"

@@ -70,7 +70,7 @@ func main() {
     }
 
     // run tests if selected
-    if m, ok := m.(Model); ok && m.Chosen == 2 {
+    if m, ok := m.(Model); ok && m.Chosen == 3 {
         runTests()
         fmt.Print("\n\n")
     }

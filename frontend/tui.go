@@ -27,6 +27,9 @@ type Model struct {
     loginInputs  []textinput.Model
     loginFocus   int
     loginMsg     string
+    // create
+    created      bool
+    createMsg    string
     // update
     updated       bool
     updateInputs  []textinput.Model
@@ -295,6 +298,8 @@ func InitialModel() Model {
         loginInputs:   loginInputs,
         loginFocus:    0,
         loginMsg:      fmt.Sprintf(loginMsgWrapping, ""),
+        created:       true,
+        createMsg:     fmt.Sprintf(createMsgWrapping, ""),
         updated:       true,
         updateInputs:  updateInputs,
         updateFocus:   0,
@@ -324,7 +329,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
         return m, tea.Quit
     }
     // Use the appropriate update function
-    if !m.loggedIn {
+    if !m.created {
+        return updateCreate(msg, m)
+    } else if !m.loggedIn {
         return updateLogin(msg, m)
     } else if !m.updated {
         return updateUpdate(msg, m)
@@ -349,7 +356,9 @@ func (m Model) View() string {
         return "Bye!"
     }
     var s string
-    if !m.loggedIn {
+    if !m.created {
+        s = createView(m)
+    } else if !m.loggedIn {
         s = loginView(m)
     } else if !m.updated {
         s = updateView(m)

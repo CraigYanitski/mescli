@@ -3,7 +3,6 @@ package main
 import (
 	"errors"
 	"fmt"
-	"log"
 	"regexp"
 	"strings"
 
@@ -18,7 +17,7 @@ const (
 )
 
 func updateLogin(msg tea.Msg, m Model) (tea.Model, tea.Cmd) {
-    if viper.GetString("refresh_token") != "" {
+    if viper.GetString("access_token") != "" {
         m.loggedIn = true
         return m, nil
     }
@@ -27,13 +26,13 @@ func updateLogin(msg tea.Msg, m Model) (tea.Model, tea.Cmd) {
     switch msg := msg.(type) {
     case tea.KeyMsg:
         switch msg.Type {
-        case tea.KeyCtrlC, tea.KeyEsc:
+        case tea.KeyCtrlC, tea.KeyEscape:
             m.Quitting = true
             return m, tea.Quit 
         case tea.KeyTab, tea.KeyDown:
             m.loginFocus = (m.loginFocus + 1) % len(m.loginInputs)
         case tea.KeyShiftTab, tea.KeyUp:
-            m.loginFocus = (m.loginFocus % len(m.loginInputs) + len(m.loginInputs)) % len(m.loginInputs)
+            m.loginFocus = ((m.loginFocus - 1) % len(m.loginInputs) + len(m.loginInputs)) % len(m.loginInputs)
         case tea.KeyEnter:
             err := loginWithPassword(
                 m.loginInputs[loginEmail].Value(), 
@@ -43,24 +42,30 @@ func updateLogin(msg tea.Msg, m Model) (tea.Model, tea.Cmd) {
                 m.loginMsg = fmt.Sprintf(loginMsgWrapping, "Invalid login")
             }
             m.loggedIn = true
+            m.loginFocus = 0
+            for i, _ := range m.loginInputs {
+                m.loginInputs[i].SetValue("")
+            }
         case tea.KeyCtrlN:
-            if err := m.loginInputs[loginEmail].Err; err != nil {
-                m.loginMsg = fmt.Sprintf(loginMsgWrapping, err)
-                return m, nil
-            } else if err = m.loginInputs[loginPassword].Err; err != nil {
-                m.loginMsg = fmt.Sprintf(loginMsgWrapping, err)
-                return m, nil
-            }
-            err := createAccount(
-                m.loginInputs[loginEmail].Value(),
-                m.loginInputs[loginPassword].Value(),
-            )
-            if err != nil {
-                log.Println(err)
-                m.loginMsg = fmt.Sprintf(loginMsgWrapping, "Invalid login")
-                return m, nil
-            }
-            m.loggedIn = true
+            m.created = false
+            return m, nil
+            //if err := m.loginInputs[loginEmail].Err; err != nil {
+            //    m.loginMsg = fmt.Sprintf(loginMsgWrapping, err)
+            //    return m, nil
+            //} else if err = m.loginInputs[loginPassword].Err; err != nil {
+            //    m.loginMsg = fmt.Sprintf(loginMsgWrapping, err)
+            //    return m, nil
+            //}
+            //err := createAccount(
+            //    m.loginInputs[loginEmail].Value(),
+            //    m.loginInputs[loginPassword].Value(),
+            //)
+            //if err != nil {
+            //    log.Println(err)
+            //    m.loginMsg = fmt.Sprintf(loginMsgWrapping, "Invalid login")
+            //    return m, nil
+            //}
+            //m.loggedIn = true
         }
         for i := range m.loginInputs {
             m.loginInputs[i].Blur()

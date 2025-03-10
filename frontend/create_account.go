@@ -38,15 +38,20 @@ type UserResponse struct {
     AccessToken     string     `json:"access_token"`
 }
 
-func createAccount(email, password string) error {
+func createAccount(name, email, password string) error {
     // get api url
     apiURL := viper.GetString("api_url")
     // initialise client
     c := &client.Client{}
     c.Initialise(false)
+    // check if name set
+    if name == "" {
+        name = "Hi, I'm new here"
+    }
+    // create request json
     login := CreateRequest{
         Email: email,
-        Name:  "Hi, I'm new here",
+        Name:  name,
         Password:     password,
         IdentityKey:  crypt.EncodeECDSAPublicKey(c.IdentityECDSA()),
         SignedPrekey: crypt.EncodeECDHPublicKey(c.SignedPrekey()),

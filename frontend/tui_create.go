@@ -7,50 +7,40 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
-// login struct
-const (
-    updateName = iota
-    updateEmail
-    updatePassword
-    updateRetypePassword
-)
-
-func updateUpdate(msg tea.Msg, m Model) (tea.Model, tea.Cmd) {
+func updateCreate(msg tea.Msg, m Model) (tea.Model, tea.Cmd) {
     cmds := make([]tea.Cmd, len(m.updateInputs))
     switch msg := msg.(type) {
     case tea.KeyMsg:
         switch msg.Type {
-        case tea.KeyCtrlC:
+        case tea.KeyCtrlC, tea.KeyEscape:
             m.Quitting = true
             return m, tea.Quit 
-        case tea.KeyEscape:
-            m.updated = true
-            return m, nil
         case tea.KeyTab, tea.KeyDown:
             m.updateFocus = (m.updateFocus + 1) % len(m.updateInputs)
         case tea.KeyShiftTab, tea.KeyUp:
             m.updateFocus = ((m.updateFocus - 1) % len(m.updateInputs) + len(m.updateInputs)) % len(m.updateInputs)
         case tea.KeyEnter:
             if err := m.updateInputs[updateEmail].Err; err != nil {
-                m.updateMsg = fmt.Sprintf(updateMsgWrapping, err)
+                m.createMsg = fmt.Sprintf(createMsgWrapping, err)
                 return m, nil
             } else if err = m.updateInputs[updatePassword].Err; err != nil {
-                m.updateMsg = fmt.Sprintf(updateMsgWrapping, err)
+                m.createMsg = fmt.Sprintf(createMsgWrapping, err)
                 return m, nil
             } else if m.updateInputs[updateRetypePassword].Value() != m.updateInputs[updatePassword].Value() {
-                m.updateMsg = fmt.Sprintf(updateMsgWrapping, "Passwords do not match")
+                m.createMsg = fmt.Sprintf(createMsgWrapping, "Passwords do not match")
                 return m, nil
             }
-            err := updateAccount(
+            err := createAccount(
                 m.updateInputs[updateName].Value(),
                 m.updateInputs[updateEmail].Value(),
                 m.updateInputs[updatePassword].Value(),
             )
             if err != nil {
-                m.updateMsg = fmt.Sprintf(updateMsgWrapping, "Update failed")
+                m.createMsg = fmt.Sprintf(createMsgWrapping, "Update failed")
                 return m, nil
             }
-            m.updated = true
+            m.created = true
+            m.loggedIn = true
             m.updateFocus = 0
             for i, _ := range m.updateInputs {
                 m.updateInputs[i].SetValue("")
@@ -67,7 +57,7 @@ func updateUpdate(msg tea.Msg, m Model) (tea.Model, tea.Cmd) {
     return m, tea.Batch(cmds...)
 }
 
-func updateView(m Model) string{
+func createView(m Model) string{
     // obscure password
     pw := m.updateInputs[updatePassword].Value()
     pwTemp := strings.Repeat("*", len(pw))
@@ -83,7 +73,7 @@ func updateView(m Model) string{
         m.updateInputs[updateEmail].View(), 
         m.updateInputs[updatePassword].View(),
         m.updateInputs[updateRetypePassword].View(),
-        m.updateMsg,
+        m.createMsg,
     )
     // restore password
     m.updateInputs[updatePassword].SetValue(pw)
