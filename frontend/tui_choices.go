@@ -25,6 +25,9 @@ func updateChoices(msg tea.Msg, m Model) (tea.Model, tea.Cmd) {
                 m.updated = false
                 m.Chosen = 0
                 m.updateMsg = fmt.Sprintf(updateMsgWrapping, "")
+            } else if m.Chosen == 3 {
+                m.Quitting = true
+                return m, tea.Quit
             }
         }
     case tea.WindowSizeMsg:
