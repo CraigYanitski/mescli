@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"time"
 
@@ -38,7 +38,7 @@ type UserResponse struct {
     AccessToken     string     `json:"access_token"`
 }
 
-func createAccount(email, password string) (bool, error) {
+func createAccount(email, password string) error {
     // get api url
     apiURL := viper.GetString("api_url")
     // initialise client
@@ -54,31 +54,26 @@ func createAccount(email, password string) (bool, error) {
     }
     data, err := json.Marshal(login)
     if err != nil {
-        log.Println(err)
-        return false, err
+        return err
     }
     // send credentials to server
     resp, err := http.Post(apiURL+"/users", "application/json", bytes.NewReader(data))
     if err != nil {
-        log.Println(err)
-        return false, err
+        return err
     }
     if resp.StatusCode != 201 {
-        log.Printf("status %s: invalid user request", resp.Status)
-        return false, nil
+        return fmt.Errorf("status %s: invalid user request", resp.Status)
     }
     // read body
     body, err := io.ReadAll(resp.Body)
     if err != nil {
-        log.Println(err)
-        return false, err
+        return err
     }
     // unmarshal response
     var user UserResponse
     err = json.Unmarshal(body, &user)
     if err != nil {
-        log.Println(err)
-        return false, err
+        return err
     }
     // update config
     viper.Set("name",  user.Name)
@@ -87,5 +82,5 @@ func createAccount(email, password string) (bool, error) {
     viper.Set("access_token",  user.AccessToken)
     viper.Set("last_refresh",  time.Now().Unix())
     viper.WriteConfig()
-    return true, nil
+    return nil
 }
