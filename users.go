@@ -24,6 +24,7 @@ type InitUser struct {
     IdentityKey     string  `json:"identity_key"`
     SignedPrekey    string  `json:"signed_key"`
     SignedKey       string  `json:"signed_prekey"`
+    OnetimePrekey   string  `json:"onetime_prekey"`
 }
 type User struct {
     ID              uuid.UUID  `json:"id"`
@@ -32,9 +33,6 @@ type User struct {
     Email           string     `json:"email"`
     Name            string     `json:"name"`
     HashedPassword  string     `json:"hashed_password,omitempty"`
-    IdentityKey     string     `json:"identity_key"`
-    SignedPrekey    string     `json:"signed_key"`
-    SignedKey       string     `json:"signed_prekey"`
     Initialised     bool       `json:"initialised"`
 }
 type ValidUser struct {
@@ -43,10 +41,21 @@ type ValidUser struct {
     RefreshToken  string  `json:"refresh_token"`
 }
 
+type CryptoKey struct {
+    IdentityKey     string     `json:"identity_key"`
+    CreatedAt       time.Time  `json:"created_at,omitempty"`
+    UpdatedAt       time.Time  `json:"updated_at,omitempty"`
+    UserID          uuid.UUID  `json:"user_id"`
+    SignedPrekey    string     `json:"signed_key"`
+    SignedKey       string     `json:"signed_prekey"`
+    OnetimePrekey   string     `json:"onetime_prekey"`
+}
+
 type PrekeyPacketJSON struct {
-    IdentityKey   string  `json:"identity_key"`
-    SignedPrekey  string  `json:"signed_prekey"`
-    SignedKey     string  `json:"signed_key"`
+    IdentityKey    string  `json:"identity_key"`
+    SignedPrekey   string  `json:"signed_prekey"`
+    SignedKey      string  `json:"signed_key"`
+    OnetimePrekey  string  `json:"onetime_prekey"`
 }
 
 func (cfg *apiConfig) handleCreateUser(w http.ResponseWriter, r *http.Request) {
@@ -91,17 +100,30 @@ func (cfg *apiConfig) handleCreateUser(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    params := database.CreateUserParams{
+    createParams := database.CreateUserParams{
         Email: u.Email,
         Name: u.Name,
         HashedPassword: hash,
-        IdentityKey: u.IdentityKey,//hex.EncodeToString(idkBytes),
-        SignedPrekey: u.SignedPrekey,//hex.EncodeToString(spkBytes),
-        SignedKey: u.SignedKey,//hex.EncodeToString(skBytes),
+        //IdentityKey: u.IdentityKey,//hex.EncodeToString(idkBytes),
+        //SignedPrekey: u.SignedPrekey,//hex.EncodeToString(spkBytes),
+        //SignedKey: u.SignedKey,//hex.EncodeToString(skBytes),
     }
-    createdUser, err := cfg.dbQueries.CreateUser(r.Context(), params)
+    createdUser, err := cfg.dbQueries.CreateUser(r.Context(), createParams)
     if err != nil {
-        respondWithError(w, http.StatusInternalServerError, "error adding to database", err)
+        respondWithError(w, http.StatusInternalServerError, "error adding to users database", err)
+        return
+    }
+
+    cryptoParams := database.CreateKeyPacketParams{
+        UserID: createdUser.ID,
+        IdentityKey: u.IdentityKey,
+        SignedPrekey: u.SignedPrekey,
+        SignedKey: u.SignedKey,
+        OnetimePrekey: u.OnetimePrekey,
+    }
+    _, err = cfg.dbQueries.CreateKeyPacket(r.Context(), cryptoParams)
+    if err != nil {
+        respondWithError(w, http.StatusInternalServerError, "error adding to crypto_keys database", err)
         return
     }
 
@@ -118,7 +140,7 @@ func (cfg *apiConfig) handleGetUserKeyPacket(w http.ResponseWriter, r *http.Requ
         respondWithError(w, http.StatusInternalServerError, "unable to unmarshal user", err)
     }
 
-    userKeys, err := cfg.dbQueries.GetUserKeyPacket(r.Context(), u.ID)
+    userKeyPacket, err := cfg.dbQueries.GetUserKeyPacket(r.Context(), u.ID)
     if err != nil {
         respondWithError(
             w, 
@@ -129,7 +151,7 @@ func (cfg *apiConfig) handleGetUserKeyPacket(w http.ResponseWriter, r *http.Requ
         return
     }
 
-    respondWithJSON(w, http.StatusOK, PrekeyPacketJSON(userKeys))
+    respondWithJSON(w, http.StatusOK, CryptoKey(userKeyPacket))
     return
 }
 
@@ -153,28 +175,28 @@ func (cfg *apiConfig) handleLogin(w http.ResponseWriter, r *http.Request) {
 
     // search for user in database using their email
     foundUser, err := cfg.dbQueries.GetUserByEmail(r.Context(), u.Email)
-    if (err != nil) || (foundUser.HashedPassword == "") {
-        respondWithError(w, http.StatusNotFound, "error finding user", err)
-        return
-    }
+    //if (err != nil) || (foundUser.HashedPassword == "") {
+    //    respondWithError(w, http.StatusNotFound, "error finding user", err)
+    //    return
+    //}
 
     // make user JWT token
-    token, err := auth.MakeJWT(foundUser.ID, cfg.secret, duration)
+    token, err := auth.MakeJWT(foundUser, cfg.secret, duration)
     if err != nil {
         respondWithError(w, http.StatusInternalServerError, "error making JWT token", err)
         return
     }
 
     // generate refresh token
-    refreshToken, err := cfg.dbQueries.GetRefreshToken(r.Context(), foundUser.ID)
+    refreshToken, err := cfg.dbQueries.GetRefreshToken(r.Context(), foundUser)
     if err != nil {
         rtExpiresAt := time.Now().AddDate(0, 0, 60)
         rt, err := auth.MakeRefreshToken()
         if err != nil {
-            respondWithError(w, http.StatusInternalServerError, "", err)
+            respondWithError(w, http.StatusInternalServerError, "error making refresh token", err)
             return
         }
-        params := database.CreateRefreshTokenParams{Token: rt, UserID: foundUser.ID, ExpiresAt: rtExpiresAt}
+        params := database.CreateRefreshTokenParams{Token: rt, UserID: foundUser, ExpiresAt: rtExpiresAt}
         refreshToken, err = cfg.dbQueries.CreateRefreshToken(r.Context(), params)
         if err != nil {
             respondWithError(w, http.StatusInternalServerError, "error creating refresh token", err)
@@ -184,7 +206,7 @@ func (cfg *apiConfig) handleLogin(w http.ResponseWriter, r *http.Request) {
 
     // recast database user to validated one, adding JWT
     validUser := &ValidUser{}
-    validUser.User = User(foundUser)
+    validUser.User = User{ID: foundUser}
     validUser.AccessToken = token
     validUser.RefreshToken = refreshToken.Token
 
@@ -252,18 +274,31 @@ func (cfg *apiConfig) handleUpdateUser(w http.ResponseWriter, r *http.Request) {
         Email: u.Email,
         Name: u.Name,
         HashedPassword: hash,
-        IdentityKey: u.IdentityKey,//hex.EncodeToString(idkBytes),
-        SignedPrekey: u.SignedPrekey,//hex.EncodeToString(spkBytes),
-        SignedKey: u.SignedKey,//hex.EncodeToString(skBytes),
+        // IdentityKey: u.IdentityKey,//hex.EncodeToString(idkBytes),
+        // SignedPrekey: u.SignedPrekey,//hex.EncodeToString(spkBytes),
+        // SignedKey: u.SignedKey,//hex.EncodeToString(skBytes),
     }
-    createdUser, err := cfg.dbQueries.UpdateUser(r.Context(), params)
+    updatedUser, err := cfg.dbQueries.UpdateUser(r.Context(), params)
     if err != nil {
-        respondWithError(w, http.StatusInternalServerError, "error adding to database", err)
+        respondWithError(w, http.StatusInternalServerError, "error updating users database", err)
         return
     }
 
-    createdUser.HashedPassword = ""
-    respondWithJSON(w, http.StatusCreated, User(createdUser))
+    cryptoParams := database.UpdateKeyPacketParams{
+        UserID: id,
+        IdentityKey: u.IdentityKey,
+        SignedPrekey: u.SignedPrekey,
+        SignedKey: u.SignedKey,
+        OnetimePrekey: u.OnetimePrekey,
+    }
+    _, err = cfg.dbQueries.UpdateKeyPacket(r.Context(), cryptoParams)
+    if err != nil {
+        respondWithError(w, http.StatusInternalServerError, "error updating crypto_keys database", err)
+        return
+    }
+
+    updatedUser.HashedPassword = ""
+    respondWithJSON(w, http.StatusCreated, User(updatedUser))
     return
 }
 
