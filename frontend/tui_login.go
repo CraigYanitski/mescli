@@ -39,7 +39,7 @@ func updateLogin(msg tea.Msg, m Model) (tea.Model, tea.Cmd) {
                 m.loginInputs[loginPassword].Value(),
             )
             if err != nil {
-                m.loginMsg = fmt.Sprintf(loginMsgWrapping, "Invalid login")
+                m.loginMsg = fmt.Sprintf(loginMsgWrapping, errorStyle.Render("Invalid login"))
             }
             m.loggedIn = true
             m.loginFocus = 0
@@ -49,23 +49,6 @@ func updateLogin(msg tea.Msg, m Model) (tea.Model, tea.Cmd) {
         case tea.KeyCtrlN:
             m.created = false
             return m, nil
-            //if err := m.loginInputs[loginEmail].Err; err != nil {
-            //    m.loginMsg = fmt.Sprintf(loginMsgWrapping, err)
-            //    return m, nil
-            //} else if err = m.loginInputs[loginPassword].Err; err != nil {
-            //    m.loginMsg = fmt.Sprintf(loginMsgWrapping, err)
-            //    return m, nil
-            //}
-            //err := createAccount(
-            //    m.loginInputs[loginEmail].Value(),
-            //    m.loginInputs[loginPassword].Value(),
-            //)
-            //if err != nil {
-            //    log.Println(err)
-            //    m.loginMsg = fmt.Sprintf(loginMsgWrapping, "Invalid login")
-            //    return m, nil
-            //}
-            //m.loggedIn = true
         }
         for i := range m.loginInputs {
             m.loginInputs[i].Blur()

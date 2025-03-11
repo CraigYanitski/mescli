@@ -10,7 +10,6 @@ import (
 	"strings"
 
 	"github.com/CraigYanitski/mescli/client"
-	"github.com/CraigYanitski/mescli/typeset"
 	"github.com/spf13/viper"
 
 	// "github.com/charmbracelet/bubbles/list"
@@ -110,11 +109,13 @@ func runTests() {
     // Confirm whether or not they are equal, and thus the exchange is complete
     var result string
     if alice.CheckSecretEqual(bob) {
-        result, _ = typeset.FormatString("\nDiffie-Hellman secrets match - extended triple Diffie-Hellman exchange complete", 
-            []string{"italics", "green"})
+        result = successStyle.Italic(true).Render(
+            "\nDiffie-Hellman secrets match - extended triple Diffie-Hellman exchange complete",
+        )
     } else {
-        result, _ = typeset.FormatString("\nDiffie-Hellman secrets don't match - error in establishing X3DH exchange! Secrets are not equal!!", 
-            []string{"italics", "red"})
+        result = errorStyle.Italic(true).Render(
+            "\nDiffie-Hellman secrets don't match - error in establishing X3DH exchange! Secrets are not equal!!", 
+        )
     }
     fmt.Println(result)
 
@@ -139,11 +140,11 @@ func runTests() {
     }
 
     // Define progress strings
-    initMessage, _ := typeset.FormatString("\ninitial message (%d): ", []string{"yellow", "bold"})
+    initMessage := statusStyle.Bold(true).Render("\ninitial message (%d): ")
     initMessage += "%s\n"
-    encrMessage, _ := typeset.FormatString("\nencrypted message (%d): ", []string{"yellow", "bold"})
+    encrMessage := statusStyle.Bold(true).Render("\nencrypted message (%d): ")
     encrMessage += "0x%x\n"
-    decrMessage, _ := typeset.FormatString("\ndecrypted message (%d): ", []string{"yellow", "bold"})
+    decrMessage := statusStyle.Bold(true).Render("\ndecrypted message (%d): ")
     decrMessage += "%s\n"
 
     // Print progress
@@ -153,9 +154,9 @@ func runTests() {
 
     // Compare result
     if strings.Contains(plaintext, message) {
-        result, _ = typeset.FormatString("\nMessage Encryption successful!!", []string{"green"})
+        result = successStyle.Italic(true).Render("\nMessage Encryption successful!!")
     } else {
-        result, _ = typeset.FormatString("\nError in message encryption!", []string{"red"})
+        result = errorStyle.Italic(true).Render("\nError in message encryption!")
     }
     fmt.Println(result)
 
@@ -188,9 +189,9 @@ func runTests() {
 
     // Compare result
     if strings.Contains(plaintext, message) {
-        result, _ = typeset.FormatString("\nMessage Encryption successful!!", []string{"italics", "green"})
+        result = successStyle.Italic(true).Render("\nMessage Encryption successful!!")
     } else {
-        result, _ = typeset.FormatString("\nError in message encryption!", []string{"italics", "red"})
+        result = errorStyle.Italic(true).Render("\nError in message encryption!")
     }
     fmt.Println(result)
 }

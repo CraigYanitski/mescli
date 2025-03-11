@@ -21,13 +21,13 @@ func updateCreate(msg tea.Msg, m Model) (tea.Model, tea.Cmd) {
             m.updateFocus = ((m.updateFocus - 1) % len(m.updateInputs) + len(m.updateInputs)) % len(m.updateInputs)
         case tea.KeyEnter:
             if err := m.updateInputs[updateEmail].Err; err != nil {
-                m.createMsg = fmt.Sprintf(createMsgWrapping, err)
+                m.createMsg = fmt.Sprintf(createMsgWrapping, errorStyle.Render(err.Error()))
                 return m, nil
             } else if err = m.updateInputs[updatePassword].Err; err != nil {
-                m.createMsg = fmt.Sprintf(createMsgWrapping, err)
+                m.createMsg = fmt.Sprintf(createMsgWrapping, errorStyle.Render(err.Error()))
                 return m, nil
             } else if m.updateInputs[updateRetypePassword].Value() != m.updateInputs[updatePassword].Value() {
-                m.createMsg = fmt.Sprintf(createMsgWrapping, "Passwords do not match")
+                m.createMsg = fmt.Sprintf(createMsgWrapping, errorStyle.Render("Passwords do not match"))
                 return m, nil
             }
             err := createAccount(
@@ -36,7 +36,7 @@ func updateCreate(msg tea.Msg, m Model) (tea.Model, tea.Cmd) {
                 m.updateInputs[updatePassword].Value(),
             )
             if err != nil {
-                m.createMsg = fmt.Sprintf(createMsgWrapping, "Update failed")
+                m.createMsg = fmt.Sprintf(createMsgWrapping, errorStyle.Render("Update failed"))
                 return m, nil
             }
             m.created = true
