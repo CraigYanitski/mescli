@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path"
 
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/key"
@@ -13,6 +14,7 @@ import (
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/joho/godotenv"
 )
 
 // model parameters
@@ -59,10 +61,17 @@ type Model struct {
 
 // model initialiser
 func InitialModel() Model {
+    // load environment
+    // TODO: simplify during installation
+    godotenv.Load(".env")
+    godotenv.Load("../.env")
     // open logo
     var logo string
-    logoDir := os.Getenv("MESCLI_DIR")+"assets/logo.txt"
-    file, err := os.ReadFile(logoDir)
+    logoDir, ok := os.LookupEnv("MESCLI_DIR")
+    if !ok {
+        log.Println("there is no MESCLI_DIR env variable")
+    }
+    file, err := os.ReadFile(path.Join(logoDir, "assets/logo.txt"))
     if err != nil {
         log.Printf("error: %s", err)
         logo = "mescli"
