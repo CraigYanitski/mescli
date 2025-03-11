@@ -40,6 +40,7 @@ func updateLogin(msg tea.Msg, m Model) (tea.Model, tea.Cmd) {
             )
             if err != nil {
                 m.loginMsg = fmt.Sprintf(loginMsgWrapping, errorStyle.Render("Invalid login"))
+                return m, nil
             }
             m.loggedIn = true
             m.loginFocus = 0

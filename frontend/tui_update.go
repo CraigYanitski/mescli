@@ -72,7 +72,7 @@ func updateView(m Model) string{
     pw := m.updateInputs[updatePassword].Value()
     pwTemp := strings.Repeat("*", len(pw))
     m.updateInputs[updatePassword].SetValue(pwTemp)
-    rpw := m.updateInputs[updatePassword].Value()
+    rpw := m.updateInputs[updateRetypePassword].Value()
     rpwTemp := strings.Repeat("*", len(rpw))
     m.updateInputs[updateRetypePassword].SetValue(rpwTemp)
     // set output string
