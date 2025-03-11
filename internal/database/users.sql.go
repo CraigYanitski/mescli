@@ -19,9 +19,7 @@ INSERT INTO users (
     email, 
     name,
     hashed_password, 
-    identity_key, 
-    signed_prekey, 
-    signed_key
+    initialised
 ) VALUES (
     gen_random_uuid(), 
     NOW(), 
@@ -29,30 +27,18 @@ INSERT INTO users (
     $1,
     $2,
     $3,
-    $4,
-    $5,
-    $6
-) RETURNING id, created_at, updated_at, email, name, hashed_password, identity_key, signed_prekey, signed_key, initialised
+    false
+) RETURNING id, created_at, updated_at, email, name, hashed_password, initialised
 `
 
 type CreateUserParams struct {
 	Email          string
 	Name           string
 	HashedPassword string
-	IdentityKey    string
-	SignedPrekey   string
-	SignedKey      string
 }
 
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, error) {
-	row := q.db.QueryRowContext(ctx, createUser,
-		arg.Email,
-		arg.Name,
-		arg.HashedPassword,
-		arg.IdentityKey,
-		arg.SignedPrekey,
-		arg.SignedKey,
-	)
+	row := q.db.QueryRowContext(ctx, createUser, arg.Email, arg.Name, arg.HashedPassword)
 	var i User
 	err := row.Scan(
 		&i.ID,
@@ -61,16 +47,13 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		&i.Email,
 		&i.Name,
 		&i.HashedPassword,
-		&i.IdentityKey,
-		&i.SignedPrekey,
-		&i.SignedKey,
 		&i.Initialised,
 	)
 	return i, err
 }
 
 const getUser = `-- name: GetUser :one
-SELECT id, created_at, updated_at, email, name, hashed_password, identity_key, signed_prekey, signed_key, initialised FROM users 
+SELECT id, created_at, updated_at, email, name, hashed_password, initialised FROM users 
 WHERE id = $1
 `
 
@@ -84,53 +67,21 @@ func (q *Queries) GetUser(ctx context.Context, id uuid.UUID) (User, error) {
 		&i.Email,
 		&i.Name,
 		&i.HashedPassword,
-		&i.IdentityKey,
-		&i.SignedPrekey,
-		&i.SignedKey,
 		&i.Initialised,
 	)
 	return i, err
 }
 
 const getUserByEmail = `-- name: GetUserByEmail :one
-SELECT id, created_at, updated_at, email, name, hashed_password, identity_key, signed_prekey, signed_key, initialised FROM users 
+SELECT id FROM users 
 WHERE email = $1
 `
 
-func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error) {
+func (q *Queries) GetUserByEmail(ctx context.Context, email string) (uuid.UUID, error) {
 	row := q.db.QueryRowContext(ctx, getUserByEmail, email)
-	var i User
-	err := row.Scan(
-		&i.ID,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.Email,
-		&i.Name,
-		&i.HashedPassword,
-		&i.IdentityKey,
-		&i.SignedPrekey,
-		&i.SignedKey,
-		&i.Initialised,
-	)
-	return i, err
-}
-
-const getUserKeyPacket = `-- name: GetUserKeyPacket :one
-SELECT identity_key, signed_prekey, signed_key FROM users 
-WHERE id = $1
-`
-
-type GetUserKeyPacketRow struct {
-	IdentityKey  string
-	SignedPrekey string
-	SignedKey    string
-}
-
-func (q *Queries) GetUserKeyPacket(ctx context.Context, id uuid.UUID) (GetUserKeyPacketRow, error) {
-	row := q.db.QueryRowContext(ctx, getUserKeyPacket, id)
-	var i GetUserKeyPacketRow
-	err := row.Scan(&i.IdentityKey, &i.SignedPrekey, &i.SignedKey)
-	return i, err
+	var id uuid.UUID
+	err := row.Scan(&id)
+	return id, err
 }
 
 const updateUser = `-- name: UpdateUser :one
@@ -139,11 +90,9 @@ SET updated_at = NOW(),
     email = $2,
     name = $3,
     hashed_password = $4,
-    identity_key = $5,
-    signed_prekey = $6,
-    signed_key = $7
+    initialised = $5
 WHERE id = $1
-RETURNING id, created_at, updated_at, email, name, hashed_password, identity_key, signed_prekey, signed_key, initialised
+RETURNING id, created_at, updated_at, email, name, hashed_password, initialised
 `
 
 type UpdateUserParams struct {
@@ -151,9 +100,7 @@ type UpdateUserParams struct {
 	Email          string
 	Name           string
 	HashedPassword string
-	IdentityKey    string
-	SignedPrekey   string
-	SignedKey      string
+	Initialised    bool
 }
 
 func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, error) {
@@ -162,9 +109,7 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, e
 		arg.Email,
 		arg.Name,
 		arg.HashedPassword,
-		arg.IdentityKey,
-		arg.SignedPrekey,
-		arg.SignedKey,
+		arg.Initialised,
 	)
 	var i User
 	err := row.Scan(
@@ -174,9 +119,6 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, e
 		&i.Email,
 		&i.Name,
 		&i.HashedPassword,
-		&i.IdentityKey,
-		&i.SignedPrekey,
-		&i.SignedKey,
 		&i.Initialised,
 	)
 	return i, err

@@ -11,6 +11,16 @@ import (
 	"github.com/google/uuid"
 )
 
+type CryptoKey struct {
+	IdentityKey   string
+	CreatedOn     time.Time
+	UpdatedOn     time.Time
+	UserID        uuid.UUID
+	SignedPrekey  string
+	SignedKey     string
+	OnetimePrekey string
+}
+
 type RefreshToken struct {
 	Token     string
 	CreatedAt time.Time
@@ -27,8 +37,5 @@ type User struct {
 	Email          string
 	Name           string
 	HashedPassword string
-	IdentityKey    string
-	SignedPrekey   string
-	SignedKey      string
 	Initialised    bool
 }

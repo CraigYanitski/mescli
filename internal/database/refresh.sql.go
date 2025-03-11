@@ -67,7 +67,7 @@ func (q *Queries) GetRefreshToken(ctx context.Context, userID uuid.UUID) (Refres
 }
 
 const getUserFromRefreshToken = `-- name: GetUserFromRefreshToken :one
-SELECT id, users.created_at, users.updated_at, email, name, hashed_password, identity_key, signed_prekey, signed_key, initialised, token, refresh_tokens.created_at, refresh_tokens.updated_at, user_id, expires_at, revoked_at FROM users
+SELECT id, users.created_at, users.updated_at, email, name, hashed_password, initialised, token, refresh_tokens.created_at, refresh_tokens.updated_at, user_id, expires_at, revoked_at FROM users
 JOIN refresh_tokens ON refresh_tokens.user_id = users.id
 WHERE refresh_tokens.token = $1
 AND revoked_at IS NULL 
@@ -81,9 +81,6 @@ type GetUserFromRefreshTokenRow struct {
 	Email          string
 	Name           string
 	HashedPassword string
-	IdentityKey    string
-	SignedPrekey   string
-	SignedKey      string
 	Initialised    bool
 	Token          string
 	CreatedAt_2    time.Time
@@ -103,9 +100,6 @@ func (q *Queries) GetUserFromRefreshToken(ctx context.Context, token string) (Ge
 		&i.Email,
 		&i.Name,
 		&i.HashedPassword,
-		&i.IdentityKey,
-		&i.SignedPrekey,
-		&i.SignedKey,
 		&i.Initialised,
 		&i.Token,
 		&i.CreatedAt_2,
