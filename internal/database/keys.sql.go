@@ -28,7 +28,7 @@ INSERT INTO crypto_keys (
     $3,
     $4,
     $5
-) RETURNING identity_key, created_on, updated_on, user_id, signed_prekey, signed_key, onetime_prekey
+) RETURNING identity_key, created_at, updated_at, user_id, signed_prekey, signed_key, onetime_prekey
 `
 
 type CreateKeyPacketParams struct {
@@ -50,8 +50,8 @@ func (q *Queries) CreateKeyPacket(ctx context.Context, arg CreateKeyPacketParams
 	var i CryptoKey
 	err := row.Scan(
 		&i.IdentityKey,
-		&i.CreatedOn,
-		&i.UpdatedOn,
+		&i.CreatedAt,
+		&i.UpdatedAt,
 		&i.UserID,
 		&i.SignedPrekey,
 		&i.SignedKey,
@@ -61,7 +61,7 @@ func (q *Queries) CreateKeyPacket(ctx context.Context, arg CreateKeyPacketParams
 }
 
 const getUserKeyPacket = `-- name: GetUserKeyPacket :one
-SELECT identity_key, created_on, updated_on, user_id, signed_prekey, signed_key, onetime_prekey FROM crypto_keys 
+SELECT identity_key, created_at, updated_at, user_id, signed_prekey, signed_key, onetime_prekey FROM crypto_keys 
 WHERE user_id = $1
 `
 
@@ -70,8 +70,8 @@ func (q *Queries) GetUserKeyPacket(ctx context.Context, userID uuid.UUID) (Crypt
 	var i CryptoKey
 	err := row.Scan(
 		&i.IdentityKey,
-		&i.CreatedOn,
-		&i.UpdatedOn,
+		&i.CreatedAt,
+		&i.UpdatedAt,
 		&i.UserID,
 		&i.SignedPrekey,
 		&i.SignedKey,
@@ -88,7 +88,7 @@ SET updated_at = NOW(),
     signed_key = $4,
     onetime_prekey = $5
 WHERE user_id = $1 
-RETURNING identity_key, created_on, updated_on, user_id, signed_prekey, signed_key, onetime_prekey
+RETURNING identity_key, created_at, updated_at, user_id, signed_prekey, signed_key, onetime_prekey
 `
 
 type UpdateKeyPacketParams struct {
@@ -110,8 +110,8 @@ func (q *Queries) UpdateKeyPacket(ctx context.Context, arg UpdateKeyPacketParams
 	var i CryptoKey
 	err := row.Scan(
 		&i.IdentityKey,
-		&i.CreatedOn,
-		&i.UpdatedOn,
+		&i.CreatedAt,
+		&i.UpdatedAt,
 		&i.UserID,
 		&i.SignedPrekey,
 		&i.SignedKey,

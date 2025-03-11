@@ -13,8 +13,8 @@ import (
 
 type CryptoKey struct {
 	IdentityKey   string
-	CreatedOn     time.Time
-	UpdatedOn     time.Time
+	CreatedAt     time.Time
+	UpdatedAt     time.Time
 	UserID        uuid.UUID
 	SignedPrekey  string
 	SignedKey     string
