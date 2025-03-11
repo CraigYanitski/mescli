@@ -6,7 +6,7 @@ CREATE TABLE crypto_keys (
     user_id UUID NOT NULL REFERENCES users ON DELETE CASCADE,
     signed_prekey TEXT NOT NULL,
     signed_key TEXT NOT NULL,
-    onetime_key TEXT NOT NULL 
+    onetime_prekey TEXT NOT NULL 
 ) ;
 
 -- +goose Down
