@@ -6,9 +6,6 @@ CREATE TABLE users (
     email TEXT UNIQUE NOT NULL,
     name TEXT NOT NULL,
     hashed_password TEXT NOT NULL DEFAULT 'unset',
-    identity_key TEXT NOT NULL DEFAULT 'unset',
-    signed_prekey TEXT NOT NULL DEFAULT 'unset',
-    signed_key TEXT NOT NULL DEFAULT 'unset',
     initialised BOOLEAN NOT NULL DEFAULT false
 ) ;
 
