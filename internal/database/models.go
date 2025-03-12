@@ -21,6 +21,14 @@ type CryptoKey struct {
 	OnetimePrekey string
 }
 
+type Message struct {
+	ID        uuid.UUID
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	UserID    uuid.UUID
+	Message   string
+}
+
 type RefreshToken struct {
 	Token     string
 	CreatedAt time.Time
