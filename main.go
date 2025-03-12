@@ -45,12 +45,17 @@ func main() {
     mux := http.NewServeMux()
 
     // define endpoint handlers
+    // users
     mux.HandleFunc("POST /api/users", http.HandlerFunc(apiCfg.handleCreateUser))
     mux.HandleFunc("GET /api/users", http.HandlerFunc(apiCfg.handleGetUserKeyPacket))
     mux.HandleFunc("PUT /api/users", http.HandlerFunc(apiCfg.handleUpdateUser))
+    // refresh tokens
     mux.HandleFunc("POST /api/login", http.HandlerFunc(apiCfg.handleLogin))
     mux.HandleFunc("POST /api/refresh", http.HandlerFunc(apiCfg.handleRefresh))
     mux.HandleFunc("POST /api/revoke", http.HandlerFunc(apiCfg.handleRevoke))
+    // messages
+    mux.HandleFunc("POST /api/messages", http.HandlerFunc(apiCfg.handleCreateMessage))
+    mux.HandleFunc("GET /api/messages", http.HandlerFunc(apiCfg.HandleGetMessages))
 
     // define server and listen for requests
     const port = "8080"
