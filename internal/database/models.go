@@ -26,6 +26,7 @@ type Message struct {
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	UserID    uuid.UUID
+	SenderID  uuid.UUID
 	Message   string
 }
 

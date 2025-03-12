@@ -17,29 +17,33 @@ INSERT INTO messages (
     created_at,
     updated_at,
     user_id,
+    sender_id,
     message
 ) VALUES(
     gen_random_uuid(),
     NOW(),
     NOW(),
     $1,
-    $2
-) RETURNING id, created_at, updated_at, user_id, message
+    $2,
+    $3
+) RETURNING id, created_at, updated_at, user_id, sender_id, message
 `
 
 type CreateMessageParams struct {
-	UserID  uuid.UUID
-	Message string
+	UserID   uuid.UUID
+	SenderID uuid.UUID
+	Message  string
 }
 
 func (q *Queries) CreateMessage(ctx context.Context, arg CreateMessageParams) (Message, error) {
-	row := q.db.QueryRowContext(ctx, createMessage, arg.UserID, arg.Message)
+	row := q.db.QueryRowContext(ctx, createMessage, arg.UserID, arg.SenderID, arg.Message)
 	var i Message
 	err := row.Scan(
 		&i.ID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.UserID,
+		&i.SenderID,
 		&i.Message,
 	)
 	return i, err
@@ -48,7 +52,7 @@ func (q *Queries) CreateMessage(ctx context.Context, arg CreateMessageParams) (M
 const deleteMessage = `-- name: DeleteMessage :one
 DELETE FROM messages 
 WHERE id = $1 
-RETURNING id, created_at, updated_at, user_id, message
+RETURNING id, created_at, updated_at, user_id, sender_id, message
 `
 
 func (q *Queries) DeleteMessage(ctx context.Context, id uuid.UUID) (Message, error) {
@@ -59,13 +63,14 @@ func (q *Queries) DeleteMessage(ctx context.Context, id uuid.UUID) (Message, err
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.UserID,
+		&i.SenderID,
 		&i.Message,
 	)
 	return i, err
 }
 
 const getMessages = `-- name: GetMessages :many
-SELECT id, created_at, updated_at, user_id, message FROM messages 
+SELECT id, created_at, updated_at, user_id, sender_id, message FROM messages 
 WHERE user_id = $1 
 ORDER BY created_at
 `
@@ -84,6 +89,7 @@ func (q *Queries) GetMessages(ctx context.Context, userID uuid.UUID) ([]Message,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.UserID,
+			&i.SenderID,
 			&i.Message,
 		); err != nil {
 			return nil, err

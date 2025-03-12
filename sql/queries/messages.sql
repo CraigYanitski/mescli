@@ -4,13 +4,15 @@ INSERT INTO messages (
     created_at,
     updated_at,
     user_id,
+    sender_id,
     message
 ) VALUES(
     gen_random_uuid(),
     NOW(),
     NOW(),
     $1,
-    $2
+    $2,
+    $3
 ) RETURNING * ;
 
 -- name: GetMessages :many
