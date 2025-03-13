@@ -13,6 +13,7 @@ import (
 
 	crypt "github.com/CraigYanitski/mescli/cryptography"
 	"github.com/CraigYanitski/mescli/typeset"
+	"github.com/google/uuid"
 	"github.com/spf13/viper"
 	"golang.org/x/crypto/hkdf"
 )
@@ -132,7 +133,7 @@ func (c *Client) EphemeralKey() (*ecdh.PublicKey) {
     return c.ephemeralKey.PublicKey()
 }
 
-func (c *Client) InitiateX3DH(contact *PrekeyPacketJSON, test bool) *MessagePacketJSON {
+func (c *Client) InitiateX3DH(contact *PrekeyPacketJSON, contactID uuid.UUID, test bool) *MessagePacketJSON {
     // get recipient identity public keys
     rIKdsa, rSPK, rSK, rOK := ParsePrekeyPacket(contact)
     rIK, err := rIKdsa.ECDH()
@@ -213,9 +214,9 @@ func (c *Client) InitiateX3DH(contact *PrekeyPacketJSON, test bool) *MessagePack
             salt[i] = secret[i] ^ 0xff
         }
         // get ratchets from config
-        c.rootRatchet = crypt.DecodeRatchet(viper.GetString("root_ratchet"), nil, nil)
-        c.sendRatchet = crypt.DecodeRatchet(viper.GetString("send_ratchet"), salt, nil)
-        c.recvRatchet = crypt.DecodeRatchet(viper.GetString("recv_ratchet"), salt, nil)
+        c.rootRatchet = crypt.DecodeRatchet(viper.GetString("contacts."+contactID.String()+".root_ratchet"), nil, nil)
+        c.sendRatchet = crypt.DecodeRatchet(viper.GetString("contacts."+contactID.String()+".send_ratchet"), salt, nil)
+        c.recvRatchet = crypt.DecodeRatchet(viper.GetString("contacts."+contactID.String()+".recv_ratchet"), salt, nil)
     }
 
     packet, err := c.SendMessagePacketJSON()
@@ -225,10 +226,12 @@ func (c *Client) InitiateX3DH(contact *PrekeyPacketJSON, test bool) *MessagePack
     
     // save ratchets in config
     if !test {
+        // save secret 
+        viper.Set("contacts."+contactID.String()+".secret", c.secret)
         // save ratchets
-        viper.Set("root_ratchet.key", c.rootRatchet.EncodeRatchet())
-        viper.Set("send_ratchets."+"user"+".key", c.sendRatchet.EncodeRatchet())
-        viper.Set("recv_ratchets."+"user"+".key", c.recvRatchet.EncodeRatchet())
+        viper.Set("contacts."+contactID.String()+".root_ratchet", c.rootRatchet.EncodeRatchet())
+        viper.Set("contacts."+contactID.String()+".send_ratchets", c.sendRatchet.EncodeRatchet())
+        viper.Set("contacts."+contactID.String()+".recv_ratchets", c.recvRatchet.EncodeRatchet())
         // write config
         err = viper.WriteConfig()
         if err != nil {
@@ -238,7 +241,7 @@ func (c *Client) InitiateX3DH(contact *PrekeyPacketJSON, test bool) *MessagePack
     return packet
 }
 
-func (c *Client) CompleteX3DH(contact *MessagePacketJSON, test bool) error {
+func (c *Client) CompleteX3DH(contact *MessagePacketJSON, contactID uuid.UUID, test bool) error {
     // get sender public keys
     sIKdsa, sEK := ParseMessagePacket(contact)
     sIK, err := sIKdsa.ECDH()
@@ -277,6 +280,7 @@ func (c *Client) CompleteX3DH(contact *MessagePacketJSON, test bool) error {
 
     // save secret and return
     c.secret = secret
+    viper.Set("contacts."+contactID.String()+".secret", secret)
 
     // check if ratchets are in config
     if rr := viper.GetString("root_ratchet"); rr == "" || test {
@@ -299,19 +303,6 @@ func (c *Client) CompleteX3DH(contact *MessagePacketJSON, test bool) error {
         }
         c.sendRatchet = &crypt.Ratchet{}
         c.sendRatchet.NewKDF(sendSecret, nil, nil)
-        
-        // save ratchets in config
-        if !test {
-            // save ratchets
-            viper.Set("root_ratchet", c.rootRatchet.EncodeRatchet())
-            viper.Set("recv_ratchets."+"user"+".key", c.recvRatchet.EncodeRatchet())
-            viper.Set("send_ratchets."+"user"+".key", c.sendRatchet.EncodeRatchet())
-            // write config
-            err = viper.WriteConfig()
-            if err != nil {
-                log.Fatal(err)
-            }
-        }
     } else {
         // Make salt
         salt := make([]byte, len(secret))
@@ -322,6 +313,20 @@ func (c *Client) CompleteX3DH(contact *MessagePacketJSON, test bool) error {
         c.rootRatchet = crypt.DecodeRatchet(viper.GetString("root_ratchet"), nil, nil)
         c.sendRatchet = crypt.DecodeRatchet(viper.GetString("send_ratchet"), salt, nil)
         c.recvRatchet = crypt.DecodeRatchet(viper.GetString("recv_ratchet"), salt, nil)
+    }
+    
+    // save ratchets in config
+    if !test {
+        viper.Set("contacts."+contactID.String()+".secret", c.secret)
+        // save ratchets
+        viper.Set("contacts."+contactID.String()+".root_ratchet" , c.rootRatchet.EncodeRatchet())
+        viper.Set("contacts."+contactID.String()+".recv_ratchets", c.recvRatchet.EncodeRatchet())
+        viper.Set("contacts."+contactID.String()+".send_ratchets", c.sendRatchet.EncodeRatchet())
+        // write config
+        err = viper.WriteConfig()
+        if err != nil {
+            log.Fatal(err)
+        }
     }
 
     return nil
@@ -355,11 +360,11 @@ func (c *Client) CheckPassword(password string) bool {
     return ok
 }
 
-func (c *Client) SendMessage(plaintext string, format []string, pubkey *ecdh.PublicKey, test bool) ([]byte, error) {
+func (c *Client) SendMessage(plaintext string, format []string, pubkey *ecdh.PublicKey, test bool) (string, error) {
     // Format message
     formattedMessage, err := typeset.FormatString(plaintext, format)
     if err != nil {
-        return nil, err
+        return "", err
     }
 
     // Renew Diffie-Hellman key for encryption
@@ -373,7 +378,7 @@ func (c *Client) SendMessage(plaintext string, format []string, pubkey *ecdh.Pub
     // Calculate shared secret
     secret, err := key.ECDH(pubkey)
     if err != nil {
-        return nil, err
+        return "", err
     }
 
     // Make salt
@@ -385,14 +390,14 @@ func (c *Client) SendMessage(plaintext string, format []string, pubkey *ecdh.Pub
     // Generate key and iv
     sendKey, iv, err := c.sendRatchet.Extract(secret, salt, nil)
     if err != nil {
-        return nil, err
+        return "", err
     }
 
     // Encrypt message
     ciphertext, err := crypt.EncryptMessage(sendKey, []byte(formattedMessage), iv)
     if err != nil {
         err = fmt.Errorf("error encrypting message: %v", err)
-        return nil, err
+        return "", err
     }
 
     // save sending key if not test
@@ -403,10 +408,10 @@ func (c *Client) SendMessage(plaintext string, format []string, pubkey *ecdh.Pub
         viper.WriteConfig()
     }
 
-    return ciphertext, nil
+    return hex.EncodeToString(ciphertext), nil
 }
 
-func (c *Client) ReceiveMessage(ciphertext []byte, pubkey *ecdh.PublicKey, test bool) (string, error) {
+func (c *Client) ReceiveMessage(ciphertext string, pubkey *ecdh.PublicKey, test bool) (string, error) {
     // Renew Diffie-Hellman key
     key := c.identityECDH()
 
@@ -429,7 +434,11 @@ func (c *Client) ReceiveMessage(ciphertext []byte, pubkey *ecdh.PublicKey, test 
     }
 
     // Decrypt message
-    plaintext, err := crypt.DecryptMessage(recvKey, ciphertext, iv)
+    ciphertextBytes, err := hex.DecodeString(ciphertext)
+    if err != nil {
+        return "", err
+    }
+    plaintext, err := crypt.DecryptMessage(recvKey, ciphertextBytes, iv)
     if err != nil {
         err = fmt.Errorf("error decrypting message: %v", err)
         return "", err
