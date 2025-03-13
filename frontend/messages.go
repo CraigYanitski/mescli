@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"crypto/ecdh"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -40,39 +41,51 @@ func addContact(email string) error {
     return nil
 }
 
-func sendMessage(user uuid.UUID, message string) error {
+func getUserIdentityKey(user uuid.UUID) (*ecdh.PublicKey, error) {
     apiURL := viper.GetString("api_url")
     httpClient := http.Client{}
-    c := client.Client{}
-    c.Initialise(false)
     // get user key packet
     u := UserResponse{ID: user}
     userData, err := json.Marshal(u)
     if err != nil {
-        return err
+        return nil, err
     }
     userReq, err := http.NewRequest(http.MethodGet, apiURL+"/users", bytes.NewBuffer(userData))
     userReq.Header.Set("Content-Type", "application/json")
     userReq.Header.Set("Authorization", "Bearer "+viper.GetString("access_token"))
     userResp, err := httpClient.Do(userReq)
     if err != nil {
-        return err
+        return nil, err
     }
     userKeys := &UserKeyPacket{}
     keyData, err := io.ReadAll(userResp.Body)
     if err != nil {
-        return err
+        return nil, err
     }
     err = json.Unmarshal(keyData, userKeys)
     if err != nil {
-        return err
+        return nil, err
     }
-    userIK := cryptography.DecodeECDSAPublicKey(userKeys.IdentityKey)
-    ikECDH, err := userIK.ECDH()
+    identityKey := cryptography.DecodeECDSAPublicKey(userKeys.IdentityKey)
+    userIK, err := identityKey.ECDH()
     if err != nil {
-        return err
+        return nil, err
     }
-    encryptedMsg, err := c.SendMessage(message, []string{}, ikECDH, false)
+    return userIK, nil
+}
+
+func sendMessage(user uuid.UUID, message string) error {
+    apiURL := viper.GetString("api_url")
+    httpClient := http.Client{}
+    c := client.Client{}
+    c.Initialise(false)
+    // get contact identity key
+    contactIK, err := getUserIdentityKey(user)
+    if err != nil {
+        return fmt.Errorf("error getting contact identity key: %s", err)
+    }
+    // encrypt message and marshal request JSON
+    encryptedMsg, err := c.SendMessage(message, []string{}, contactIK, false)
     if err != nil {
         return err
     }
@@ -93,9 +106,50 @@ func sendMessage(user uuid.UUID, message string) error {
     msgReq.Header.Set("Authorization", "Bearer "+viper.GetString("access_token"))
     msgResp, err := httpClient.Do(msgReq)
     defer msgResp.Body.Close()
+    if err != nil {
+        return err
+    }
     // check if request successful
     if msgResp.StatusCode != 201 {
         return errors.New("error: update not successful")
     }
     return nil
 }
+
+func getMessages() (messages []MessageResponse, err error) {
+    messages = []MessageResponse{}
+    apiURL := viper.GetString("api_url")
+    httpClient := http.Client{}
+    c := client.Client{}
+    c.Initialise(false)
+    // send GET request to server
+    req, err := http.NewRequest(http.MethodGet, apiURL+"/messages", nil)
+    if err != nil {
+        return
+    }
+    req.Header.Set("Content-Type", "application/json")
+    req.Header.Set("Authorization", "Bearer "+viper.GetString("access_token"))
+    resp, err := httpClient.Do(req)
+    defer resp.Body.Close()
+    if err != nil {
+        return
+    }
+    if resp.StatusCode != 200 {
+        err = errors.New("error: cannot retrieve messages")
+        return
+    }
+    messagesData, err := io.ReadAll(resp.Body)
+    if err != nil {
+        return
+    }
+    messagesSlice := &[]MessageResponse{}
+    err = json.Unmarshal(messagesData, messagesSlice)
+    if err != nil {
+        return
+    }
+    for _, message := range *messagesSlice {
+        messages = append(messages, message)
+    }
+    return
+}
+
