@@ -180,15 +180,21 @@ func (cfg *apiConfig) handleLogin(w http.ResponseWriter, r *http.Request) {
     //    return
     //}
 
+    // check validity of password
+    if !crypt.CheckPasswordHash(u.Password, foundUser.HashedPassword) {
+        respondWithError(w, http.StatusUnauthorized, "password incorrect", err)
+        return
+    }
+
     // make user JWT token
-    token, err := auth.MakeJWT(foundUser, cfg.secret, duration)
+    token, err := auth.MakeJWT(foundUser.ID, cfg.secret, duration)
     if err != nil {
         respondWithError(w, http.StatusInternalServerError, "error making JWT token", err)
         return
     }
 
     // generate refresh token
-    refreshToken, err := cfg.dbQueries.GetRefreshToken(r.Context(), foundUser)
+    refreshToken, err := cfg.dbQueries.GetRefreshToken(r.Context(), foundUser.ID)
     if err != nil {
         rtExpiresAt := time.Now().AddDate(0, 0, 60)
         rt, err := auth.MakeRefreshToken()
@@ -196,7 +202,7 @@ func (cfg *apiConfig) handleLogin(w http.ResponseWriter, r *http.Request) {
             respondWithError(w, http.StatusInternalServerError, "error making refresh token", err)
             return
         }
-        params := database.CreateRefreshTokenParams{Token: rt, UserID: foundUser, ExpiresAt: rtExpiresAt}
+        params := database.CreateRefreshTokenParams{Token: rt, UserID: foundUser.ID, ExpiresAt: rtExpiresAt}
         refreshToken, err = cfg.dbQueries.CreateRefreshToken(r.Context(), params)
         if err != nil {
             respondWithError(w, http.StatusInternalServerError, "error creating refresh token", err)
@@ -206,15 +212,9 @@ func (cfg *apiConfig) handleLogin(w http.ResponseWriter, r *http.Request) {
 
     // recast database user to validated one, adding JWT
     validUser := &ValidUser{}
-    validUser.User = User{ID: foundUser}
+    validUser.User = User(foundUser)
     validUser.AccessToken = token
     validUser.RefreshToken = refreshToken.Token
-
-    // check validity of password
-    if !crypt.CheckPasswordHash(u.Password, validUser.HashedPassword) {
-        respondWithError(w, http.StatusUnauthorized, "password incorrect", err)
-        return
-    }
 
     // empty password field to remove from marshalled JSON
     validUser.HashedPassword = ""
