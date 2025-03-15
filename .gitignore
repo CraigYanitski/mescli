@@ -2,4 +2,4 @@ mescli*
 server
 .env
 *.mescli.yaml
-
+.vscode
