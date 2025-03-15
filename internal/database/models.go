@@ -22,12 +22,14 @@ type CryptoKey struct {
 }
 
 type Message struct {
-	ID        uuid.UUID
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	UserID    uuid.UUID
-	SenderID  uuid.UUID
-	Message   string
+	ID                 uuid.UUID
+	CreatedAt          time.Time
+	UpdatedAt          time.Time
+	UserID             uuid.UUID
+	SenderID           uuid.UUID
+	SenderIdentityKey  sql.NullString
+	SenderEphemeralKey sql.NullString
+	Message            string
 }
 
 type RefreshToken struct {

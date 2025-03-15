@@ -5,6 +5,8 @@ INSERT INTO messages (
     updated_at,
     user_id,
     sender_id,
+    sender_identity_key,
+    sender_ephemeral_key,
     message
 ) VALUES(
     gen_random_uuid(),
@@ -12,6 +14,8 @@ INSERT INTO messages (
     NOW(),
     $1,
     $2,
+    $4,
+    $5,
     $3
 ) RETURNING * ;
 
