@@ -22,27 +22,34 @@ triple-Diffie-Hellman (X3DH) asynchronous key exchange that is also implemented 
 
 ## Installing / Building
 
-You can test the current state of the client program using,
+I currently have two executables you can build: one for the server and the 
+other for the client.
+Since `mescli` is actively developed and not yet deploqed, this defaults to 
+serving on the local host.
+You can compile and run the client executable (called `mescli) using,
 
 ```bash
 make build
 ./mescli
 ```
 
-It currently uses a configuration file in the current directory.
-This will hold the user's identifying keys and possibly at some point their messages.
-There is also not much to test now; you can either write messages to phony "contacts" or run some 
-tests of the X3DH handshake and encryption, but there is not yet a server.
+It uses a configuration file from the current directory (this will change soon).
+This file will hold the user's identifying keys as well as the ratchet keys and 
+their conversations.
+In order to be cryptographically secure, messages are not stored on the server.
+There is not much to test now other than creating an account on the server and 
+initialising your keys.
+I am currently writing handlers for the `messages` endpoint.
 
-The current server code can also be run using,
+The `server` executable can also be compiled and run using,
 
 ```bash
 make build-server
 ./server
 ```
 
-however it should be noted that there aren't many endpoints at the moment.
-This is primarily what is being developed at the moment.
+The server interacts with a PostgreSQL database, and the required migrations
+are stored in `./sql/schema` and run using [`goose`](https://github.com/pressly/goose).
 
 ## Development
 
@@ -57,12 +64,12 @@ Many of the more complex features making it useful will be deferred to a later r
 - [x] Decrypt server response
 - [x] Format display
 - [ ] Use DH generation for each message with KDF
-- [ ] Create a TUI
+- [x] Create a TUI
   - [x] create TUI framework (bubbletea)
   - [x] implement Markdown rendering
   - [ ] implement encrypted messaging
 - [ ] ~Allow non-local users~ DEFERRED
-  - [ ] develop server code
+  - [x] develop server code
 - [ ] ~Format maths env~ DEFERRED
   - [ ] ~use MathJax with glamour~ deferred
 
