@@ -4,29 +4,32 @@
 ## Introduction
 
 MESCLI will be a CLI messaging app, and is currently in development.
-I want secure end-to-end encryption of the messages, as well as a double ratchet for improved security.
+I want secure end-to-end encryption of the messages, as well as a 
+double-ratchet for improved security.
 There will preferably be markup support, eventually including a maths mode.
-It is not yet known whether a server will be made public (obviously a public server is necessary
-to make this functional beyond testing).
+It is not yet known whether a server will be made public (obviously a public 
+server is necessary to make this functional beyond testing).
 More likely than not, this will have many iterations over several stages.
 
 ## Motivation
 
-I am fascinated by cryptology, so I wanted to attempt my own implementation of an end-to-end messaging 
-service.
+I am fascinated by cryptology, so I wanted to attempt my own implementation of 
+an end-to-end messaging service.
 I will also use this as a platform to test my own cryptographic algorithms.
-For the double-ratchet algorithm I am implementing for this app, I am using as a guide the 
-very thorough [Signal protocol](https://signal.org/docs/specifications/doubleratchet/) specifications.
-One can also find there a [description](https://signal.org/docs/specifications/x3dh/) of the extended 
-triple-Diffie-Hellman (X3DH) asynchronous key exchange that is also implemented in `mescli`.
+For the double-ratchet algorithm I am implementing for this app, I am using as 
+a guide the very thorough [Signal protocol](https://signal.org/docs/specifications/doubleratchet/) 
+specifications.
+One can also find there a [description](https://signal.org/docs/specifications/x3dh/) 
+of the extended triple-Diffie-Hellman (X3DH) asynchronous key exchange that is 
+also implemented in `mescli`.
 
 ## Installing / Building
 
 I currently have two executables you can build: one for the server and the 
 other for the client.
-Since `mescli` is actively developed and not yet deploqed, this defaults to 
+Since MESCLI is actively developed and not yet deployed, this defaults to 
 serving on the local host.
-You can compile and run the client executable (called `mescli) using,
+You can compile and run the client executable (called `mescli`) using,
 
 ```bash
 make build
@@ -53,25 +56,27 @@ are stored in `./sql/schema` and run using [`goose`](https://github.com/pressly/
 
 ## Development
 
-Since the full project is rather complex, I will focus on a few features for the first stage.
-Many of the more complex features making it useful will be deferred to a later release.
+Since the full project is rather complex, I will focus on a few features for 
+the first stage.
+Many of the more complex features making it useful will be deferred to a later 
+release.
 
 - [x] Format text with ANSI codes
-  - [ ] replace with glamour/lipgloss
+  - [x] replace with glamour/lipgloss
 - [x] Generate client- and server-side keys
 - [x] Synchronise client KDFs
 - [x] Encrypt messages before sending through server
 - [x] Decrypt server response
 - [x] Format display
-- [ ] Use DH generation for each message with KDF
+- [ ] ~Use DH generation for each message with KDF~ DEFERRED until after server setup
 - [x] Create a TUI
   - [x] create TUI framework (bubbletea)
   - [x] implement Markdown rendering
   - [ ] implement encrypted messaging
-- [ ] ~Allow non-local users~ DEFERRED
+- [ ] ~Allow non-local users~ DEFERRED (might deploy on AWS)
   - [x] develop server code
-- [ ] ~Format maths env~ DEFERRED
-  - [ ] ~use MathJax with glamour~ deferred
+- [ ] ~Format maths env~ DEFERRED to different project extending goldmark
+  - [ ] ~use MathJax with glamour~ DEFERRED
 
 ## Issues
 
