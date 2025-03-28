@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/CraigYanitski/mescli/client"
+	"github.com/google/uuid"
 )
 
 func TestClientCreation(t *testing.T) {
@@ -182,14 +183,14 @@ func TestX3DH(t *testing.T) {
             t.Errorf("error sending client 1 message packet: %v", err)
         }
 
-        clientOnePacket := clientOne.InitiateX3DH(clientTwoPacket, true)
+        clientOnePacket := clientOne.InitiateX3DH(clientTwoPacket, uuid.UUID{}, true)
         if err != nil {
             t.Errorf("error for %v initiating X3DH with %v: %v", clientOne.Name, clientTwo.Name, err)
         }
 
         fmt.Printf("%v completing X3DH exchange\n", clientTwo.Name)
 
-        err = clientTwo.CompleteX3DH(clientOnePacket, true)
+        err = clientTwo.CompleteX3DH(clientOnePacket, uuid.UUID{}, true)
         if err != nil {
             t.Errorf("error for %v completing X3DH with %v: %v", clientTwo.Name, clientOne.Name, err)
         }

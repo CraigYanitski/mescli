@@ -360,7 +360,7 @@ func (c *Client) CheckPassword(password string) bool {
     return ok
 }
 
-func (c *Client) SendMessage(plaintext string, format []string, pubkey *ecdh.PublicKey, test bool) (string, error) {
+func (c *Client) SendMessage(plaintext string, format []string, pubkey *ecdh.PublicKey, contactID uuid.UUID, test bool) (string, error) {
     // Format message
     formattedMessage, err := typeset.FormatString(plaintext, format)
     if err != nil {
@@ -403,7 +403,7 @@ func (c *Client) SendMessage(plaintext string, format []string, pubkey *ecdh.Pub
     // save sending key if not test
     if !test {
         // save ratchet
-        viper.Set("send_ratchet."+"user"+".key", c.sendRatchet.EncodeRatchet())
+        viper.Set("send_ratchet."+contactID.String()+".key", c.sendRatchet.EncodeRatchet())
         // write config
         viper.WriteConfig()
     }
@@ -411,7 +411,7 @@ func (c *Client) SendMessage(plaintext string, format []string, pubkey *ecdh.Pub
     return hex.EncodeToString(ciphertext), nil
 }
 
-func (c *Client) ReceiveMessage(ciphertext string, pubkey *ecdh.PublicKey, test bool) (string, error) {
+func (c *Client) ReceiveMessage(ciphertext string, pubkey *ecdh.PublicKey, contactID uuid.UUID, test bool) (string, error) {
     // Renew Diffie-Hellman key
     key := c.identityECDH()
 
@@ -447,7 +447,7 @@ func (c *Client) ReceiveMessage(ciphertext string, pubkey *ecdh.PublicKey, test 
     // save sending key if not test
     if !test {
         // save ratchet
-        viper.Set("recv_ratchet."+"user"+".key", c.recvRatchet.EncodeRatchet())
+        viper.Set("recv_ratchet."+contactID.String()+".key", c.recvRatchet.EncodeRatchet())
         // write config
         viper.WriteConfig()
     }
