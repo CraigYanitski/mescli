@@ -47,8 +47,10 @@ func main() {
     // define endpoint handlers
     // users
     mux.HandleFunc("POST /api/users", http.HandlerFunc(apiCfg.handleCreateUser))
-    mux.HandleFunc("GET /api/users", http.HandlerFunc(apiCfg.handleGetUserKeyPacket))
+    mux.HandleFunc("GET /api/users", http.HandlerFunc(apiCfg.handleGetUserByEmail))  //TODO
     mux.HandleFunc("PUT /api/users", http.HandlerFunc(apiCfg.handleUpdateUser))
+    mux.HandleFunc("GET /api/users/{userID}", http.HandlerFunc(apiCfg.handleGetUser))  //TODO
+    mux.HandleFunc("GET /api/users/crypto/{userID}", http.HandlerFunc(apiCfg.handleGetUserKeyPacket))
     // refresh tokens
     mux.HandleFunc("POST /api/login", http.HandlerFunc(apiCfg.handleLogin))
     mux.HandleFunc("POST /api/refresh", http.HandlerFunc(apiCfg.handleRefresh))
