@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/CraigYanitski/mescli/client"
+	"github.com/google/uuid"
 	"github.com/spf13/viper"
 
 	// "github.com/charmbracelet/bubbles/list"
@@ -97,9 +98,9 @@ func runTests() {
     log.Println("have prekey packet")
 
     // Perform extended triple Diffie-Hellman exchange
-    aliceMP := alice.InitiateX3DH(bobPKP, true)
+    aliceMP := alice.InitiateX3DH(bobPKP, uuid.UUID{}, true)
     fmt.Printf("\nX3DH initialised\n")
-    err = bob.CompleteX3DH(aliceMP, true)
+    err = bob.CompleteX3DH(aliceMP, uuid.UUID{}, true)
     if err != nil {
         log.Fatal(err)
     }
@@ -130,11 +131,11 @@ func runTests() {
     alicePub, _ := alice.IdentityECDSA().ECDH()
     bobPub, _ := bob.IdentityECDSA().ECDH()
     message := "Hi Bob!!"
-    ciphertext, err := alice.SendMessage(message, []string{"blue"}, bobPub, true)
+    ciphertext, err := alice.SendMessage(message, []string{"blue"}, bobPub, uuid.UUID{}, true)
     if err != nil {
         panic(err)
     }
-    plaintext, err := bob.ReceiveMessage(ciphertext, alicePub, true)
+    plaintext, err := bob.ReceiveMessage(ciphertext, alicePub, uuid.UUID{}, true)
     if err != nil {
         panic(err)
     }
@@ -143,7 +144,7 @@ func runTests() {
     initMessage := statusStyle.Bold(true).Render("\ninitial message (%d): ")
     initMessage += "%s\n"
     encrMessage := statusStyle.Bold(true).Render("\nencrypted message (%d): ")
-    encrMessage += "0x%x\n"
+    encrMessage += "0x%s\n"
     decrMessage := statusStyle.Bold(true).Render("\ndecrypted message (%d): ")
     decrMessage += "%s\n"
 
@@ -173,11 +174,11 @@ func runTests() {
               "Perhaps this sentence will not make it through the transmission? " +
               "I should start splitting the message into chunks before finishing the encryption. " +
               "This message is clearly a good way to test this functionality."
-    ciphertext, err = bob.SendMessage(message, []string{}, alicePub, true)
+    ciphertext, err = bob.SendMessage(message, []string{}, alicePub, uuid.UUID{}, true)
     if err != nil {
         panic(err)
     }
-    plaintext, err = alice.ReceiveMessage(ciphertext, bobPub, true)
+    plaintext, err = alice.ReceiveMessage(ciphertext, bobPub, uuid.UUID{}, true)
     if err != nil {
         panic(err)
     }
