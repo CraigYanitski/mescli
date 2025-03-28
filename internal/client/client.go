@@ -11,8 +11,8 @@ import (
 	"log"
 	"slices"
 
-	crypt "github.com/CraigYanitski/mescli/cryptography"
-	"github.com/CraigYanitski/mescli/typeset"
+	crypt "github.com/CraigYanitski/mescli/internal/cryptography"
+	"github.com/CraigYanitski/mescli/internal/typeset"
 	"github.com/google/uuid"
 	"github.com/spf13/viper"
 	"golang.org/x/crypto/hkdf"

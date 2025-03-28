@@ -11,8 +11,8 @@ import (
 	"strings"
 	"time"
 
-	crypt "github.com/CraigYanitski/mescli/cryptography"
 	"github.com/CraigYanitski/mescli/internal/auth"
+	crypt "github.com/CraigYanitski/mescli/internal/cryptography"
 	"github.com/CraigYanitski/mescli/internal/database"
 	"github.com/google/uuid"
 )

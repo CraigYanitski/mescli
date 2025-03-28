@@ -9,7 +9,7 @@ import (
 	"log"
 	"strings"
 
-	"github.com/CraigYanitski/mescli/client"
+	"github.com/CraigYanitski/mescli/internal/client"
 	"github.com/google/uuid"
 	"github.com/spf13/viper"
 

@@ -9,8 +9,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/CraigYanitski/mescli/client"
-	crypt "github.com/CraigYanitski/mescli/cryptography"
+	"github.com/CraigYanitski/mescli/internal/client"
+	crypt "github.com/CraigYanitski/mescli/internal/cryptography"
 	"github.com/google/uuid"
 	"github.com/spf13/viper"
 )

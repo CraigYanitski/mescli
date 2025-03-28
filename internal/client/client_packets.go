@@ -4,10 +4,11 @@ import (
 	"crypto/ecdh"
 	"crypto/ecdsa"
 	"encoding/hex"
+
 	//"fmt"
 	"log"
 
-	crypt "github.com/CraigYanitski/mescli/cryptography"
+	crypt "github.com/CraigYanitski/mescli/internal/cryptography"
 )
 
 type PrekeyPacket struct {
