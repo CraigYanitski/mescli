@@ -133,13 +133,36 @@ func (cfg *apiConfig) handleCreateUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (cfg *apiConfig) handleGetUserKeyPacket(w http.ResponseWriter, r *http.Request) {
-    decoder := json.NewDecoder(r.Body)
-    u := &User{}
-    err := decoder.Decode(u)
+    // check user authentication
+    token, err := auth.GetBearerToken(r.Header)
     if err != nil {
-        respondWithError(w, http.StatusInternalServerError, "unable to unmarshal user", err)
+        respondWithError(w, http.StatusUnauthorized, "", err)
+        return
+    }
+    _, err = auth.ValidateJWT(token, cfg.secret)
+    if err != nil {
+        respondWithError(w, http.StatusUnauthorized, token, err)
+        return
     }
 
+    // get user request
+    decoder := json.NewDecoder(r.Body)
+    u := &User{}
+    err = decoder.Decode(u)
+    if err != nil {
+        respondWithError(w, http.StatusInternalServerError, "unable to unmarshal user", err)
+        return
+    }
+    if u.Email != "" {
+        foundUser, err := cfg.dbQueries.GetUserByEmail(r.Context(), u.Email)
+        if err != nil {
+            respondWithError(w, http.StatusInternalServerError, "unable to find user in DB by email", err)
+        } else {
+            u.ID = foundUser.ID
+        }
+    }
+
+    // make request for key packet
     userKeyPacket, err := cfg.dbQueries.GetUserKeyPacket(r.Context(), u.ID)
     if err != nil {
         respondWithError(
