@@ -1,10 +1,6 @@
 package main
 
 import (
-	//"crypto/ecdh"
-	//"crypto/ecdsa"
-	//"crypto/x509"
-	//"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -56,6 +52,25 @@ type PrekeyPacketJSON struct {
     SignedPrekey   string  `json:"signed_prekey"`
     SignedKey      string  `json:"signed_key"`
     OnetimePrekey  string  `json:"onetime_prekey"`
+}
+
+func (cfg *apiConfig) authenticationMiddleware(next http.Handler) http.Handler {
+    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        // check user authentication
+        token, err := auth.GetBearerToken(r.Header)
+        if err != nil {
+            respondWithError(w, http.StatusUnauthorized, "", err)
+            return
+        }
+
+        _, err = auth.ValidateJWT(token, cfg.secret)
+        if err != nil {
+            respondWithError(w, http.StatusUnauthorized, token, err)
+            return
+        }
+
+        next.ServeHTTP(w, r)
+    })
 }
 
 func (cfg *apiConfig) handleCreateUser(w http.ResponseWriter, r *http.Request) {
@@ -139,16 +154,17 @@ func (cfg *apiConfig) handleGetUser(w http.ResponseWriter, r *http.Request) {
         respondWithError(w, http.StatusInternalServerError, "unable to parse user ID", err)
         return
     }
-    // check user authentication
-    token, err := auth.GetBearerToken(r.Header)
-    if err != nil {
-        respondWithError(w, http.StatusUnauthorized, "", err)
-        return
-    }
-    _, err = auth.ValidateJWT(token, cfg.secret)
-    if err != nil {
-        respondWithError(w, http.StatusUnauthorized, token, err)
-    }
+    // check user authentication (will wrap in middleware)
+    //token, err := auth.GetBearerToken(r.Header)
+    //if err != nil {
+    //    respondWithError(w, http.StatusUnauthorized, "", err)
+    //    return
+    //}
+    //_, err = auth.ValidateJWT(token, cfg.secret)
+    //if err != nil {
+    //    respondWithError(w, http.StatusUnauthorized, token, err)
+    //    return
+    //}
 
     user, err := cfg.dbQueries.GetUser(r.Context(), userID)
     if err != nil {
@@ -161,21 +177,21 @@ func (cfg *apiConfig) handleGetUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (cfg *apiConfig) handleGetUserByEmail(w http.ResponseWriter, r *http.Request) {
-    // check user authentication
-    token, err := auth.GetBearerToken(r.Header)
-    if err != nil {
-        respondWithError(w, http.StatusUnauthorized, "", err)
-        return
-    }
-    _, err = auth.ValidateJWT(token, cfg.secret)
-    if err != nil {
-        respondWithError(w, http.StatusUnauthorized, token, err)
-    }
+    // check user authentication (will wrap in middleware)
+    //token, err := auth.GetBearerToken(r.Header)
+    //if err != nil {
+    //    respondWithError(w, http.StatusUnauthorized, "", err)
+    //    return
+    //}
+    //_, err = auth.ValidateJWT(token, cfg.secret)
+    //if err != nil {
+    //    respondWithError(w, http.StatusUnauthorized, token, err)
+    //}
 
     // ensure request contains email
     u := &User{}
     decoder := json.NewDecoder(r.Body)
-    err = decoder.Decode(u)
+    err := decoder.Decode(u)
     if err != nil {
         respondWithError(w, http.StatusInternalServerError, "unable to unmarshal user", err)
         return
@@ -203,17 +219,17 @@ func (cfg *apiConfig) handleGetUserKeyPacket(w http.ResponseWriter, r *http.Requ
         respondWithError(w, http.StatusInternalServerError, "unable to parse user ID", err)
         return
     }
-    // check user authentication
-    token, err := auth.GetBearerToken(r.Header)
-    if err != nil {
-        respondWithError(w, http.StatusUnauthorized, "", err)
-        return
-    }
-    _, err = auth.ValidateJWT(token, cfg.secret)
-    if err != nil {
-        respondWithError(w, http.StatusUnauthorized, token, err)
-        return
-    }
+    // check user authentication (will wrap in middleware)
+    //token, err := auth.GetBearerToken(r.Header)
+    //if err != nil {
+    //    respondWithError(w, http.StatusUnauthorized, "", err)
+    //    return
+    //}
+    //_, err = auth.ValidateJWT(token, cfg.secret)
+    //if err != nil {
+    //    respondWithError(w, http.StatusUnauthorized, token, err)
+    //    return
+    //}
 
     // get user request
     //decoder := json.NewDecoder(r.Body)
@@ -318,7 +334,7 @@ func (cfg *apiConfig) handleLogin(w http.ResponseWriter, r *http.Request) {
 }
 
 func (cfg *apiConfig) handleUpdateUser(w http.ResponseWriter, r *http.Request) {
-    // check user authentication
+    // check user authentication (will wrap in middleware)
     token, err := auth.GetBearerToken(r.Header)
     if err != nil {
         respondWithError(w, http.StatusUnauthorized, "", err)
