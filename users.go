@@ -132,7 +132,77 @@ func (cfg *apiConfig) handleCreateUser(w http.ResponseWriter, r *http.Request) {
     return
 }
 
+func (cfg *apiConfig) handleGetUser(w http.ResponseWriter, r *http.Request) {
+    // get user ID from request
+    userID, err := uuid.Parse(r.PathValue("userID"))
+    if err != nil {
+        respondWithError(w, http.StatusInternalServerError, "unable to parse user ID", err)
+        return
+    }
+    // check user authentication
+    token, err := auth.GetBearerToken(r.Header)
+    if err != nil {
+        respondWithError(w, http.StatusUnauthorized, "", err)
+        return
+    }
+    _, err = auth.ValidateJWT(token, cfg.secret)
+    if err != nil {
+        respondWithError(w, http.StatusUnauthorized, token, err)
+    }
+
+    user, err := cfg.dbQueries.GetUser(r.Context(), userID)
+    if err != nil {
+        respondWithError(w, http.StatusInternalServerError, "unable to get user", err)
+        return
+    }
+
+    // return user
+    respondWithJSON(w, http.StatusOK, User(user))
+}
+
+func (cfg *apiConfig) handleGetUserByEmail(w http.ResponseWriter, r *http.Request) {
+    // check user authentication
+    token, err := auth.GetBearerToken(r.Header)
+    if err != nil {
+        respondWithError(w, http.StatusUnauthorized, "", err)
+        return
+    }
+    _, err = auth.ValidateJWT(token, cfg.secret)
+    if err != nil {
+        respondWithError(w, http.StatusUnauthorized, token, err)
+    }
+
+    // ensure request contains email
+    u := &User{}
+    decoder := json.NewDecoder(r.Body)
+    err = decoder.Decode(u)
+    if err != nil {
+        respondWithError(w, http.StatusInternalServerError, "unable to unmarshal user", err)
+        return
+    }
+    if u.Email == "" {
+        respondWithError(w, http.StatusBadRequest, "need to supply user email", err)
+        return
+    }
+
+    // get user
+    user, err := cfg.dbQueries.GetUserByEmail(r.Context(), u.Email)
+    if err != nil {
+        respondWithError(w, http.StatusInternalServerError, "unable to get user by email", err)
+        return
+    }
+
+    // return user JSON
+    respondWithJSON(w, http.StatusOK, User(user))
+}
+
 func (cfg *apiConfig) handleGetUserKeyPacket(w http.ResponseWriter, r *http.Request) {
+    // get user ID from request
+    userID, err := uuid.Parse(r.PathValue("userID"))
+    if err != nil {
+        respondWithError(w, http.StatusInternalServerError, "unable to parse user ID", err)
+        return
+    }
     // check user authentication
     token, err := auth.GetBearerToken(r.Header)
     if err != nil {
@@ -146,29 +216,29 @@ func (cfg *apiConfig) handleGetUserKeyPacket(w http.ResponseWriter, r *http.Requ
     }
 
     // get user request
-    decoder := json.NewDecoder(r.Body)
-    u := &User{}
-    err = decoder.Decode(u)
-    if err != nil {
-        respondWithError(w, http.StatusInternalServerError, "unable to unmarshal user", err)
-        return
-    }
-    if u.Email != "" {
-        foundUser, err := cfg.dbQueries.GetUserByEmail(r.Context(), u.Email)
-        if err != nil {
-            respondWithError(w, http.StatusInternalServerError, "unable to find user in DB by email", err)
-        } else {
-            u.ID = foundUser.ID
-        }
-    }
+    //decoder := json.NewDecoder(r.Body)
+    //u := &User{}
+    //err = decoder.Decode(u)
+    //if err != nil {
+    //    respondWithError(w, http.StatusInternalServerError, "unable to unmarshal user", err)
+    //    return
+    //}
+    //if u.Email != "" {
+    //    foundUser, err := cfg.dbQueries.GetUserByEmail(r.Context(), u.Email)
+    //    if err != nil {
+    //        respondWithError(w, http.StatusInternalServerError, "unable to find user in DB by email", err)
+    //    } else {
+    //        u.ID = foundUser.ID
+    //    }
+    //}
 
     // make request for key packet
-    userKeyPacket, err := cfg.dbQueries.GetUserKeyPacket(r.Context(), u.ID)
+    userKeyPacket, err := cfg.dbQueries.GetUserKeyPacket(r.Context(), userID)
     if err != nil {
         respondWithError(
             w, 
             http.StatusInternalServerError, 
-            fmt.Sprintf("error finding %s to database", u.ID), 
+            fmt.Sprintf("error finding %s to database", userID), 
             err,
         )
         return
