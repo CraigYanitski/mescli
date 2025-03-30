@@ -1,8 +1,8 @@
 package typeset
 
 import (
-    "fmt"
-    "strings"
+	"fmt"
+	"strings"
 )
 
 type ansiCMD int
@@ -55,7 +55,7 @@ func formatANSI(codes []ansiCMD) (string, error) {
             ansi += fmt.Sprintf(";%d", codes[i])
         }
     } else {
-        return "", fmt.Errorf("No ANSI code to apply...")
+        return "", fmt.Errorf("no ANSI code to apply")
     }
 
     // Finish ANSI code and return
@@ -142,13 +142,13 @@ func getCode(format string) (ansiCMD, error) {
         code = BackDefault
     // Default error
     default:
-        return Normal, fmt.Errorf("Error parsing format %v.\n" +
+        return Normal, fmt.Errorf("error parsing format %v.\n" +
             "You can specify 'normal', 'bold', 'faint', 'italics', " +
             "'underline', 'blink', 'crossout', as well as those keys preceded by 'not'.\n" +
             "You can also specify the colors 'black', 'red', 'green', 'yellow', 'blue', " +
             "'magenta', 'cyan', and 'white', but you should also specify 'fore' or 'back' " +
             "before the color to set the foreground or background. " +
-            "The default is the foreground.", format)
+            "The default is the foreground", format)
     }
     return code, nil
 }
@@ -164,7 +164,7 @@ func FormatString(line string, format []string) (string, error) {
     for i := 0; i < len(format); i++ {
         code, err := getCode(format[i])
         if err != nil {
-            return "", fmt.Errorf("Error getting ANSI CODE: %v", err)
+            return "", fmt.Errorf("error getting ANSI CODE: %v", err)
         }
         codes = append(codes, code)
     }
@@ -172,13 +172,13 @@ func FormatString(line string, format []string) (string, error) {
     // Format string prefix
     prefix, err := formatANSI(codes)
     if err != nil {
-        return "", fmt.Errorf("Error combining ANSI codes: %v", err)
+        return "", fmt.Errorf("error combining ANSI codes: %v", err)
     }
 
     // Format reset string
     suffix, err := formatANSI([]ansiCMD{Normal})
     if err != nil {
-        return "", fmt.Errorf("Error creating suffix: %v", err)
+        return "", fmt.Errorf("error creating suffix: %v", err)
     }
 
     return prefix + line + suffix, nil

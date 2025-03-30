@@ -30,7 +30,7 @@ func (d optionDelegate) Render(w io.Writer, m list.Model, index int, listItem li
 		return
 	}
 
-	option := fmt.Sprintf("%s", i.str)
+	option := i.str//fmt.Sprintf("%s", i.str)
 
     var str string
 	if index == m.Index() {

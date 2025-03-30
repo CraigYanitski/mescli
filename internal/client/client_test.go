@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/CraigYanitski/mescli/client"
+	"github.com/CraigYanitski/mescli/internal/client"
 	"github.com/google/uuid"
 )
 

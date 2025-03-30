@@ -24,13 +24,16 @@ func getContact(email string) (*uuid.UUID, error) {
         return nil, err
     }
     userReq, err := http.NewRequest(http.MethodGet, apiURL+"/users", bytes.NewBuffer(userData))
+    if err != nil {
+        return nil, err
+    }
     userReq.Header.Set("Content-Type", "application/json")
     userReq.Header.Set("Authorization", "Bearer "+viper.GetString("access_token"))
     userResp, err := httpClient.Do(userReq)
     if err != nil {
         return nil, err
     }
-    user := UserResponse{}
+    user := &UserResponse{}
     userRespData, err := io.ReadAll(userResp.Body)
     if err != nil {
         return nil, err

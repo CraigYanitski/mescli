@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/CraigYanitski/mescli/typeset"
+	"github.com/CraigYanitski/mescli/internal/typeset"
 )
 
 func TestBlueText(t *testing.T) {

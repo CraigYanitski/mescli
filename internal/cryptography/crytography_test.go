@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/CraigYanitski/mescli/cryptography"
+	"github.com/CraigYanitski/mescli/internal/cryptography"
 )
 
 func TestPasswordHash(t *testing.T) {

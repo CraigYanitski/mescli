@@ -51,6 +51,9 @@ func updateAccount(name, email, password string) error {
     req.Header.Set("Content-Type", "application/json")
     req.Header.Set("Authorization", "Bearer "+viper.GetString("access_token"))
     resp, err := client.Do(req)
+    if err != nil {
+        return err
+    }
     defer resp.Body.Close()
     // check if request successful
     if resp.StatusCode != 200 {

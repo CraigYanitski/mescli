@@ -97,6 +97,9 @@ func getUserIdentityKey(user uuid.UUID) (*ecdsa.PublicKey, error) {
         return nil, err
     }
     userReq, err := http.NewRequest(http.MethodGet, apiURL+"/users/crypto/"+user.String(), bytes.NewBuffer(userData))
+    if err != nil {
+        return nil, err
+    }
     userReq.Header.Set("Content-Type", "application/json")
     userReq.Header.Set("Authorization", "Bearer "+viper.GetString("access_token"))
     userResp, err := httpClient.Do(userReq)
@@ -156,15 +159,15 @@ func sendMessage(contactID uuid.UUID, contactX3DHpacket *client.MessagePacketJSO
     // send request to server
     msgReq, err := http.NewRequest(http.MethodPost, apiURL+"/messages", bytes.NewBuffer(msgData))
     if err != nil {
-        return fmt.Errorf("error making message request", err)
+        return fmt.Errorf("error making message request: %s", err)
     }
     msgReq.Header.Set("Content-Type", "application/json")
     msgReq.Header.Set("Authorization", "Bearer "+viper.GetString("access_token"))
     msgResp, err := httpClient.Do(msgReq)
-    defer msgResp.Body.Close()
     if err != nil {
         return err
     }
+    defer msgResp.Body.Close()
     // check if request successful
     if msgResp.StatusCode != 201 {
         return errors.New("error: update not successful")
@@ -186,10 +189,10 @@ func getMessages() (messages []MessageResponse, err error) {
     req.Header.Set("Content-Type", "application/json")
     req.Header.Set("Authorization", "Bearer "+viper.GetString("access_token"))
     resp, err := httpClient.Do(req)
-    defer resp.Body.Close()
     if err != nil {
         return
     }
+    defer resp.Body.Close()
     if resp.StatusCode != 200 {
         err = errors.New("error: cannot retrieve messages")
         return
