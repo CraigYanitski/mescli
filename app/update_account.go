@@ -6,7 +6,7 @@ import (
 	"errors"
 	"net/http"
 
-	crypt "github.com/CraigYanitski/mescli/cryptography"
+	crypt "github.com/CraigYanitski/mescli/internal/cryptography"
 	"github.com/spf13/viper"
 )
 
