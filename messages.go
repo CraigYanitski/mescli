@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"encoding/json"
 	"net/http"
 	"time"
@@ -16,12 +17,14 @@ type InitMessage struct {
     Message   string     `json:"message"`
 }
 type Message struct {
-    ID         uuid.UUID  `json:"id"`
-    CreatedAt  time.Time  `json:"created_at"`
-    UpdatedAt  time.Time  `json:"updated_at"`
-    UserID     uuid.UUID  `json:"user_id"`
-    SenderID   uuid.UUID  `json:"sender_id"`
-    Message    string     `json:"message"`
+    ID                  uuid.UUID       `json:"id"`
+    CreatedAt           time.Time       `json:"created_at"`
+    UpdatedAt           time.Time       `json:"updated_at"`
+    UserID              uuid.UUID       `json:"user_id"`
+    SenderID            uuid.UUID       `json:"sender_id"`
+    SenderIdentityKey   sql.NullString  `json:"sender_identity_key"`
+    SenderEphemeralKey  sql.NullString  `json:"sender_ephemeral_key"`
+    Message             string          `json:"message"`
 }
 
 func (cfg *apiConfig) handleCreateMessage(w http.ResponseWriter, r *http.Request) {

@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"crypto/ecdh"
+	"database/sql"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -10,8 +11,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/CraigYanitski/mescli/client"
-	"github.com/CraigYanitski/mescli/cryptography"
+	"github.com/CraigYanitski/mescli/internal/client"
+	"github.com/CraigYanitski/mescli/internal/cryptography"
 	"github.com/google/uuid"
 	"github.com/spf13/viper"
 )
@@ -31,14 +32,14 @@ type MessageRequest struct {
     SenderEphemeralKey  string     `json:"sender_ephemeral_key"`
 }
 type MessageResponse struct {
-    ID                  uuid.UUID  `json:"id"`
-    CreatedAt           time.Time  `json:"created_at"`
-    UpdatedAt           time.Time  `json:"updated_at"`
-    UserID              uuid.UUID  `json:"user_id"`
-    SenderID            uuid.UUID  `json:"sender_id"`
-    Message             string     `json:"message"`
-    SenderIdentityKey   string     `json:"sender_identity_key"`
-    SenderEphemeralKey  string     `json:"sender_ephemeral_key"`
+    ID                  uuid.UUID       `json:"id"`
+    CreatedAt           time.Time       `json:"created_at"`
+    UpdatedAt           time.Time       `json:"updated_at"`
+    UserID              uuid.UUID       `json:"user_id"`
+    SenderID            uuid.UUID       `json:"sender_id"`
+    SenderIdentityKey   sql.NullString  `json:"sender_identity_key"`
+    SenderEphemeralKey  sql.NullString  `json:"sender_ephemeral_key"`
+    Message             string          `json:"message"`
 }
 
 func addContact(email string) (*client.MessagePacketJSON, error) {
@@ -95,7 +96,7 @@ func getUserIdentityKey(user uuid.UUID) (*ecdh.PublicKey, error) {
     if err != nil {
         return nil, err
     }
-    userReq, err := http.NewRequest(http.MethodGet, apiURL+"/users", bytes.NewBuffer(userData))
+    userReq, err := http.NewRequest(http.MethodGet, apiURL+"/users/crypto/"+user.String(), bytes.NewBuffer(userData))
     userReq.Header.Set("Content-Type", "application/json")
     userReq.Header.Set("Authorization", "Bearer "+viper.GetString("access_token"))
     userResp, err := httpClient.Do(userReq)
@@ -209,11 +210,11 @@ func getMessages() (messages []MessageResponse, err error) {
         senderEncryptedMessages = append(senderEncryptedMessages, message.Message)
         viper.Set("contacts."+message.SenderID.String()+".encrypted_messages", senderEncryptedMessages)
         // check if X3DH initiated
-        if message.SenderEphemeralKey != "" {
+        if message.SenderEphemeralKey.Valid && message.SenderIdentityKey.Valid {
             err = c.CompleteX3DH(
                 &client.MessagePacketJSON{
-                    IdentityKey: message.SenderIdentityKey,
-                    EphemeralKey: message.SenderEphemeralKey,
+                    IdentityKey: message.SenderIdentityKey.String,
+                    EphemeralKey: message.SenderEphemeralKey.String,
                 },
                 message.SenderID,
                 false,
