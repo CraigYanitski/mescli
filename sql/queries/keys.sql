@@ -21,6 +21,10 @@ INSERT INTO crypto_keys (
 SELECT * FROM crypto_keys 
 WHERE user_id = $1 ;
 
+-- name: GetUserIdentityKey :one
+SELECT identity_key FROM crypto_keys 
+WHERE user_id = $1 ;
+
 -- name: UpdateKeyPacket :one
 UPDATE crypto_keys 
 SET updated_at = NOW(),

@@ -144,7 +144,6 @@ func (cfg *apiConfig) handleCreateUser(w http.ResponseWriter, r *http.Request) {
 
     createdUser.HashedPassword = ""
     respondWithJSON(w, http.StatusCreated, User(createdUser))
-    return
 }
 
 func (cfg *apiConfig) handleGetUser(w http.ResponseWriter, r *http.Request) {
@@ -261,7 +260,30 @@ func (cfg *apiConfig) handleGetUserKeyPacket(w http.ResponseWriter, r *http.Requ
     }
 
     respondWithJSON(w, http.StatusOK, CryptoKey(userKeyPacket))
-    return
+}
+
+func (cfg *apiConfig) handleGetUserIdentityKey(w http.ResponseWriter, r *http.Request) {
+    // get user ID from request
+    userID, err := uuid.Parse(r.PathValue("userID"))
+    if err != nil {
+        respondWithError(w, http.StatusInternalServerError, "unable to parse user ID", err)
+        return
+    }
+
+    // make request for identity key
+    identityKey, err := cfg.dbQueries.GetUserIdentityKey(r.Context(), userID)
+    if err != nil {
+        respondWithError(
+            w, 
+            http.StatusInternalServerError, 
+            fmt.Sprintf("error finding %s to database", userID), 
+            err,
+        )
+        return
+    }
+
+    keyStruct := CryptoKey{IdentityKey: identityKey}
+    respondWithJSON(w, http.StatusOK, keyStruct)
 }
 
 func (cfg *apiConfig) handleLogin(w http.ResponseWriter, r *http.Request) {
@@ -330,7 +352,6 @@ func (cfg *apiConfig) handleLogin(w http.ResponseWriter, r *http.Request) {
 
     // respond with user JSON
     respondWithJSON(w, http.StatusOK, validUser)
-    return
 }
 
 func (cfg *apiConfig) handleUpdateUser(w http.ResponseWriter, r *http.Request) {
@@ -408,6 +429,5 @@ func (cfg *apiConfig) handleUpdateUser(w http.ResponseWriter, r *http.Request) {
 
     updatedUser.HashedPassword = ""
     respondWithJSON(w, http.StatusCreated, User(updatedUser))
-    return
 }
 

@@ -51,6 +51,7 @@ func main() {
     mux.Handle("PUT /api/users", apiCfg.authenticationMiddleware(http.HandlerFunc(apiCfg.handleUpdateUser)))
     mux.Handle("GET /api/users/{userID}", apiCfg.authenticationMiddleware(http.HandlerFunc(apiCfg.handleGetUser)))
     mux.Handle("GET /api/users/crypto/{userID}", apiCfg.authenticationMiddleware(http.HandlerFunc(apiCfg.handleGetUserKeyPacket)))
+    mux.Handle("GET /api/users/identity/{userID}", apiCfg.authenticationMiddleware(http.HandlerFunc(apiCfg.handleGetUserIdentityKey)))
     // refresh tokens
     mux.HandleFunc("POST /api/login", http.HandlerFunc(apiCfg.handleLogin))
     mux.HandleFunc("POST /api/refresh", http.HandlerFunc(apiCfg.handleRefresh))

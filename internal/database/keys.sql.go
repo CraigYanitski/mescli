@@ -60,6 +60,18 @@ func (q *Queries) CreateKeyPacket(ctx context.Context, arg CreateKeyPacketParams
 	return i, err
 }
 
+const getUserIdentityKey = `-- name: GetUserIdentityKey :one
+SELECT identity_key FROM crypto_keys 
+WHERE user_id = $1
+`
+
+func (q *Queries) GetUserIdentityKey(ctx context.Context, userID uuid.UUID) (string, error) {
+	row := q.db.QueryRowContext(ctx, getUserIdentityKey, userID)
+	var identity_key string
+	err := row.Scan(&identity_key)
+	return identity_key, err
+}
+
 const getUserKeyPacket = `-- name: GetUserKeyPacket :one
 SELECT identity_key, created_at, updated_at, user_id, signed_prekey, signed_key, onetime_prekey FROM crypto_keys 
 WHERE user_id = $1

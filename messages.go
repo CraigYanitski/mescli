@@ -65,7 +65,6 @@ func (cfg *apiConfig) handleCreateMessage(w http.ResponseWriter, r *http.Request
     }
 
     respondWithJSON(w, http.StatusCreated, Message(createdMessage))
-    return
 }
 
 func (cfg *apiConfig) HandleGetMessages(w http.ResponseWriter, r *http.Request) {
@@ -92,9 +91,11 @@ func (cfg *apiConfig) HandleGetMessages(w http.ResponseWriter, r *http.Request) 
     for _, message := range messages {
         newMessages = append(newMessages, Message(message))
         _, err = cfg.dbQueries.DeleteMessage(r.Context(), message.ID)
+        if err != nil {
+            respondWithError(w, http.StatusInternalServerError, "error deleting message from server", err)
+        }
     }
 
     respondWithJSON(w, http.StatusOK, newMessages)
-    return
 }
 
