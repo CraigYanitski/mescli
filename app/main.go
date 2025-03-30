@@ -131,7 +131,7 @@ func runTests() {
     alicePub, _ := alice.IdentityECDSA().ECDH()
     bobPub, _ := bob.IdentityECDSA().ECDH()
     message := "Hi Bob!!"
-    ciphertext, err := alice.SendMessage(message, []string{"blue"}, bobPub, uuid.UUID{}, true)
+    ciphertext, err := alice.SendMessage(message, bobPub, uuid.UUID{}, true)
     if err != nil {
         panic(err)
     }
@@ -174,7 +174,7 @@ func runTests() {
               "Perhaps this sentence will not make it through the transmission? " +
               "I should start splitting the message into chunks before finishing the encryption. " +
               "This message is clearly a good way to test this functionality."
-    ciphertext, err = bob.SendMessage(message, []string{}, alicePub, uuid.UUID{}, true)
+    ciphertext, err = bob.SendMessage(message, alicePub, uuid.UUID{}, true)
     if err != nil {
         panic(err)
     }

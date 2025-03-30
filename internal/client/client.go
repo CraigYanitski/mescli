@@ -12,7 +12,6 @@ import (
 	"slices"
 
 	crypt "github.com/CraigYanitski/mescli/internal/cryptography"
-	"github.com/CraigYanitski/mescli/internal/typeset"
 	"github.com/google/uuid"
 	"github.com/spf13/viper"
 	"golang.org/x/crypto/hkdf"
@@ -360,13 +359,7 @@ func (c *Client) CheckPassword(password string) bool {
     return ok
 }
 
-func (c *Client) SendMessage(plaintext string, format []string, pubkey *ecdh.PublicKey, contactID uuid.UUID, test bool) (string, error) {
-    // Format message
-    formattedMessage, err := typeset.FormatString(plaintext, format)
-    if err != nil {
-        return "", err
-    }
-
+func (c *Client) SendMessage(plaintext string, pubkey *ecdh.PublicKey, contactID uuid.UUID, test bool) (string, error) {
     // Renew Diffie-Hellman key for encryption
     // key, err := generateKey()
     // if err != nil {
@@ -394,7 +387,7 @@ func (c *Client) SendMessage(plaintext string, format []string, pubkey *ecdh.Pub
     }
 
     // Encrypt message
-    ciphertext, err := crypt.EncryptMessage(sendKey, []byte(formattedMessage), iv)
+    ciphertext, err := crypt.EncryptMessage(sendKey, []byte(plaintext), iv)
     if err != nil {
         err = fmt.Errorf("error encrypting message: %v", err)
         return "", err
