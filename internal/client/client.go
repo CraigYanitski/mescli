@@ -359,7 +359,7 @@ func (c *Client) CheckPassword(password string) bool {
     return ok
 }
 
-func (c *Client) SendMessage(plaintext string, pubkey *ecdh.PublicKey, contactID uuid.UUID, test bool) (string, error) {
+func (c *Client) SendMessage(plaintext string, pubkey *ecdsa.PublicKey, contactID uuid.UUID, test bool) (string, error) {
     // Renew Diffie-Hellman key for encryption
     // key, err := generateKey()
     // if err != nil {
@@ -367,9 +367,13 @@ func (c *Client) SendMessage(plaintext string, pubkey *ecdh.PublicKey, contactID
     //     return nil, err
     // }
     key := c.identityECDH()
+    pubkeyDH, err := pubkey.ECDH()
+    if err != nil {
+        return "", fmt.Errorf("unable to convert DSA key to DH key: %s", err)
+    }
 
     // Calculate shared secret
-    secret, err := key.ECDH(pubkey)
+    secret, err := key.ECDH(pubkeyDH)
     if err != nil {
         return "", err
     }
@@ -404,12 +408,16 @@ func (c *Client) SendMessage(plaintext string, pubkey *ecdh.PublicKey, contactID
     return hex.EncodeToString(ciphertext), nil
 }
 
-func (c *Client) ReceiveMessage(ciphertext string, pubkey *ecdh.PublicKey, contactID uuid.UUID, test bool) (string, error) {
+func (c *Client) ReceiveMessage(ciphertext string, pubkey *ecdsa.PublicKey, contactID uuid.UUID, test bool) (string, error) {
     // Renew Diffie-Hellman key
     key := c.identityECDH()
+    pubkeyDH, err := pubkey.ECDH()
+    if err != nil {
+        return "", fmt.Errorf("unable to convert DSA key to DH key: %s", err)
+    }
 
     // Calculate shared secret
-    secret, err := key.ECDH(pubkey)
+    secret, err := key.ECDH(pubkeyDH)
     if err != nil {
         return "", err
     }

@@ -2,22 +2,13 @@ package main
 
 import (
 	"fmt"
-	//"os"
-	//"path"
-
-	// "io"
 	"log"
 	"strings"
 
 	"github.com/CraigYanitski/mescli/internal/client"
+	tea "github.com/charmbracelet/bubbletea"
 	"github.com/google/uuid"
 	"github.com/spf13/viper"
-
-	// "github.com/charmbracelet/bubbles/list"
-	// "github.com/charmbracelet/bubbles/textarea"
-	// "github.com/charmbracelet/bubbles/viewport"
-	tea "github.com/charmbracelet/bubbletea"
-	// "github.com/charmbracelet/lipgloss"
 )
 
 func main() {
@@ -128,8 +119,8 @@ func runTests() {
     fmt.Println("Alice -> Bob")
 
     // Try to send a message from Alice to Bob
-    alicePub, _ := alice.IdentityECDSA().ECDH()
-    bobPub, _ := bob.IdentityECDSA().ECDH()
+    alicePub := alice.IdentityECDSA()
+    bobPub := bob.IdentityECDSA()
     message := "Hi Bob!!"
     ciphertext, err := alice.SendMessage(message, bobPub, uuid.UUID{}, true)
     if err != nil {

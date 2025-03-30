@@ -2,7 +2,7 @@ package main
 
 import (
 	"bytes"
-	"crypto/ecdh"
+	"crypto/ecdsa"
 	"database/sql"
 	"encoding/json"
 	"errors"
@@ -87,7 +87,7 @@ func addContact(email string) (*client.MessagePacketJSON, error) {
     return messageJSON, nil
 }
 
-func getUserIdentityKey(user uuid.UUID) (*ecdh.PublicKey, error) {
+func getUserIdentityKey(user uuid.UUID) (*ecdsa.PublicKey, error) {
     apiURL := viper.GetString("api_url")
     httpClient := http.Client{}
     // get user key packet
@@ -113,11 +113,11 @@ func getUserIdentityKey(user uuid.UUID) (*ecdh.PublicKey, error) {
         return nil, err
     }
     identityKey := cryptography.DecodeECDSAPublicKey(userKeys.IdentityKey)
-    userIK, err := identityKey.ECDH()
-    if err != nil {
-        return nil, err
-    }
-    return userIK, nil
+    //userIK, err := identityKey.ECDH()
+    //if err != nil {
+    //    return nil, err
+    //}
+    return identityKey, nil
 }
 
 func sendMessage(contactID uuid.UUID, contactX3DHpacket *client.MessagePacketJSON, message string) error {
@@ -131,7 +131,7 @@ func sendMessage(contactID uuid.UUID, contactX3DHpacket *client.MessagePacketJSO
         return fmt.Errorf("error getting contact identity key: %s", err)
     }
     // encrypt message and marshal request JSON
-    encryptedMsg, err := c.SendMessage(message, []string{}, contactIK, contactID, false)
+    encryptedMsg, err := c.SendMessage(message, contactIK, contactID, false)
     if err != nil {
         return err
     }
