@@ -54,6 +54,15 @@ make build-server
 The server interacts with a PostgreSQL database, and the required migrations
 are stored in `./sql/schema` and run using [`goose`](https://github.com/pressly/goose).
 
+In order for the server to run correctly, it expects a `.env` file in the root directory
+with environment variables `DB_URL` (defined by the PostgreSQL database) and 
+`JWT_SECRET`, a base 64 encoded string used for authenticating users.
+You can generate your own 32-byte key using,
+
+```bash
+openssl rand -base64 32
+```
+
 ## Development
 
 Since the full project is rather complex, I will focus on a few features for 
