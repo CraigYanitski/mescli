@@ -49,6 +49,7 @@ func updateConversation(msg tea.Msg, m Model) (tea.Model, tea.Cmd) {
                 }
                 messageMD, err := renderer.Render(m.textarea.Value())
                 if err != nil {
+                    // fallback to unformatted text if there is an issue rendering the markdown
                     messageMD = m.textarea.Value()
                 }
                 messageMD = strings.TrimSpace(messageMD)
