@@ -36,7 +36,7 @@ func (d optionDelegate) Render(w io.Writer, m list.Model, index int, listItem li
 	if index == m.Index() {
 		str = selectedOptionStyle.Render("> " + option)
 	} else {
-	    str = optionStyle.Render("  " + option)
+        str = optionStyle.Render("  " + option)
     }
 
 	fmt.Fprint(w, str)
@@ -74,6 +74,7 @@ type listKeyMap struct {
     optionUp        key.Binding
     optionDown      key.Binding
     toggleHelpMenu  key.Binding
+    addOption       key.Binding
     Enter           key.Binding
     Back            key.Binding
     Quit            key.Binding
@@ -91,6 +92,10 @@ func newListKeyMap() *listKeyMap {
         toggleHelpMenu: key.NewBinding(
             key.WithKeys("ctrl+h", "h"),
             key.WithHelp("ctrl+h | h", "display help menu"),
+        ),
+        addOption: key.NewBinding(
+            key.WithKeys("ctrl+a", "a"),
+            key.WithHelp("ctrl+a | a", "add new option"),
         ),
         Enter: key.NewBinding(
             key.WithKeys("enter"),
