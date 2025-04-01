@@ -58,7 +58,7 @@ func addContact(email string) (*client.MessagePacketJSON, error) {
         return nil, err
     }
     // send request to server
-    keyReq, err := http.NewRequest(http.MethodGet, apiURL+"/users", bytes.NewBuffer(data))
+    keyReq, err := http.NewRequest(http.MethodGet, apiURL+"/users/crypto/"+(*senderID).String(), bytes.NewBuffer(data))
     if err != nil {
         return nil, err
     }
@@ -96,7 +96,7 @@ func getUserIdentityKey(user uuid.UUID) (*ecdsa.PublicKey, error) {
     if err != nil {
         return nil, err
     }
-    userReq, err := http.NewRequest(http.MethodGet, apiURL+"/users/crypto/"+user.String(), bytes.NewBuffer(userData))
+    userReq, err := http.NewRequest(http.MethodGet, apiURL+"/users/identity/"+user.String(), bytes.NewBuffer(userData))
     if err != nil {
         return nil, err
     }
@@ -128,7 +128,7 @@ func sendMessage(contactID uuid.UUID, contactX3DHpacket *client.MessagePacketJSO
     httpClient := http.Client{}
     c := client.Client{}
     c.Initialise(false)
-    // get contact identity key
+    // get contact identity key (only need identity key for exchanging messages)
     contactIK, err := getUserIdentityKey(contactID)  // TODO: change input to string (and function to decode string)
     if err != nil {
         return fmt.Errorf("error getting contact identity key: %s", err)
