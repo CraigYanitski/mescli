@@ -74,7 +74,7 @@ type listKeyMap struct {
     optionUp        key.Binding
     optionDown      key.Binding
     toggleHelpMenu  key.Binding
-    addOption       key.Binding
+    findOption      key.Binding
     Enter           key.Binding
     Back            key.Binding
     Quit            key.Binding
@@ -93,9 +93,9 @@ func newListKeyMap() *listKeyMap {
             key.WithKeys("ctrl+h", "h"),
             key.WithHelp("ctrl+h | h", "display help menu"),
         ),
-        addOption: key.NewBinding(
-            key.WithKeys("ctrl+a", "a"),
-            key.WithHelp("ctrl+a | a", "add new option"),
+        findOption: key.NewBinding(
+            key.WithKeys("ctrl+f", "f"),
+            key.WithHelp("ctrl+f | f", "add new option"),
         ),
         Enter: key.NewBinding(
             key.WithKeys("enter"),
