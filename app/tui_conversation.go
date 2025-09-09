@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -54,8 +55,14 @@ func updateConversation(msg tea.Msg, m Model) (tea.Model, tea.Cmd) {
                 }
                 messageMD = strings.TrimSpace(messageMD)
                 message := m.Prompt + strings.Replace(messageMD, "m  ", "m", 1)
-                m.messages[m.conversation] = append(m.messages[m.conversation], 
-                    message)
+                m.messages[m.conversation] = append(
+                    m.messages[m.conversation], 
+                    message,
+                )
+                ok := writeMessages(m.messages)
+                if !ok {
+                    log.Fatal("error writing messages")
+                }
                 m.viewport.SetContent(strings.Join(m.messages[m.conversation], "\n"))
                 m.textarea.Reset()
                 m.viewport.GotoBottom()

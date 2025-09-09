@@ -8,7 +8,9 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/CraigYanitski/mescli/internal/client"
@@ -251,5 +253,19 @@ func getMessages() (messages []MessageResponse, err error) {
     }
     viper.WriteConfig()
     return
+}
+
+func writeMessages(messages map[string][]string) bool {
+    messageBytes, err := json.MarshalIndent(messages, "", "    ")
+    if err != nil {
+        log.Println(err)
+        return false
+    }
+    err = os.WriteFile("./.messages", messageBytes, 0644)
+    if err != nil {
+        log.Println(err)
+        return false
+    }
+    return true
 }
 
