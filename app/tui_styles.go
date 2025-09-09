@@ -42,7 +42,7 @@ var (
     selectedContactStyleDesc  = lipgloss.NewStyle().Italic(true).Foreground(lipgloss.Color("164"))
 
     // chat styles
-    converstionStyle  = lipgloss.NewStyle().Bold(true)
+    conversationStyle  = lipgloss.NewStyle().Bold(true)
     outputStyle       = lipgloss.NewStyle()
     senderStyle       = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("164"))
     promptStyle       = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("220"))

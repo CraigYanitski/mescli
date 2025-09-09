@@ -74,7 +74,7 @@ func updateConversation(msg tea.Msg, m Model) (tea.Model, tea.Cmd) {
 func conversationView(m Model) string {
     return fmt.Sprintf(
         conversationWrapping,
-        converstionStyle.Render(m.conversation),
+        conversationStyle.Render(m.conversation),
         m.viewport.View(),
         m.textarea.View(),
     )
