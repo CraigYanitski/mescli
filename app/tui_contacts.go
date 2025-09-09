@@ -19,8 +19,9 @@ func updateContacts(msg tea.Msg, m Model) (tea.Model, tea.Cmd) {
         case key.Matches(msg, m.keys.Back):
             m.Chosen = 0
             return m, nil
-        case key.Matches(msg, m.keys.findOption):
-            return m, nil
+        // case key.Matches(msg, m.keys.findOption):
+        //     m.search = true
+        //     return m, nil
         case key.Matches(msg, m.keys.Enter):
             c, _ := m.contacts.SelectedItem().(contact)
             m.conversation = c.name

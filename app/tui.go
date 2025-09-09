@@ -131,7 +131,7 @@ func InitialModel() Model {
     o.SetFilteringEnabled(false)
     o.Styles.PaginationStyle = paginationStyle
     o.Styles.HelpStyle = helpStyle
-    o.SetShowHelp(false)
+    o.SetShowHelp(true)
 
     // contact messages
     messages := make(map[string][]string)
@@ -151,7 +151,7 @@ func InitialModel() Model {
     c.Styles.Title = titleStyle
     c.Styles.PaginationStyle = paginationStyle
     c.Styles.HelpStyle = helpStyle
-    c.SetShowHelp(false)
+    c.SetShowHelp(true)
 
     // conversation textarea
     ta := textarea.New()
@@ -255,13 +255,13 @@ func InitialModel() Model {
     ta.Prompt = "| "
     ta.CharLimit = 1024
     ta.FocusedStyle.Prompt = promptStyle
-    ta.SetWidth(30)
+    ta.SetWidth(100)
     ta.SetHeight(3)
     ta.FocusedStyle.CursorLine = lipgloss.NewStyle()
     ta.ShowLineNumbers = false
     ta.KeyMap.InsertNewline.SetEnabled(true)
     // conversation viewport
-    vp := viewport.New(30, 5)
+    vp := viewport.New(100, 5)
     viewportKeyMap := viewport.KeyMap{
 		PageDown: key.NewBinding(
 			key.WithKeys("pgdown"),
@@ -346,6 +346,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
         return updateLogin(msg, m)
     } else if !m.updated {
         return updateUpdate(msg, m)
+    } else if m.viewHelp {
+        return updateHelp(msg, m)
     } else if m.conversation != "" {
         return updateConversation(msg, m)
     } else if m.Chosen == 0 {
@@ -354,8 +356,6 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
         return updateContacts(msg, m)
     } else if m.Chosen == 2 {
         return updateUpdate(msg, m)
-    } else if m.viewHelp {
-        return updateHelp(msg, m)
     } else {
         // m.View()
         return m, tea.Quit
@@ -373,6 +373,8 @@ func (m Model) View() string {
         s = loginView(m)
     } else if !m.updated {
         s = updateView(m)
+    } else if m.viewHelp {
+        s = helpView(m)
     } else if m.conversation != "" {
         s = conversationView(m)
     } else if m.Chosen == 0 {
@@ -381,8 +383,6 @@ func (m Model) View() string {
         s = contactsView(m)
     } else if m.Chosen == 2 {
         s = updateView(m)
-    } else if m.viewHelp {
-        s = helpView(m)
     } else {
         s = ""
     }

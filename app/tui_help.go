@@ -70,7 +70,7 @@ func updateHelp(msg tea.Msg, m Model) (tea.Model, tea.Cmd) {
 
 func helpView(m Model) string {
     m.help.ShowAll = true
-    help := helpStyle.Width(m.viewport.Width - 6).Margin(optionMargin.height, optionMargin.width).
+    help := helpStyle.Width(m.viewport.Width).Margin(optionMargin.height, optionMargin.width).
         Render(m.help.View(m))
     return fmt.Sprintf(helpWrapping, help)
 }

@@ -90,8 +90,8 @@ func newListKeyMap() *listKeyMap {
             key.WithHelp("down", "next option"),
         ),
         toggleHelpMenu: key.NewBinding(
-            key.WithKeys("ctrl+h", "h"),
-            key.WithHelp("ctrl+h | h", "display help menu"),
+            key.WithKeys("ctrl+h", "h", "?"),
+            key.WithHelp("ctrl+h | h | ?", "display help menu"),
         ),
         findOption: key.NewBinding(
             key.WithKeys("ctrl+f", "f"),
@@ -110,5 +110,25 @@ func newListKeyMap() *listKeyMap {
             key.WithHelp("ctrl+c | q", "quit mescli"),
         ),
     }
+}
+
+func newListDelegate(keys *listKeyMap) list.DefaultDelegate {
+    d := list.NewDefaultDelegate()
+
+    d.UpdateFunc = func(msg tea.Msg, m *list.Model) tea.Cmd {
+        return nil
+    }
+
+    help := []key.Binding{keys.Back, keys.Quit, keys.toggleHelpMenu}
+
+    d.ShortHelpFunc = func() []key.Binding {
+        return help
+    }
+
+    d.FullHelpFunc = func() [][]key.Binding {
+        return [][]key.Binding{help, {keys.optionUp, keys.optionDown, keys.findOption}}
+    }
+
+    return d
 }
 
