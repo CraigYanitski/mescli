@@ -25,17 +25,17 @@ type CreateRequest struct {
 }
 type UserResponse struct {
     ID              uuid.UUID  `json:"id"`
-    CreatedAt       time.Time  `json:"created_at"`
-    UpdatedAt       time.Time  `json:"updated_at"`
+    CreatedAt       time.Time  `json:"created_at,omitempty"`
+    UpdatedAt       time.Time  `json:"updated_at,omitempty"`
     Email           string     `json:"email"`
     Name            string     `json:"name"`
     HashedPassword  string     `json:"hashed_password,omitempty"`
-    IdentityKey     string     `json:"identity_key"`
-    SignedPrekey    string     `json:"signed_key"`
-    SignedKey       string     `json:"signed_prekey"`
+    IdentityKey     string     `json:"identity_key,omitempty"`
+    SignedPrekey    string     `json:"signed_key,omitempty"`
+    SignedKey       string     `json:"signed_prekey,omitempty"`
     Initialised     bool       `json:"initialised"`
-    RefreshToken    string     `json:"refresh_token"`
-    AccessToken     string     `json:"access_token"`
+    RefreshToken    string     `json:"refresh_token,omitempty"`
+    AccessToken     string     `json:"access_token,omitempty"`
 }
 
 func createAccount(name, email, password string) error {
