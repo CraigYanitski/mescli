@@ -2,4 +2,5 @@ mescli*
 server
 .env
 *.mescli.yaml
+*.*messages
 .vscode
