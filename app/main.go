@@ -1,8 +1,10 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
+	"os"
 	"strings"
 
 	"github.com/CraigYanitski/mescli/internal/client"
@@ -10,6 +12,13 @@ import (
 	"github.com/google/uuid"
 	"github.com/spf13/viper"
 )
+
+type apiConfig struct {
+    name  string
+    email  string
+    uuid  uuid.UUID
+    messages  map[string][]string
+}
 
 func main() {
     // set default user configuration
@@ -42,6 +51,22 @@ func main() {
     }
     viper.SetEnvPrefix("MESCLI_")
     viper.AutomaticEnv()
+
+    apiCfg := apiConfig{
+        name: viper.GetString("name"),
+        email: viper.GetString("email"),
+    }
+
+    messages := make(map[string][]string)
+    msgBytes, err := os.ReadFile(".messages")
+    if err != nil {
+        log.Fatalln(err)
+    }
+    if err = json.Unmarshal(msgBytes, &messages); err != nil {
+        log.Fatalln(err)
+    }
+    
+    apiCfg.messages = messages
 
     // check if client is initialised
     //c := client.Client{
