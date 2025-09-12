@@ -124,7 +124,7 @@ func InitialModel(cfg *apiConfig) Model {
     // option list
     options := []list.Item{
         option{str: "View conversations", o: 1},
-        option{str: "Update account", o:2},
+        option{str: "Update account", o: 2},
         option{str: "Run custom tests", o: 3},
     }
     o := list.New(options, optionDelegate{}, 20, 10)
