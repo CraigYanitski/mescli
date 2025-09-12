@@ -48,6 +48,10 @@ func updateConversation(msg tea.Msg, m Model) (tea.Model, tea.Cmd) {
                 if err != nil {
                     renderer, _ = glamour.NewTermRenderer()
                 }
+                m.cfg.messages[m.conversation] = append(
+                    m.cfg.messages[m.conversation], 
+                    m.textarea.Value(),
+                )
                 messageMD, err := renderer.Render(m.textarea.Value())
                 if err != nil {
                     // fallback to unformatted text if there is an issue rendering the markdown
@@ -59,7 +63,7 @@ func updateConversation(msg tea.Msg, m Model) (tea.Model, tea.Cmd) {
                     m.messages[m.conversation], 
                     message,
                 )
-                ok := writeMessages(m.messages)
+                ok := writeMessages(m.cfg.messages)
                 if !ok {
                     log.Fatal("error writing messages")
                 }

@@ -19,6 +19,8 @@ import (
 
 // model parameters
 type Model struct {
+    // config
+    cfg  *apiConfig
     // geometry
     height  int
     width   int
@@ -60,7 +62,7 @@ type Model struct {
 }
 
 // model initialiser
-func InitialModel() Model {
+func InitialModel(cfg *apiConfig) Model {
     // load environment
     // TODO: simplify during installation
     godotenv.Load(".env")
@@ -305,6 +307,9 @@ func InitialModel() Model {
     senderPrompt := "You: "
 
     return Model {
+        // config
+        cfg: cfg,
+        // Model
         loggedIn:      false,
         loginInputs:   loginInputs,
         loginFocus:    0,
