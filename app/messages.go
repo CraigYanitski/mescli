@@ -255,7 +255,7 @@ func getMessages() (messages []MessageResponse, err error) {
     return
 }
 
-func writeMessages(messages map[string][]string) bool {
+func writeMessages(messages map[string][]RawMessage) bool {
     messageBytes, err := json.MarshalIndent(messages, "", "    ")
     if err != nil {
         log.Println(err)

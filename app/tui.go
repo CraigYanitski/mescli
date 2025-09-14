@@ -46,13 +46,15 @@ type Model struct {
     contacts      list.Model
     conversation  string
     // conversation
-    viewport      viewport.Model
-    messages      map[string][]string
-    textarea      textarea.Model
-    senderPrompt  string
-    senderStyle   lipgloss.Style
-    Prompt        string
-    help          help.Model
+    viewport       viewport.Model
+    messages       map[string][]string
+    textarea       textarea.Model
+    senderPrompt   string
+    senderStyle    lipgloss.Style
+    Prompt         string
+    receivePrompt  string
+    receiveStyle   lipgloss.Style
+    help           help.Model
     // help
     viewHelp  bool
     // misc
@@ -306,33 +308,36 @@ func InitialModel(cfg *apiConfig) Model {
     vp.SetContent(welcomeMsg)
     vp.Style.Margin(convMargin.height, convMargin.width)
     senderPrompt := "You: "
+    receivePrompt := "> "
 
     return Model {
         // config
         cfg: cfg,
         // Model
-        loggedIn:      false,
-        loginInputs:   loginInputs,
-        loginFocus:    0,
-        loginMsg:      fmt.Sprintf(loginMsgWrapping, ""),
-        created:       true,
-        createMsg:     fmt.Sprintf(createMsgWrapping, ""),
-        updated:       true,
-        updateInputs:  updateInputs,
-        updateFocus:   0,
-        updateMsg:     updateMsgWrapping,
-        keys:          newListKeyMap(),
-        options:       o,
-        contacts:      c,
-        textarea:      ta,
-        messages:      messages,
-        viewport:      vp,
-        senderStyle:   senderStyle,
-        senderPrompt:  senderPrompt,
-        Prompt:        senderStyle.Render(senderPrompt),
-        help:          help.New(),
-        logo:          logo,
-        err:           nil,
+        loggedIn:       false,
+        loginInputs:    loginInputs,
+        loginFocus:     0,
+        loginMsg:       fmt.Sprintf(loginMsgWrapping, ""),
+        created:        true,
+        createMsg:      fmt.Sprintf(createMsgWrapping, ""),
+        updated:        true,
+        updateInputs:   updateInputs,
+        updateFocus:    0,
+        updateMsg:      updateMsgWrapping,
+        keys:           newListKeyMap(),
+        options:        o,
+        contacts:       c,
+        textarea:       ta,
+        messages:       messages,
+        viewport:       vp,
+        senderStyle:    senderStyle,
+        senderPrompt:   senderPrompt,
+        Prompt:         senderStyle.Render(senderPrompt),
+        receiveStyle:   receiveStyle,
+        receivePrompt:  receivePrompt,
+        help:           help.New(),
+        logo:           logo,
+        err:            nil,
     }
 }
 

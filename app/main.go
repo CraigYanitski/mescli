@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/CraigYanitski/mescli/internal/client"
 	tea "github.com/charmbracelet/bubbletea"
@@ -17,7 +18,20 @@ type apiConfig struct {
     name  string
     email  string
     uuid  uuid.UUID
-    messages  map[string][]string
+    messages  map[string][]RawMessage
+}
+
+type senderType int
+
+const (
+    SelfType senderType = iota
+    ContactType
+)
+
+type RawMessage struct {
+    Sender   senderType  `json:"sender"`
+    Message  string      `json:"message"`
+    Time     time.Time   `json:"time"`
 }
 
 func main() {
@@ -57,7 +71,7 @@ func main() {
         email: viper.GetString("email"),
     }
 
-    messages := make(map[string][]string)
+    messages := make(map[string][]RawMessage)
     if _, err = os.Stat(".messages"); err == nil {
         msgBytes, err := os.ReadFile(".messages")
         if err != nil {

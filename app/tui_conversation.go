@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/glamour"
@@ -41,7 +42,11 @@ func updateConversation(msg tea.Msg, m Model) (tea.Model, tea.Cmd) {
             m.viewHelp = true
         case tea.KeyEnter:
             if strings.TrimSpace(m.textarea.Value()) != "" {
-                rawMsg := strings.TrimSpace(m.textarea.Value())
+                rawMsg := RawMessage{
+                    Sender: SelfType,
+                    Message: strings.TrimSpace(m.textarea.Value()),
+                    Time: time.Now(),
+                }
                 m.cfg.messages[m.conversation] = append(
                     m.cfg.messages[m.conversation], 
                     rawMsg,
@@ -79,7 +84,18 @@ func conversationView(m Model) string {
     )
 }
 
-func renderMessage(m Model, rawMsg string) string {
+func renderMessage(m Model, rawMsg RawMessage) string {
+    var prompt string
+    switch rawMsg.Sender {
+    case SelfType:
+        prompt = m.Prompt
+    case ContactType:
+        if m.receivePrompt != "" {
+            prompt = m.receiveStyle.Render(m.receivePrompt)
+        } else {
+            prompt = m.receiveStyle.Render(m.conversation)
+        }
+    }
     renderer, err := glamour.NewTermRenderer(
         glamour.WithStylePath("tokyo-night"), 
         glamour.WithWordWrap(m.viewport.Width - len(m.senderPrompt)),
@@ -87,13 +103,13 @@ func renderMessage(m Model, rawMsg string) string {
     if err != nil {
         renderer, _ = glamour.NewTermRenderer()
     }
-    messageMD, err := renderer.Render(rawMsg)
+    messageMD, err := renderer.Render(rawMsg.Message)
     if err != nil {
         // fallback to unformatted text if there is an issue rendering the markdown
-        messageMD = rawMsg
+        messageMD = rawMsg.Message
     }
     messageMD = strings.TrimSpace(messageMD)
-    message := m.Prompt + strings.Replace(messageMD, "m  ", "m", 1)
+    message := prompt + strings.Replace(messageMD, "m  ", "m", 1)
     return message
 }
 
