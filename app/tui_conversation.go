@@ -41,24 +41,12 @@ func updateConversation(msg tea.Msg, m Model) (tea.Model, tea.Cmd) {
             m.viewHelp = true
         case tea.KeyEnter:
             if strings.TrimSpace(m.textarea.Value()) != "" {
-                renderer, err := glamour.NewTermRenderer(
-                    glamour.WithStylePath("tokyo-night"), 
-                    glamour.WithWordWrap(m.viewport.Width - len(m.senderPrompt)),
-                )
-                if err != nil {
-                    renderer, _ = glamour.NewTermRenderer()
-                }
+                rawMsg := strings.TrimSpace(m.textarea.Value())
                 m.cfg.messages[m.conversation] = append(
                     m.cfg.messages[m.conversation], 
-                    m.textarea.Value(),
+                    rawMsg,
                 )
-                messageMD, err := renderer.Render(m.textarea.Value())
-                if err != nil {
-                    // fallback to unformatted text if there is an issue rendering the markdown
-                    messageMD = m.textarea.Value()
-                }
-                messageMD = strings.TrimSpace(messageMD)
-                message := m.Prompt + strings.Replace(messageMD, "m  ", "m", 1)
+                message := renderMessage(m, rawMsg)
                 m.messages[m.conversation] = append(
                     m.messages[m.conversation], 
                     message,
@@ -89,5 +77,23 @@ func conversationView(m Model) string {
         m.viewport.View(),
         m.textarea.View(),
     )
+}
+
+func renderMessage(m Model, rawMsg string) string {
+    renderer, err := glamour.NewTermRenderer(
+        glamour.WithStylePath("tokyo-night"), 
+        glamour.WithWordWrap(m.viewport.Width - len(m.senderPrompt)),
+    )
+    if err != nil {
+        renderer, _ = glamour.NewTermRenderer()
+    }
+    messageMD, err := renderer.Render(rawMsg)
+    if err != nil {
+        // fallback to unformatted text if there is an issue rendering the markdown
+        messageMD = rawMsg
+    }
+    messageMD = strings.TrimSpace(messageMD)
+    message := m.Prompt + strings.Replace(messageMD, "m  ", "m", 1)
+    return message
 }
 

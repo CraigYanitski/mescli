@@ -136,6 +136,7 @@ func InitialModel(cfg *apiConfig) Model {
     o.SetShowHelp(true)
 
     // contact messages
+    fmt.Println("TUI:", cfg.messages)
     messages := make(map[string][]string)
     messages["Test contact 1"] = []string{}
     messages["Test contact 2"] = []string{}

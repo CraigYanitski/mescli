@@ -25,16 +25,7 @@ func updateContacts(msg tea.Msg, m Model) (tea.Model, tea.Cmd) {
         case key.Matches(msg, m.keys.Enter):
             c, _ := m.contacts.SelectedItem().(contact)
             m.conversation = c.name
-
-            // Wrap content before setting it
-            if len(m.messages[m.conversation]) > 0 {
-                m.viewport.SetContent(lipgloss.NewStyle().Width(m.viewport.Width).
-                    Render(strings.Join(m.messages[m.conversation], "\n")))
-            } else {
-                m.viewport.SetContent(lipgloss.NewStyle().Bold(true).Render(
-                    "Welcome to the chat room!\nType a message and press Enter to send."))
-            }
-            m.viewport.GotoBottom()
+            m = initialiseConversation(m)
         }
     case tea.WindowSizeMsg:
         m = m.resize(msg.Width, msg.Height)
@@ -55,5 +46,29 @@ func contactsView(m Model) string {
             Render(m.contacts.View())
     }
     return fmt.Sprintf(contactWrapping, conversations)
+}
+
+func initialiseConversation(m Model) Model {
+    // read conversation if it exists
+    msgs := m.cfg.messages[m.conversation]
+    if msgView := m.messages[m.conversation]; len(msgView) < len(msgs) {
+        for i, msg := range msgs {
+            if i < len(msgView) {
+                continue
+            }
+            m.messages[m.conversation] = append(m.messages[m.conversation], renderMessage(m, msg))
+        }
+    }
+    // Wrap content before setting it
+    if len(m.messages[m.conversation]) > 0 {
+        m.viewport.SetContent(lipgloss.NewStyle().Width(m.viewport.Width).
+            Render(strings.Join(m.messages[m.conversation], "\n")))
+    } else {
+        m.viewport.SetContent(lipgloss.NewStyle().Bold(true).Render(
+            "Welcome to the chat room!\nType a message and press Enter to send.",
+        ))
+    }
+    m.viewport.GotoBottom()
+    return m
 }
 

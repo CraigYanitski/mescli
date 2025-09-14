@@ -58,12 +58,15 @@ func main() {
     }
 
     messages := make(map[string][]string)
-    msgBytes, err := os.ReadFile(".messages")
-    if err != nil {
-        log.Fatalln(err)
-    }
-    if err = json.Unmarshal(msgBytes, &messages); err != nil {
-        log.Fatalln(err)
+    if _, err = os.Stat(".messages"); err == nil {
+        msgBytes, err := os.ReadFile(".messages")
+        if err != nil {
+            log.Fatalln(err)
+        }
+        if err = json.Unmarshal(msgBytes, &messages); err != nil {
+            log.Fatalln(err)
+        }
+        fmt.Println(messages)
     }
     
     apiCfg.messages = messages
