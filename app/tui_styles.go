@@ -45,6 +45,7 @@ var (
     conversationStyle  = lipgloss.NewStyle().Bold(true)
     outputStyle       = lipgloss.NewStyle()
     senderStyle       = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("164"))
+    receiveStyle       = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("166"))
     promptStyle       = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("220"))
 )
 
