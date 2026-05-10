@@ -6,33 +6,14 @@ import (
 	"log"
 	"os"
 	"strings"
-	"time"
 
+	"github.com/CraigYanitski/mescli/cmd"
 	"github.com/CraigYanitski/mescli/internal/client"
+	"github.com/CraigYanitski/mescli/internal/tui"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/google/uuid"
 	"github.com/spf13/viper"
 )
-
-type apiConfig struct {
-    name  string
-    email  string
-    uuid  uuid.UUID
-    messages  map[string][]RawMessage
-}
-
-type senderType int
-
-const (
-    SelfType senderType = iota
-    ContactType
-)
-
-type RawMessage struct {
-    Sender   senderType  `json:"sender"`
-    Message  string      `json:"message"`
-    Time     time.Time   `json:"time"`
-}
 
 func main() {
     // set default user configuration
@@ -66,12 +47,12 @@ func main() {
     viper.SetEnvPrefix("MESCLI_")
     viper.AutomaticEnv()
 
-    apiCfg := apiConfig{
-        name: viper.GetString("name"),
-        email: viper.GetString("email"),
+    apiCfg := tui.ApiConfig{
+        Name: viper.GetString("name"),
+        Email: viper.GetString("email"),
     }
 
-    messages := make(map[string][]RawMessage)
+    messages := make(map[string][]tui.RawMessage)
     if _, err = os.Stat(".messages"); err == nil {
         msgBytes, err := os.ReadFile(".messages")
         if err != nil {
@@ -83,7 +64,7 @@ func main() {
         fmt.Println(messages)
     }
     
-    apiCfg.messages = messages
+    apiCfg.Messages = messages
 
     // check if client is initialised
     //c := client.Client{
@@ -93,8 +74,11 @@ func main() {
     //    c.Initialise(false)
     //}
 
+	cmd.Execute()
+	os.Exit(0)
+
     // bubble tea interface
-    p := tea.NewProgram(InitialModel(&apiCfg), tea.WithAltScreen())
+    p := tea.NewProgram(tui.InitialModel(&apiCfg), tea.WithAltScreen())
 
     // run
     m, err := p.Run()
@@ -103,7 +87,7 @@ func main() {
     }
 
     // run tests if selected
-    if m, ok := m.(Model); ok && m.Chosen == 3 {
+    if m, ok := m.(tui.Model); ok && m.Chosen == 3 {
         runTests()
         fmt.Print("\n\n")
     }
@@ -143,11 +127,11 @@ func runTests() {
     // Confirm whether or not they are equal, and thus the exchange is complete
     var result string
     if alice.CheckSecretEqual(bob) {
-        result = successStyle.Italic(true).Render(
+        result = tui.SuccessStyle.Italic(true).Render(
             "\nDiffie-Hellman secrets match - extended triple Diffie-Hellman exchange complete",
         )
     } else {
-        result = errorStyle.Italic(true).Render(
+        result = tui.ErrorStyle.Italic(true).Render(
             "\nDiffie-Hellman secrets don't match - error in establishing X3DH exchange! Secrets are not equal!!", 
         )
     }
@@ -174,11 +158,11 @@ func runTests() {
     }
 
     // Define progress strings
-    initMessage := statusStyle.Bold(true).Render("\ninitial message (%d): ")
+    initMessage := tui.StatusStyle.Bold(true).Render("\ninitial message (%d): ")
     initMessage += "%s\n"
-    encrMessage := statusStyle.Bold(true).Render("\nencrypted message (%d): ")
+    encrMessage := tui.StatusStyle.Bold(true).Render("\nencrypted message (%d): ")
     encrMessage += "0x%s\n"
-    decrMessage := statusStyle.Bold(true).Render("\ndecrypted message (%d): ")
+    decrMessage := tui.StatusStyle.Bold(true).Render("\ndecrypted message (%d): ")
     decrMessage += "%s\n"
 
     // Print progress
@@ -188,9 +172,9 @@ func runTests() {
 
     // Compare result
     if strings.Contains(plaintext, message) {
-        result = successStyle.Italic(true).Render("\nMessage Encryption successful!!")
+        result = tui.SuccessStyle.Italic(true).Render("\nMessage Encryption successful!!")
     } else {
-        result = errorStyle.Italic(true).Render("\nError in message encryption!")
+        result = tui.ErrorStyle.Italic(true).Render("\nError in message encryption!")
     }
     fmt.Println(result)
 
@@ -223,9 +207,9 @@ func runTests() {
 
     // Compare result
     if strings.Contains(plaintext, message) {
-        result = successStyle.Italic(true).Render("\nMessage Encryption successful!!")
+        result = tui.SuccessStyle.Italic(true).Render("\nMessage Encryption successful!!")
     } else {
-        result = errorStyle.Italic(true).Render("\nError in message encryption!")
+        result = tui.ErrorStyle.Italic(true).Render("\nError in message encryption!")
     }
     fmt.Println(result)
 }
