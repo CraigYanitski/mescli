@@ -1,4 +1,4 @@
-package main
+package tui
 
 import (
 	"fmt"
@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/CraigYanitski/mescli/internal/requests"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/glamour"
 )
@@ -47,8 +48,8 @@ func updateConversation(msg tea.Msg, m Model) (tea.Model, tea.Cmd) {
                     Message: strings.TrimSpace(m.textarea.Value()),
                     Time: time.Now(),
                 }
-                m.cfg.messages[m.conversation] = append(
-                    m.cfg.messages[m.conversation], 
+                m.cfg.Messages[m.conversation] = append(
+                    m.cfg.Messages[m.conversation], 
                     rawMsg,
                 )
                 message := renderMessage(m, rawMsg)
@@ -56,7 +57,7 @@ func updateConversation(msg tea.Msg, m Model) (tea.Model, tea.Cmd) {
                     m.messages[m.conversation], 
                     message,
                 )
-                ok := writeMessages(m.cfg.messages)
+                ok := requests.WriteMessages(m.cfg.Messages)
                 if !ok {
                     log.Fatal("error writing messages")
                 }

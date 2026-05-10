@@ -1,4 +1,4 @@
-package main
+package tui
 
 import (
 	"fmt"
@@ -50,7 +50,7 @@ func contactsView(m Model) string {
 
 func initialiseConversation(m Model) Model {
     // read conversation if it exists
-    msgs := m.cfg.messages[m.conversation]
+    msgs := m.cfg.Messages[m.conversation]
     if msgView := m.messages[m.conversation]; len(msgView) < len(msgs) {
         for i, msg := range msgs {
             if i < len(msgView) {

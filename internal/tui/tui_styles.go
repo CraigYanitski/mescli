@@ -1,4 +1,4 @@
-package main
+package tui
 
 import (
 	"github.com/charmbracelet/bubbles/list"
@@ -19,9 +19,9 @@ var (
 // styles
 var (
     // stateful output
-    statusStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("3"))
-    successStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("2"))
-    errorStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("1"))
+    StatusStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("3"))
+    SuccessStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("2"))
+    ErrorStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("1"))
 
     // login styles
     inputStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("164"))

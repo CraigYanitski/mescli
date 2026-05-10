@@ -1,4 +1,4 @@
-package main
+package tui
 
 import (
 	"errors"
@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/CraigYanitski/mescli/internal/requests"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/spf13/viper"
 )
@@ -34,12 +35,12 @@ func updateLogin(msg tea.Msg, m Model) (tea.Model, tea.Cmd) {
         case tea.KeyShiftTab, tea.KeyUp:
             m.loginFocus = ((m.loginFocus - 1) % len(m.loginInputs) + len(m.loginInputs)) % len(m.loginInputs)
         case tea.KeyEnter:
-            err := loginWithPassword(
+            err := requests.LoginWithPassword(
                 m.loginInputs[loginEmail].Value(), 
                 m.loginInputs[loginPassword].Value(),
             )
             if err != nil {
-                m.loginMsg = fmt.Sprintf(loginMsgWrapping, errorStyle.Render("Invalid login"))
+                m.loginMsg = fmt.Sprintf(loginMsgWrapping, ErrorStyle.Render("Invalid login"))
                 return m, nil
             }
             m.loggedIn = true

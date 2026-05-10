@@ -1,10 +1,11 @@
-package main
+package tui
 
 import (
-	"fmt"
-	"strings"
+    "fmt"
+    "strings"
 
-	tea "github.com/charmbracelet/bubbletea"
+    "github.com/CraigYanitski/mescli/internal/requests"
+    tea "github.com/charmbracelet/bubbletea"
 )
 
 func updateCreate(msg tea.Msg, m Model) (tea.Model, tea.Cmd) {
@@ -21,22 +22,22 @@ func updateCreate(msg tea.Msg, m Model) (tea.Model, tea.Cmd) {
             m.updateFocus = ((m.updateFocus - 1) % len(m.updateInputs) + len(m.updateInputs)) % len(m.updateInputs)
         case tea.KeyEnter:
             if err := m.updateInputs[updateEmail].Err; err != nil {
-                m.createMsg = fmt.Sprintf(createMsgWrapping, errorStyle.Render(err.Error()))
+                m.createMsg = fmt.Sprintf(createMsgWrapping, ErrorStyle.Render(err.Error()))
                 return m, nil
             } else if err = m.updateInputs[updatePassword].Err; err != nil {
-                m.createMsg = fmt.Sprintf(createMsgWrapping, errorStyle.Render(err.Error()))
+                m.createMsg = fmt.Sprintf(createMsgWrapping, ErrorStyle.Render(err.Error()))
                 return m, nil
             } else if m.updateInputs[updateRetypePassword].Value() != m.updateInputs[updatePassword].Value() {
-                m.createMsg = fmt.Sprintf(createMsgWrapping, errorStyle.Render("Passwords do not match"))
+                m.createMsg = fmt.Sprintf(createMsgWrapping, ErrorStyle.Render("Passwords do not match"))
                 return m, nil
             }
-            err := createAccount(
+            err := requests.CreateAccount(
                 m.updateInputs[updateName].Value(),
                 m.updateInputs[updateEmail].Value(),
                 m.updateInputs[updatePassword].Value(),
             )
             if err != nil {
-                m.createMsg = fmt.Sprintf(createMsgWrapping, errorStyle.Render("Account creation failed"))
+                m.createMsg = fmt.Sprintf(createMsgWrapping, ErrorStyle.Render("Account creation failed"))
                 return m, nil
             }
             m.created = true

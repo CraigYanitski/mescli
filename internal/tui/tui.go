@@ -1,10 +1,11 @@
-package main
+package tui
 
 import (
 	"fmt"
 	"log"
 	"os"
 	"path"
+	"time"
 
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/key"
@@ -14,13 +15,34 @@ import (
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/google/uuid"
 	"github.com/joho/godotenv"
 )
+
+type ApiConfig struct {
+    Name  string
+    Email  string
+    Uuid  uuid.UUID
+    Messages  map[string][]RawMessage
+}
+
+type SenderType int
+
+const (
+    SelfType SenderType = iota
+    ContactType
+)
+
+type RawMessage struct {
+    Sender   SenderType  `json:"sender"`
+    Message  string      `json:"message"`
+    Time     time.Time   `json:"time"`
+}
 
 // model parameters
 type Model struct {
     // config
-    cfg  *apiConfig
+    cfg  *ApiConfig
     // geometry
     height  int
     width   int
@@ -64,7 +86,7 @@ type Model struct {
 }
 
 // model initialiser
-func InitialModel(cfg *apiConfig) Model {
+func InitialModel(cfg *ApiConfig) Model {
     // load environment
     // TODO: simplify during installation
     godotenv.Load(".env")
@@ -138,7 +160,7 @@ func InitialModel(cfg *apiConfig) Model {
     o.SetShowHelp(true)
 
     // contact messages
-    fmt.Println("TUI:", cfg.messages)
+    fmt.Println("TUI:", cfg.Messages)
     messages := make(map[string][]string)
     messages["Test contact 1"] = []string{}
     messages["Test contact 2"] = []string{}
