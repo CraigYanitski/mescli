@@ -1,4 +1,4 @@
-package main
+package requests
 
 import (
 	"bytes"
@@ -38,7 +38,7 @@ type UserResponse struct {
     AccessToken     string     `json:"access_token,omitempty"`
 }
 
-func createAccount(name, email, password string) error {
+func CreateAccount(name, email, password string) error {
     // get api url
     apiURL := viper.GetString("api_url")
     // initialise client

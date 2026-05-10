@@ -1,4 +1,4 @@
-package main
+package requests
 
 import (
 	"bytes"
@@ -15,6 +15,7 @@ import (
 
 	"github.com/CraigYanitski/mescli/internal/client"
 	"github.com/CraigYanitski/mescli/internal/cryptography"
+	"github.com/CraigYanitski/mescli/internal/tui"
 	"github.com/google/uuid"
 	"github.com/spf13/viper"
 )
@@ -44,13 +45,13 @@ type MessageResponse struct {
     Message             string          `json:"message"`
 }
 
-func addContact(email string) (*client.MessagePacketJSON, error) {
+func AddContact(email string) (*client.MessagePacketJSON, error) {
     apiURL := viper.GetString("api_url")
     httpClient := http.Client{}
     u := client.Client{}
     u.Initialise(false)
     // get contact key packet
-    senderID, err := getContact(email)
+    senderID, err := GetContact(email)
     if err != nil {
         return nil, err
     }
@@ -89,7 +90,7 @@ func addContact(email string) (*client.MessagePacketJSON, error) {
     return messageJSON, nil
 }
 
-func getUserIdentityKey(user uuid.UUID) (*ecdsa.PublicKey, error) {
+func GetUserIdentityKey(user uuid.UUID) (*ecdsa.PublicKey, error) {
     apiURL := viper.GetString("api_url")
     httpClient := http.Client{}
     // get user key packet
@@ -125,13 +126,13 @@ func getUserIdentityKey(user uuid.UUID) (*ecdsa.PublicKey, error) {
     return identityKey, nil
 }
 
-func sendMessage(contactID uuid.UUID, contactX3DHpacket *client.MessagePacketJSON, message string) error {
+func SendMessage(contactID uuid.UUID, contactX3DHpacket *client.MessagePacketJSON, message string) error {
     apiURL := viper.GetString("api_url")
     httpClient := http.Client{}
     c := client.Client{}
     c.Initialise(false)
     // get contact identity key (only need identity key for exchanging messages)
-    contactIK, err := getUserIdentityKey(contactID)  // TODO: change input to string (and function to decode string)
+    contactIK, err := GetUserIdentityKey(contactID)  // TODO: change input to string (and function to decode string)
     if err != nil {
         return fmt.Errorf("error getting contact identity key: %s", err)
     }
@@ -177,7 +178,7 @@ func sendMessage(contactID uuid.UUID, contactX3DHpacket *client.MessagePacketJSO
     return nil
 }
 
-func getMessages() (messages []MessageResponse, err error) {
+func GetMessages() (messages []MessageResponse, err error) {
     messages = []MessageResponse{}
     apiURL := viper.GetString("api_url")
     httpClient := http.Client{}
@@ -231,7 +232,7 @@ func getMessages() (messages []MessageResponse, err error) {
             }
         }
         // get the sender identity key
-        senderIK, err := getUserIdentityKey(message.SenderID)
+        senderIK, err := GetUserIdentityKey(message.SenderID)
         if err != nil {
             senderMessages = append(senderMessages, message.Message)
             viper.Set("contacts."+message.SenderID.String()+".messages", senderMessages)
@@ -255,7 +256,7 @@ func getMessages() (messages []MessageResponse, err error) {
     return
 }
 
-func writeMessages(messages map[string][]RawMessage) bool {
+func WriteMessages(messages map[string][]tui.RawMessage) bool {
     messageBytes, err := json.MarshalIndent(messages, "", "    ")
     if err != nil {
         log.Println(err)

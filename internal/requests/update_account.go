@@ -1,4 +1,4 @@
-package main
+package requests
 
 import (
 	"bytes"
@@ -20,7 +20,7 @@ type UpdateRequest struct {
 }
 
 
-func updateAccount(name, email, password string) error {
+func UpdateAccount(name, email, password string) error {
     //get api_url
     apiURL := viper.GetString("api_url")
     // get user_cryptographic keys

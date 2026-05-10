@@ -1,4 +1,4 @@
-package main
+package requests
 
 import (
 	"bytes"
@@ -20,7 +20,7 @@ type LoginResponse struct {
     AccessToken   string  `json:"access_token"`
 }
 
-func loginWithPassword(email, password string) error {
+func LoginWithPassword(email, password string) error {
     apiURL := viper.GetString("api_url")
     login := LoginRequest{Email: email, Password: password}
     data, err := json.Marshal(login)

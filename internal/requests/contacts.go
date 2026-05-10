@@ -1,4 +1,4 @@
-package main
+package requests
 
 import (
 	"bytes"
@@ -14,7 +14,7 @@ type UserRequest struct {
     Email  string  `json:"email"`
 }
 
-func getContact(email string) (*uuid.UUID, error) {
+func GetContact(email string) (*uuid.UUID, error) {
     apiURL := viper.GetString("api_url")
     httpClient := http.Client{}
     // make request
