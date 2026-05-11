@@ -5,8 +5,8 @@ import (
 	"log"
 	"os"
 	"path"
-	"time"
 
+	"github.com/CraigYanitski/mescli/internal/utils"
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
@@ -23,20 +23,7 @@ type ApiConfig struct {
     Name  string
     Email  string
     Uuid  uuid.UUID
-    Messages  map[string][]RawMessage
-}
-
-type SenderType int
-
-const (
-    SelfType SenderType = iota
-    ContactType
-)
-
-type RawMessage struct {
-    Sender   SenderType  `json:"sender"`
-    Message  string      `json:"message"`
-    Time     time.Time   `json:"time"`
+    Messages  map[string][]utils.RawMessage
 }
 
 // model parameters

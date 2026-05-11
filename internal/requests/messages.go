@@ -15,7 +15,7 @@ import (
 
 	"github.com/CraigYanitski/mescli/internal/client"
 	"github.com/CraigYanitski/mescli/internal/cryptography"
-	"github.com/CraigYanitski/mescli/internal/tui"
+	"github.com/CraigYanitski/mescli/internal/utils"
 	"github.com/google/uuid"
 	"github.com/spf13/viper"
 )
@@ -256,7 +256,7 @@ func GetMessages() (messages []MessageResponse, err error) {
     return
 }
 
-func WriteMessages(messages map[string][]tui.RawMessage) bool {
+func WriteMessages(messages map[string][]utils.RawMessage) bool {
     messageBytes, err := json.MarshalIndent(messages, "", "    ")
     if err != nil {
         log.Println(err)

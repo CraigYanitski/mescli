@@ -10,6 +10,7 @@ import (
 	"github.com/CraigYanitski/mescli/cmd"
 	"github.com/CraigYanitski/mescli/internal/client"
 	"github.com/CraigYanitski/mescli/internal/tui"
+	"github.com/CraigYanitski/mescli/internal/utils"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/google/uuid"
 	"github.com/spf13/viper"
@@ -52,7 +53,7 @@ func main() {
         Email: viper.GetString("email"),
     }
 
-    messages := make(map[string][]tui.RawMessage)
+    messages := make(map[string][]utils.RawMessage)
     if _, err = os.Stat(".messages"); err == nil {
         msgBytes, err := os.ReadFile(".messages")
         if err != nil {

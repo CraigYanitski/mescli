@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/CraigYanitski/mescli/internal/requests"
+	"github.com/CraigYanitski/mescli/internal/utils"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/glamour"
 )
@@ -43,8 +44,8 @@ func updateConversation(msg tea.Msg, m Model) (tea.Model, tea.Cmd) {
             m.viewHelp = true
         case tea.KeyEnter:
             if strings.TrimSpace(m.textarea.Value()) != "" {
-                rawMsg := RawMessage{
-                    Sender: SelfType,
+                rawMsg := utils.RawMessage{
+                    Sender: utils.SelfType,
                     Message: strings.TrimSpace(m.textarea.Value()),
                     Time: time.Now(),
                 }
@@ -85,12 +86,12 @@ func conversationView(m Model) string {
     )
 }
 
-func renderMessage(m Model, rawMsg RawMessage) string {
+func renderMessage(m Model, rawMsg utils.RawMessage) string {
     var prompt string
     switch rawMsg.Sender {
-    case SelfType:
+    case utils.SelfType:
         prompt = m.Prompt
-    case ContactType:
+    case utils.ContactType:
         if m.receivePrompt != "" {
             prompt = m.receiveStyle.Render(m.receivePrompt)
         } else {
