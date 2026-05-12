@@ -2,9 +2,9 @@ package tui
 
 import (
 	"fmt"
-	"log"
-	"os"
-	"path"
+	// "log"
+	// "os"
+	// "path"
 
 	"github.com/CraigYanitski/mescli/internal/utils"
 	"github.com/charmbracelet/bubbles/help"
@@ -67,9 +67,12 @@ type Model struct {
     // help
     viewHelp  bool
     // misc
-    logo      string
     err       error
     Quitting  bool
+}
+
+func NewProgram(cfg *ApiConfig) *tea.Program {
+	return tea.NewProgram(InitialModel(cfg))
 }
 
 // model initialiser
@@ -79,17 +82,17 @@ func InitialModel(cfg *ApiConfig) Model {
     godotenv.Load(".env")
     godotenv.Load("../.env")
     // open logo
-    var logo string
-    logoDir, ok := os.LookupEnv("MESCLI_DIR")
-    if !ok {
-        log.Println("there is no MESCLI_DIR env variable")
-    }
-    file, err := os.ReadFile(path.Join(logoDir, "assets/logo.txt"))
-    if err != nil {
-        log.Printf("error: %s", err)
-        logo = "mescli"
-    }
-    logo = string(file)
+    // var logo string
+    // logoDir, ok := os.LookupEnv("MESCLI_DIR")
+    // if !ok {
+    //     log.Println("there is no MESCLI_DIR env variable")
+    // }
+    // file, err := os.ReadFile(path.Join(logoDir, "assets/logo.txt"))
+    // if err != nil {
+    //     log.Printf("error: %s", err)
+    //     logo = "mescli"
+    // }
+    // logo = string(file)
     // login textinput
     loginInputs := make([]textinput.Model, 2)
     loginInputs[loginEmail] = textinput.New()
@@ -147,7 +150,7 @@ func InitialModel(cfg *ApiConfig) Model {
     o.SetShowHelp(true)
 
     // contact messages
-    fmt.Println("TUI:", cfg.Messages)
+    //fmt.Println("TUI:", cfg.Messages)
     messages := make(map[string][]string)
     messages["Test contact 1"] = []string{}
     messages["Test contact 2"] = []string{}
@@ -345,7 +348,6 @@ func InitialModel(cfg *ApiConfig) Model {
         receiveStyle:   receiveStyle,
         receivePrompt:  receivePrompt,
         help:           help.New(),
-        logo:           logo,
         err:            nil,
     }
 }
