@@ -6,7 +6,9 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/CraigYanitski/mescli/assets"
 	"github.com/CraigYanitski/mescli/internal/requests"
+	"github.com/CraigYanitski/mescli/internal/utils"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/spf13/viper"
 )
@@ -40,7 +42,7 @@ func updateLogin(msg tea.Msg, m Model) (tea.Model, tea.Cmd) {
                 m.loginInputs[loginPassword].Value(),
             )
             if err != nil {
-                m.loginMsg = fmt.Sprintf(loginMsgWrapping, ErrorStyle.Render("Invalid login"))
+                m.loginMsg = fmt.Sprintf(loginMsgWrapping, utils.ErrorStyle.Render("Invalid login"))
                 return m, nil
             }
             m.loggedIn = true
@@ -71,7 +73,7 @@ func loginView(m Model) string{
     // set output string
     s := fmt.Sprintf(
         loginWrapping, 
-        m.logo,
+        assets.Logo,
         m.loginInputs[loginEmail].View(), 
         m.loginInputs[loginPassword].View(),
         m.loginMsg,

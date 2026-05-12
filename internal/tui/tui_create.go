@@ -1,11 +1,13 @@
 package tui
 
 import (
-    "fmt"
-    "strings"
+	"fmt"
+	"strings"
 
-    "github.com/CraigYanitski/mescli/internal/requests"
-    tea "github.com/charmbracelet/bubbletea"
+	"github.com/CraigYanitski/mescli/assets"
+	"github.com/CraigYanitski/mescli/internal/requests"
+	"github.com/CraigYanitski/mescli/internal/utils"
+	tea "github.com/charmbracelet/bubbletea"
 )
 
 func updateCreate(msg tea.Msg, m Model) (tea.Model, tea.Cmd) {
@@ -22,13 +24,13 @@ func updateCreate(msg tea.Msg, m Model) (tea.Model, tea.Cmd) {
             m.updateFocus = ((m.updateFocus - 1) % len(m.updateInputs) + len(m.updateInputs)) % len(m.updateInputs)
         case tea.KeyEnter:
             if err := m.updateInputs[updateEmail].Err; err != nil {
-                m.createMsg = fmt.Sprintf(createMsgWrapping, ErrorStyle.Render(err.Error()))
+                m.createMsg = fmt.Sprintf(createMsgWrapping, utils.ErrorStyle.Render(err.Error()))
                 return m, nil
             } else if err = m.updateInputs[updatePassword].Err; err != nil {
-                m.createMsg = fmt.Sprintf(createMsgWrapping, ErrorStyle.Render(err.Error()))
+                m.createMsg = fmt.Sprintf(createMsgWrapping, utils.ErrorStyle.Render(err.Error()))
                 return m, nil
             } else if m.updateInputs[updateRetypePassword].Value() != m.updateInputs[updatePassword].Value() {
-                m.createMsg = fmt.Sprintf(createMsgWrapping, ErrorStyle.Render("Passwords do not match"))
+                m.createMsg = fmt.Sprintf(createMsgWrapping, utils.ErrorStyle.Render("Passwords do not match"))
                 return m, nil
             }
             err := requests.CreateAccount(
@@ -37,7 +39,7 @@ func updateCreate(msg tea.Msg, m Model) (tea.Model, tea.Cmd) {
                 m.updateInputs[updatePassword].Value(),
             )
             if err != nil {
-                m.createMsg = fmt.Sprintf(createMsgWrapping, ErrorStyle.Render("Account creation failed"))
+                m.createMsg = fmt.Sprintf(createMsgWrapping, utils.ErrorStyle.Render("Account creation failed"))
                 return m, nil
             }
             m.created = true
@@ -69,7 +71,7 @@ func createView(m Model) string{
     // set output string
     s := fmt.Sprintf(
         updateWrapping, 
-        m.logo,
+        assets.Logo,
         m.updateInputs[updateName].View(), 
         m.updateInputs[updateEmail].View(), 
         m.updateInputs[updatePassword].View(),
