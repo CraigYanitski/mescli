@@ -8,7 +8,7 @@ help:
 		"At the moment there is no local storage, so any messages will be deleted after closing the program."
 
 build:
-	go build -o mescli ./frontend
+	go build -o mescli ./app
 	@echo "\n\n\n"
 	@cat assets/logo.txt
 
