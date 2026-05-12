@@ -18,11 +18,6 @@ var (
 
 // styles
 var (
-    // stateful output
-    StatusStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("3"))
-    SuccessStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("2"))
-    ErrorStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("1"))
-
     // login styles
     inputStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("164"))
 
