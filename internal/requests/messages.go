@@ -55,6 +55,7 @@ func AddContact(email string) (*client.MessagePacketJSON, error) {
     if err != nil {
         return nil, err
     }
+	// TODO: isolate rest of function to GetPacket(user uuid)
     keyReqStruct := UserResponse{ID: *senderID}
     data, err := json.Marshal(keyReqStruct)
     if err != nil {
@@ -165,7 +166,7 @@ func SendMessage(contactID uuid.UUID, contactX3DHpacket *client.MessagePacketJSO
         return fmt.Errorf("error making message request: %s", err)
     }
     msgReq.Header.Set("Content-Type", "application/json")
-    msgReq.Header.Set("Authorization", "Bearer "+viper.GetString("access_token"))
+	msgReq.Header.Set("Authorization", "Bearer "+viper.GetString("access_token")) //TODO: store token in context
     msgResp, err := httpClient.Do(msgReq)
     if err != nil {
         return err
