@@ -26,7 +26,7 @@ var getUserCmd = &cobra.Command{
         } else {
             email = args[0]
         }
-        u, err := requests.GetContact(email)
+        u, err := requests.GetContactID(email)
         if err != nil {
             return err
         }
