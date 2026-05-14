@@ -51,7 +51,8 @@ func AddContact(email string) (*client.MessagePacketJSON, error) {
     u := client.Client{}
     u.Initialise(false)
     // get contact key packet
-    senderID, err := GetContactID(email)
+    sender, err := GetUser(email)
+	senderID := &sender.ID
     if err != nil {
         return nil, err
     }

@@ -26,11 +26,11 @@ var getUserCmd = &cobra.Command{
         } else {
             email = args[0]
         }
-        u, err := requests.GetContactID(email)
+        u, err := requests.GetUser(email)
         if err != nil {
             return err
         }
-        fmt.Printf("User %s (%s) \n", u.String(), email)
+        fmt.Printf("User %s (%s) \n", u.ID.String(), email)
         return nil
     },
 }

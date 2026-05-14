@@ -94,18 +94,16 @@ var sendMessageCmd = &cobra.Command{
         msg := args[0]
         var uid *uuid.UUID
         if user == "" {
+			// Throw error if user not specified
             return errors.New("must provide a user in order to send a message")
-        } else if u, err := uuid.Parse(user); err == nil {
-            uid = &u
-            user, err = requests.GetContactEmail(u)
-            if err != nil {
-                return err
-            }
         } else {
-            uid, err = requests.GetContactID(user)
+			// Get user information and save uuid and email
+			u, err := requests.GetUser(user)
             if err != nil {
                 return err
             }
+			uid = &u.ID
+			user = u.Email
         }
         packet, err := requests.AddContact(user)
         if err != nil {
