@@ -109,7 +109,7 @@ var sendMessageCmd = &cobra.Command{
         if err != nil {
             return err
         }
-        err = requests.SendMessage(*uid, packet, msg)
+        err = requests.SendEncryptedMessage(*uid, packet, msg)
         if err != nil {
             return err
         }

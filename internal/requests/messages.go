@@ -128,7 +128,7 @@ func GetUserIdentityKey(user uuid.UUID) (*ecdsa.PublicKey, error) {
     return identityKey, nil
 }
 
-func SendMessage(contactID uuid.UUID, contactX3DHpacket *client.MessagePacketJSON, message string) error {
+func SendEncryptedMessage(contactID uuid.UUID, contactX3DHpacket *client.MessagePacketJSON, message string) error {
     apiURL := viper.GetString("api_url")
     httpClient := http.Client{}
     c := client.Client{}
@@ -178,6 +178,25 @@ func SendMessage(contactID uuid.UUID, contactX3DHpacket *client.MessagePacketJSO
         return errors.New("error: update not successful")
     }
     return nil
+}
+
+func SendMessage(user, message string) error {
+	var uid *uuid.UUID
+	u, err := GetUser(user)
+	if err != nil {
+		return err
+	}
+	uid = &u.ID
+	user = u.Email
+	packet, err := AddContact(user)
+	if err != nil {
+		return err
+	}
+	err = SendEncryptedMessage(*uid, packet, message)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func GetMessages() (messages []MessageResponse, err error) {
