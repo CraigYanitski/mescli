@@ -45,8 +45,9 @@ var rootCmd = &cobra.Command{
         if m, ok := m.(tui.Model); ok && m.Chosen == 3 {
             utils.RunTests()
             fmt.Print("\n\n")
-        }
-        fmt.Println("This will be the point when the TUI will open.")
+        } else {
+			os.Exit(1)
+		}
     },
 }
 
