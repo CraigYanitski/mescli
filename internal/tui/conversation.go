@@ -58,6 +58,13 @@ func updateConversation(msg tea.Msg, m Model) (tea.Model, tea.Cmd) {
                     m.messages[m.conversation], 
                     message,
                 )
+				err := requests.SendMessage(m.conversation, message)
+				if err != nil {
+					m.messages[m.conversation] = append(
+						m.messages[m.conversation], 
+						"Send failed...",
+					)
+				}
                 ok := requests.WriteMessages(m.cfg.Messages)
                 if !ok {
                     log.Fatal("error writing messages")
